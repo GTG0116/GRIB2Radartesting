@@ -100,9 +100,17 @@ def create_map(radars):
     )
 
     # Initialize Folium Map
+    # ... inside create_map(radars) ...
+    
+    # Initialize Folium Map
     center_lat = (GRID_LAT_MIN + GRID_LAT_MAX) / 2
     center_lon = (GRID_LON_MIN + GRID_LON_MAX) / 2
     m = folium.Map(location=[center_lat, center_lon], zoom_start=7, tiles='cartodbpositron')
+
+    # ADD THIS LINE HERE:
+    m.get_root().header.add_child(folium.Element('<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">'))
+
+    # ... rest of the code ...
 
     image_bounds = [[GRID_LAT_MIN, GRID_LON_MIN], [GRID_LAT_MAX, GRID_LON_MAX]]
 
