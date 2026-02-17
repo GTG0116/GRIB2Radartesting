@@ -1,0 +1,67 @@
+<!-- docs/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Radar Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { height: 100vh; }
+        .controls { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        .controls select, .controls button { margin-bottom: 10px; width: 100%; }
+        @media (max-width: 768px) { .controls { width: 200px; } }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="controls">
+        <select id="radar-select" class="form-select">
+            <option value="KCCX">KCCX (State College, PA)</option>
+            <option value="KDOX">KDOX (Dover, DE)</option>
+        </select>
+        <select id="product-select" class="form-select">
+            <option value="reflectivity">Reflectivity</option>
+            <option value="velocity">Velocity</option>
+            <option value="correlation_coefficient">Correlation Coefficient</option>
+        </select>
+        <button id="refresh" class="btn btn-primary">Refresh</button>
+    </div>
+
+    <script src="assets/bounds.js"></script>
+    <script>
+        const map = L.map('map').setView([40.0, -75.0], 7);  // Center on PA/DE area
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let currentOverlay;
+
+        function updateOverlay() {
+            const radar = document.getElementById('radar-select').value;
+            const product = document.getElementById('product-select').value;
+            const key = `${radar}_${product}`;
+            const bounds = RADAR_BOUNDS[key];
+            if (!bounds) return;
+
+            if (currentOverlay) map.removeLayer(currentOverlay);
+
+            const imageUrl = `assets/${radar}_${product}.png`;
+            currentOverlay = L.imageOverlay(imageUrl, [[bounds[0], bounds[1]], [bounds[2], bounds[3]]], { opacity: 0.8 });
+            currentOverlay.addTo(map);
+            map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]]);
+        }
+
+        document.getElementById('radar-select').addEventListener('change', updateOverlay);
+        document.getElementById('product-select').addEventListener('change', updateOverlay);
+        document.getElementById('refresh').addEventListener('click', () => location.reload());
+
+        // Initial load
+        updateOverlay();
+    </script>
+</body>
+</html>
