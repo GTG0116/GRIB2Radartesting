@@ -34,16 +34,23 @@ def get_latest_file(radar):
     prefix = f"{now.year}/{now.strftime('%m')}/{now.strftime('%d')}/{radar}/"
     
     # List objects to find the latest file
-    response = s3.list_objects_v2(Bucket='noaa-nexrad-level2', Prefix=prefix)
+    response = s3.list_objects_v2(Bucket='unidata-nexrad-level2', Prefix=prefix)
     if 'Contents' not in response:
+        print(f"No objects found for prefix {prefix}")
         return None
     
-    latest_key = max(response['Contents'], key=lambda x: x['LastModified'])['Key']
+    # Filter to valid Level-2 files (usually end with _V06 or similar)
+    files = [obj for obj in response['Contents'] if obj['Key'].endswith(('_V06', '_V07'))]
+    if not files:
+        print(f"No valid Level-2 files in {prefix}")
+        return None
+    
+    latest_key = max(files, key=lambda x: x['LastModified'])['Key']
     return latest_key
 
 def download_file(key):
     local_path = '/tmp/' + os.path.basename(key)
-    s3.download_file('noaa-nexrad-level2', key, local_path)
+    s3.download_file('unidata-nexrad-level2', key, local_path)
     return local_path
 
 def generate_png(radar_data, field, radar_code):
