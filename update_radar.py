@@ -3,11 +3,11 @@ import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 import datetime
+import json
 import os
 import pyart
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from cartopy.feature import ShapelyFeature
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
@@ -105,4 +105,4 @@ for radar in RADARS:
 
 # Write bounds to JS file
 with open(f"{OUTPUT_DIR}/bounds.js", 'w') as f:
-    f.write("const RADAR_BOUNDS = " + str(bounds_data) + ";")
+    f.write("const RADAR_BOUNDS = " + json.dumps(bounds_data) + ";")

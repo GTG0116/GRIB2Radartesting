@@ -7,61 +7,542 @@
     <title>Weather Radar Viewer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        #map { height: 100vh; }
-        .controls { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-        .controls select, .controls button { margin-bottom: 10px; width: 100%; }
-        @media (max-width: 768px) { .controls { width: 200px; } }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:            #0d1117;
+            --surface:       #161b22;
+            --surface-2:     #1c2230;
+            --border:        #2a3040;
+            --accent:        #4f8ef7;
+            --accent-dim:    rgba(79, 142, 247, 0.15);
+            --accent-border: rgba(79, 142, 247, 0.35);
+            --text:          #e6edf3;
+            --text-muted:    #6e7b8f;
+            --green:         #3fb950;
+            --red-bg:        #2a1a1a;
+            --red-border:    #6b2828;
+            --red-text:      #f07070;
+            --radius:        8px;
+            --panel:         272px;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        /* ── Layout ───────────────────────────────────────── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ── Header ───────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 18px;
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 400;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .header-badge {
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-spacer { flex: 1; }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        /* ── Body ─────────────────────────────────────────── */
+        .body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Side Panel ───────────────────────────────────── */
+        .panel {
+            width: var(--panel);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .section {
+            padding: 14px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child { border-bottom: none; }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* ── Now Viewing Card ─────────────────────────────── */
+        .now-viewing {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius);
+            padding: 11px 13px;
+        }
+
+        .nv-eyebrow {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .nv-name {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nv-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ── Radio Options ────────────────────────────────── */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .radio-opt {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.12s, border-color 0.12s;
+            user-select: none;
+        }
+
+        .radio-opt:hover { background: var(--surface-2); }
+
+        .radio-opt.active {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+
+        .radio-pip {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
+            transition: border-color 0.12s;
+        }
+
+        .radio-opt.active .radio-pip { border-color: var(--accent); }
+
+        .radio-pip::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.12s;
+        }
+
+        .radio-opt.active .radio-pip::after { opacity: 1; }
+
+        .radio-text { flex: 1; }
+
+        .radio-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .radio-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* ── Opacity Slider ───────────────────────────────── */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-row label {
+            font-size: 12px;
+            color: var(--text-muted);
+            width: 52px;
+            flex-shrink: 0;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .slider-val {
+            font-size: 12px;
+            color: var(--text);
+            width: 34px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* ── Refresh Button ───────────────────────────────── */
+        .refresh-btn {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: filter 0.15s, transform 0.1s;
+        }
+
+        .refresh-btn:hover  { filter: brightness(1.12); }
+        .refresh-btn:active { transform: scale(0.98); }
+
+        /* ── Map Area ─────────────────────────────────────── */
+        .map-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map { width: 100%; height: 100%; }
+
+        /* ── Error Banner ─────────────────────────────────── */
+        .error-banner {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            color: var(--red-text);
+            padding: 9px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            z-index: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            display: none;
+            animation: fadein 0.2s ease;
+        }
+
+        @keyframes fadein { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
+
+        /* ── Leaflet overrides ────────────────────────────── */
+        .leaflet-bar {
+            border: 1px solid var(--border) !important;
+            box-shadow: none !important;
+        }
+        .leaflet-bar a {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        .leaflet-bar a:hover { background: var(--surface-2) !important; }
+        .leaflet-control-attribution {
+            background: rgba(13,17,23,0.8) !important;
+            color: var(--text-muted) !important;
+            font-size: 11px !important;
+        }
+        .leaflet-control-attribution a { color: var(--accent) !important; }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div class="controls">
-        <select id="radar-select" class="form-select">
-            <option value="KCCX">KCCX (State College, PA)</option>
-            <option value="KDOX">KDOX (Dover, DE)</option>
-        </select>
-        <select id="product-select" class="form-select">
-            <option value="reflectivity">Reflectivity</option>
-            <option value="velocity">Velocity</option>
-            <option value="correlation_coefficient">Correlation Coefficient</option>
-        </select>
-        <button id="refresh" class="btn btn-primary">Refresh</button>
+<div class="app">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">&#127783;</div>
+        <span class="header-title">Weather Radar Viewer</span>
+        <span class="header-badge">NEXRAD</span>
+        <span class="header-spacer"></span>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>Live</span>
+        </div>
+    </header>
+
+    <!-- Main body -->
+    <div class="body">
+
+        <!-- Side panel -->
+        <aside class="panel">
+
+            <!-- Now Viewing -->
+            <div class="section">
+                <div class="section-label">Now Viewing</div>
+                <div class="now-viewing">
+                    <div class="nv-eyebrow">Active Radar</div>
+                    <div class="nv-name" id="nv-name">KCCX</div>
+                    <div class="nv-detail" id="nv-detail">Reflectivity &middot; State College, PA</div>
+                </div>
+            </div>
+
+            <!-- Radar site -->
+            <div class="section">
+                <div class="section-label">Radar Site</div>
+                <div class="radio-group" id="radar-group">
+                    <div class="radio-opt active" data-value="KCCX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KCCX</div>
+                            <div class="radio-desc">State College, PA</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KDOX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KDOX</div>
+                            <div class="radio-desc">Dover, DE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product -->
+            <div class="section">
+                <div class="section-label">Product</div>
+                <div class="radio-group" id="product-group">
+                    <div class="radio-opt active" data-value="reflectivity">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Reflectivity</div>
+                            <div class="radio-desc">Precipitation intensity</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="velocity">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Velocity</div>
+                            <div class="radio-desc">Wind speed &amp; direction</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="correlation_coefficient">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Correlation Coeff.</div>
+                            <div class="radio-desc">Hydrometeor classification</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opacity -->
+            <div class="section">
+                <div class="section-label">Radar Opacity</div>
+                <div class="slider-row">
+                    <label for="opacity">Opacity</label>
+                    <input type="range" id="opacity" min="20" max="100" value="80">
+                    <span class="slider-val" id="opacity-val">80%</span>
+                </div>
+            </div>
+
+            <!-- Refresh -->
+            <div class="section">
+                <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
+            </div>
+
+        </aside>
+
+        <!-- Map -->
+        <div class="map-wrap">
+            <div id="map"></div>
+            <div class="error-banner" id="error-banner"></div>
+        </div>
+
     </div>
+</div>
 
-    <script src="assets/bounds.js"></script>
-    <script>
-        const map = L.map('map').setView([40.0, -75.0], 7);  // Center on PA/DE area
+<script src="assets/bounds.js"></script>
+<script>
+    /* ── State ── */
+    let selectedRadar   = 'KCCX';
+    let selectedProduct = 'reflectivity';
+    let currentOverlay  = null;
+    let opacity         = 0.80;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+    const RADAR_NAMES = {
+        KCCX: 'State College, PA',
+        KDOX: 'Dover, DE',
+    };
 
-        let currentOverlay;
+    const PRODUCT_NAMES = {
+        reflectivity:             'Reflectivity',
+        velocity:                 'Velocity',
+        correlation_coefficient:  'Corr. Coeff.',
+    };
 
-        function updateOverlay() {
-            const radar = document.getElementById('radar-select').value;
-            const product = document.getElementById('product-select').value;
-            const key = `${radar}_${product}`;
-            const bounds = RADAR_BOUNDS[key];
-            if (!bounds) return;
+    /* ── Map init ── */
+    const map = L.map('map', { zoomControl: true }).setView([40.0, -75.0], 7);
 
-            if (currentOverlay) map.removeLayer(currentOverlay);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
 
-            const imageUrl = `assets/${radar}_${product}.png`;
-            currentOverlay = L.imageOverlay(imageUrl, [[bounds[0], bounds[1]], [bounds[2], bounds[3]]], { opacity: 0.8 });
-            currentOverlay.addTo(map);
-            map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]]);
+    /* ── Error helper ── */
+    let errorTimer;
+    function showError(msg) {
+        const el = document.getElementById('error-banner');
+        el.textContent = msg;
+        el.style.display = 'block';
+        clearTimeout(errorTimer);
+        errorTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+
+    /* ── Now-viewing card ── */
+    function refreshNowViewing() {
+        document.getElementById('nv-name').textContent   = selectedRadar;
+        document.getElementById('nv-detail').textContent =
+            PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
+    }
+
+    /* ── Overlay update (single-radar enforcement) ── */
+    function updateOverlay() {
+        // Always remove any existing overlay before adding a new one
+        if (currentOverlay) {
+            map.removeLayer(currentOverlay);
+            currentOverlay = null;
         }
 
-        document.getElementById('radar-select').addEventListener('change', updateOverlay);
-        document.getElementById('product-select').addEventListener('change', updateOverlay);
-        document.getElementById('refresh').addEventListener('click', () => location.reload());
+        if (typeof RADAR_BOUNDS === 'undefined') {
+            showError('Radar data not yet available — check back in a few minutes.');
+            return;
+        }
 
-        // Initial load
-        updateOverlay();
-    </script>
+        const key    = `${selectedRadar}_${selectedProduct}`;
+        const bounds = RADAR_BOUNDS[key];
+
+        if (!bounds) {
+            showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
+            refreshNowViewing();
+            return;
+        }
+
+        const sw = [bounds[0], bounds[1]];
+        const ne = [bounds[2], bounds[3]];
+
+        currentOverlay = L.imageOverlay(
+            `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`,
+            [sw, ne],
+            { opacity, interactive: false }
+        ).addTo(map);
+
+        map.fitBounds([sw, ne], { padding: [24, 24] });
+        refreshNowViewing();
+    }
+
+    /* ── Radio group factory ── */
+    function initRadioGroup(groupId, onChange) {
+        document.getElementById(groupId).querySelectorAll('.radio-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.getElementById(groupId)
+                    .querySelectorAll('.radio-opt')
+                    .forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                onChange(opt.dataset.value);
+            });
+        });
+    }
+
+    initRadioGroup('radar-group', val => { selectedRadar   = val; updateOverlay(); });
+    initRadioGroup('product-group', val => { selectedProduct = val; updateOverlay(); });
+
+    /* ── Opacity slider ── */
+    const opacityInput = document.getElementById('opacity');
+    opacityInput.addEventListener('input', () => {
+        opacity = opacityInput.value / 100;
+        document.getElementById('opacity-val').textContent = opacityInput.value + '%';
+        if (currentOverlay) currentOverlay.setOpacity(opacity);
+    });
+
+    /* ── Refresh button ── */
+    document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+
+    /* ── Initial render ── */
+    updateOverlay();
+</script>
 </body>
 </html>
