@@ -62,13 +62,13 @@ def generate_png(radar_data, field, radar_code):
     
     # Select colormap and range based on field
     if field == 'reflectivity':
-        cmap = 'pyart_NWSRef'
+        cmap = 'NWSRef'
         vmin, vmax = -30, 70
     elif field == 'velocity':
-        cmap = 'pyart_BuDRd18'
+        cmap = 'BuDRd18'
         vmin, vmax = -20, 20
     else:  # correlation_coefficient
-        cmap = 'pyart_RefDiff'
+        cmap = 'RefDiff'
         vmin, vmax = 0, 1.05
     
     # Plot the radar data
