@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import pyart
+import pyart.graph.cm          # ← This ensures pyart_NWSRef, pyart_BuDRd18, etc. are registered
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
@@ -60,12 +61,29 @@ def generate_png(radar_data, field, radar_code):
     projection = ccrs.PlateCarree()
     ax = plt.axes(projection=projection)
     
+    # Select colormap and range based on field
+    if field == 'reflectivity':
+        cmap = 'pyart_NWSRef'
+        vmin, vmax = -30, 70
+    elif field == 'velocity':
+        cmap = 'pyart_BuDRd18'
+        vmin, vmax = -20, 20
+    else:  # correlation_coefficient
+        cmap = 'pyart_RefDiff'
+        vmin, vmax = 0, 1.05
+    
     # Plot the radar data
-    mesh = display.plot_ppi_map(field, 0, vmin=-30 if field == 'reflectivity' else -20 if field == 'velocity' else 0,
-                                vmax=70 if field == 'reflectivity' else 20 if field == 'velocity' else 1.05,
-                                cmap='pyart_NWSRef' if field == 'reflectivity' else 'pyart_BuDRd18' if field == 'velocity' else 'pyart_RefDiff',
-                                ax=ax, title='', colorbar_flag=False,
-                                lat_lines=np.arange(30, 50, 1), lon_lines=np.arange(-90, -70, 1))
+    mesh = display.plot_ppi_map(
+        field, 0,
+        vmin=vmin,
+        vmax=vmax,
+        cmap=cmap,
+        ax=ax,
+        title='',
+        colorbar_flag=False,
+        lat_lines=np.arange(30, 50, 1),
+        lon_lines=np.arange(-90, -70, 1)
+    )
     
     # Set transparent background
     fig.patch.set_alpha(0.0)
