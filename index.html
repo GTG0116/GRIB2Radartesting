@@ -1,199 +1,749 @@
+<!-- docs/index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
-    
-            <meta name="viewport" content="width=device-width,
-                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <style>
-                #map_7d2203c42c23eeec4229d091de735913 {
-                    position: relative;
-                    width: 100.0%;
-                    height: 100.0%;
-                    left: 0.0%;
-                    top: 0.0%;
-                }
-                .leaflet-container { font-size: 1rem; }
-            </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Radar Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-            <style>html, body {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            </style>
+        :root {
+            --bg:            #0d1117;
+            --surface:       #161b22;
+            --surface-2:     #1c2230;
+            --border:        #2a3040;
+            --accent:        #4f8ef7;
+            --accent-dim:    rgba(79, 142, 247, 0.15);
+            --accent-border: rgba(79, 142, 247, 0.35);
+            --text:          #e6edf3;
+            --text-muted:    #6e7b8f;
+            --green:         #3fb950;
+            --red-bg:        #2a1a1a;
+            --red-border:    #6b2828;
+            --red-text:      #f07070;
+            --radius:        8px;
+            --panel:         272px;
+        }
 
-            <style>#map {
-                position:absolute;
-                top:0;
-                bottom:0;
-                right:0;
-                left:0;
-                }
-            </style>
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
 
-            <script>
-                L_NO_TOUCH = false;
-                L_DISABLE_3D = false;
-            </script>
+        /* ── Layout ───────────────────────────────────────── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-        
-    
-            
-                <style>
-                    .leaflet-image-layer {
-                        /* old android/safari*/
-                        image-rendering: -webkit-optimize-contrast;
-                        image-rendering: crisp-edges; /* safari */
-                        image-rendering: pixelated; /* chrome */
-                        image-rendering: -moz-crisp-edges; /* firefox */
-                        image-rendering: -o-crisp-edges; /* opera */
-                        -ms-interpolation-mode: nearest-neighbor; /* ie */
-                    }
-                </style>
-            
-        
-    
-            
-                <style>
-                    .leaflet-image-layer {
-                        /* old android/safari*/
-                        image-rendering: -webkit-optimize-contrast;
-                        image-rendering: crisp-edges; /* safari */
-                        image-rendering: pixelated; /* chrome */
-                        image-rendering: -moz-crisp-edges; /* firefox */
-                        image-rendering: -o-crisp-edges; /* opera */
-                        -ms-interpolation-mode: nearest-neighbor; /* ie */
-                    }
-                </style>
-            
-        
-    
-            
-                <style>
-                    .leaflet-image-layer {
-                        /* old android/safari*/
-                        image-rendering: -webkit-optimize-contrast;
-                        image-rendering: crisp-edges; /* safari */
-                        image-rendering: pixelated; /* chrome */
-                        image-rendering: -moz-crisp-edges; /* firefox */
-                        image-rendering: -o-crisp-edges; /* opera */
-                        -ms-interpolation-mode: nearest-neighbor; /* ie */
-                    }
-                </style>
-            
-        
+        /* ── Header ───────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 18px;
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 400;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .header-badge {
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-spacer { flex: 1; }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        /* ── Body ─────────────────────────────────────────── */
+        .body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Side Panel ───────────────────────────────────── */
+        .panel {
+            width: var(--panel);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .section {
+            padding: 14px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child { border-bottom: none; }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* ── Now Viewing Card ─────────────────────────────── */
+        .now-viewing {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius);
+            padding: 11px 13px;
+        }
+
+        .nv-eyebrow {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .nv-name {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nv-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ── Radio Options ────────────────────────────────── */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .radio-opt {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.12s, border-color 0.12s;
+            user-select: none;
+        }
+
+        .radio-opt:hover { background: var(--surface-2); }
+
+        .radio-opt.active {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+
+        .radio-pip {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
+            transition: border-color 0.12s;
+        }
+
+        .radio-opt.active .radio-pip { border-color: var(--accent); }
+
+        .radio-pip::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.12s;
+        }
+
+        .radio-opt.active .radio-pip::after { opacity: 1; }
+
+        .radio-text { flex: 1; }
+
+        .radio-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .radio-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* ── Opacity Slider ───────────────────────────────── */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-row label {
+            font-size: 12px;
+            color: var(--text-muted);
+            width: 52px;
+            flex-shrink: 0;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .slider-val {
+            font-size: 12px;
+            color: var(--text);
+            width: 34px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* ── Refresh Button ───────────────────────────────── */
+        .refresh-btn {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: filter 0.15s, transform 0.1s;
+        }
+
+        .refresh-btn:hover  { filter: brightness(1.12); }
+        .refresh-btn:active { transform: scale(0.98); }
+
+        /* ── Map Area ─────────────────────────────────────── */
+        .map-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map { width: 100%; height: 100%; }
+
+        /* ── Error Banner ─────────────────────────────────── */
+        .error-banner {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            color: var(--red-text);
+            padding: 9px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            z-index: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            display: none;
+            animation: fadein 0.2s ease;
+        }
+
+        @keyframes fadein { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
+
+        /* ── Toggle switch ───────────────────────────────── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle input { display: none; }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle input:checked + .toggle-track { background: var(--accent); }
+
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+        /* ── Warning legend ──────────────────────────────── */
+        .warnings-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .legend-swatch {
+            width: 13px;
+            height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1.5px solid;
+            opacity: 0.85;
+        }
+
+        .legend-swatch.watch { border-style: dashed; }
+
+        /* ── Leaflet warning tooltip ─────────────────────── */
+        .leaflet-tooltip.warning-tip {
+            background: rgba(13,17,23,0.92);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 12px;
+            padding: 5px 9px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .leaflet-tooltip.warning-tip::before { display: none; }
+
+        /* ── Leaflet overrides ────────────────────────────── */
+        .leaflet-bar {
+            border: 1px solid var(--border) !important;
+            box-shadow: none !important;
+        }
+        .leaflet-bar a {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        .leaflet-bar a:hover { background: var(--surface-2) !important; }
+        .leaflet-control-attribution {
+            background: rgba(13,17,23,0.8) !important;
+            color: var(--text-muted) !important;
+            font-size: 11px !important;
+        }
+        .leaflet-control-attribution a { color: var(--accent) !important; }
+    </style>
 </head>
 <body>
-    
-    
-            <div class="folium-map" id="map_7d2203c42c23eeec4229d091de735913" ></div>
-        
-</body>
+<div class="app">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">&#127783;</div>
+        <span class="header-title">Weather Radar Viewer</span>
+        <span class="header-badge">NEXRAD</span>
+        <span class="header-spacer"></span>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>Live</span>
+        </div>
+    </header>
+
+    <!-- Main body -->
+    <div class="body">
+
+        <!-- Side panel -->
+        <aside class="panel">
+
+            <!-- Now Viewing -->
+            <div class="section">
+                <div class="section-label">Now Viewing</div>
+                <div class="now-viewing">
+                    <div class="nv-eyebrow">Active Radar</div>
+                    <div class="nv-name" id="nv-name">KCCX</div>
+                    <div class="nv-detail" id="nv-detail">Reflectivity &middot; State College, PA</div>
+                </div>
+            </div>
+
+            <!-- Radar site -->
+            <div class="section">
+                <div class="section-label">Radar Site</div>
+                <div class="radio-group" id="radar-group">
+                    <div class="radio-opt active" data-value="KCCX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KCCX</div>
+                            <div class="radio-desc">State College, PA</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KDOX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KDOX</div>
+                            <div class="radio-desc">Dover, DE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product -->
+            <div class="section">
+                <div class="section-label">Product</div>
+                <div class="radio-group" id="product-group">
+                    <div class="radio-opt active" data-value="reflectivity">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Reflectivity</div>
+                            <div class="radio-desc">Precipitation intensity</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="velocity">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Velocity</div>
+                            <div class="radio-desc">Wind speed &amp; direction</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="correlation_coefficient">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Correlation Coeff.</div>
+                            <div class="radio-desc">Hydrometeor classification</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opacity -->
+            <div class="section">
+                <div class="section-label">Radar Opacity</div>
+                <div class="slider-row">
+                    <label for="opacity">Opacity</label>
+                    <input type="range" id="opacity" min="20" max="100" value="80">
+                    <span class="slider-val" id="opacity-val">80%</span>
+                </div>
+            </div>
+
+            <!-- Weather Warnings -->
+            <div class="section">
+                <div class="section-label">Weather Warnings</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show on map</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="warnings-toggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="warnings-legend" id="warnings-legend"></div>
+            </div>
+
+            <!-- Refresh -->
+            <div class="section">
+                <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
+            </div>
+
+        </aside>
+
+        <!-- Map -->
+        <div class="map-wrap">
+            <div id="map"></div>
+            <div class="error-banner" id="error-banner"></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="assets/bounds.js"></script>
 <script>
-    
-    
-            var map_7d2203c42c23eeec4229d091de735913 = L.map(
-                "map_7d2203c42c23eeec4229d091de735913",
-                {
-                    center: [40.5, -76.0],
-                    crs: L.CRS.EPSG3857,
-                    ...{
-  "zoom": 7,
-  "zoomControl": true,
-  "preferCanvas": false,
-}
+    /* ── State ── */
+    let selectedRadar   = 'KCCX';
+    let selectedProduct = 'reflectivity';
+    let currentOverlay  = null;
+    let opacity         = 0.80;
 
+    const RADAR_NAMES = {
+        KCCX: 'State College, PA',
+        KDOX: 'Dover, DE',
+    };
+
+    const PRODUCT_NAMES = {
+        reflectivity:             'Reflectivity',
+        velocity:                 'Velocity',
+        correlation_coefficient:  'Corr. Coeff.',
+    };
+
+    /* ── Map init ── */
+    const map = L.map('map', { zoomControl: true }).setView([40.0, -75.0], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    /* ── Error helper ── */
+    let errorTimer;
+    function showError(msg) {
+        const el = document.getElementById('error-banner');
+        el.textContent = msg;
+        el.style.display = 'block';
+        clearTimeout(errorTimer);
+        errorTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+
+    /* ── Now-viewing card ── */
+    function refreshNowViewing() {
+        document.getElementById('nv-name').textContent   = selectedRadar;
+        document.getElementById('nv-detail').textContent =
+            PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
+    }
+
+    /* ── Overlay update (single-radar enforcement) ── */
+    function updateOverlay() {
+        // Always remove any existing overlay before adding a new one
+        if (currentOverlay) {
+            map.removeLayer(currentOverlay);
+            currentOverlay = null;
+        }
+
+        if (typeof RADAR_BOUNDS === 'undefined') {
+            showError('Radar data not yet available — check back in a few minutes.');
+            return;
+        }
+
+        const key    = `${selectedRadar}_${selectedProduct}`;
+        const bounds = RADAR_BOUNDS[key];
+
+        if (!bounds) {
+            showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
+            refreshNowViewing();
+            return;
+        }
+
+        const sw = [bounds[0], bounds[1]];
+        const ne = [bounds[2], bounds[3]];
+
+        currentOverlay = L.imageOverlay(
+            `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`,
+            [sw, ne],
+            { opacity, interactive: false }
+        ).addTo(map);
+
+        map.fitBounds([sw, ne], { padding: [24, 24] });
+        refreshNowViewing();
+    }
+
+    /* ── Radio group factory ── */
+    function initRadioGroup(groupId, onChange) {
+        document.getElementById(groupId).querySelectorAll('.radio-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.getElementById(groupId)
+                    .querySelectorAll('.radio-opt')
+                    .forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                onChange(opt.dataset.value);
+            });
+        });
+    }
+
+    initRadioGroup('radar-group', val => { selectedRadar   = val; updateOverlay(); });
+    initRadioGroup('product-group', val => { selectedProduct = val; updateOverlay(); });
+
+    /* ── Opacity slider ── */
+    const opacityInput = document.getElementById('opacity');
+    opacityInput.addEventListener('input', () => {
+        opacity = opacityInput.value / 100;
+        document.getElementById('opacity-val').textContent = opacityInput.value + '%';
+        if (currentOverlay) currentOverlay.setOpacity(opacity);
+    });
+
+    /* ── Refresh button ── */
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        updateOverlay();
+        fetchWarnings();
+    });
+
+    /* ── Weather Warnings ── */
+    const WARNING_CONFIG = [
+        // Warnings (solid)
+        { event: 'Tornado Warning',           fill: '#FF0000', border: '#CC0000', watch: false },
+        { event: 'Severe Thunderstorm Warning',fill: '#FF8C00', border: '#CC6600', watch: false },
+        { event: 'Flash Flood Warning',        fill: '#00AA00', border: '#007700', watch: false },
+        { event: 'Snow Squall Warning',        fill: '#00BFFF', border: '#0090CC', watch: false },
+        { event: 'Special Weather Statement',  fill: '#A0A000', border: '#787800', watch: false },
+        { event: 'Winter Storm Warning',       fill: '#FF69B4', border: '#CC3090', watch: false },
+        { event: 'Blizzard Warning',           fill: '#8B008B', border: '#660066', watch: false },
+        // Watches (dashed outline)
+        { event: 'Tornado Watch',              fill: '#FF6060', border: '#CC0000', watch: true  },
+        { event: 'Severe Thunderstorm Watch',  fill: '#FFD700', border: '#CCAA00', watch: true  },
+        { event: 'Winter Storm Watch',         fill: '#6495ED', border: '#3060BB', watch: true  },
+        { event: 'Blizzard Watch',             fill: '#DA70D6', border: '#A040A0', watch: true  },
+    ];
+
+    const WARN_STYLE_MAP = {};
+    WARNING_CONFIG.forEach(w => {
+        WARN_STYLE_MAP[w.event] = {
+            color:       w.border,
+            fillColor:   w.fill,
+            weight:      w.watch ? 1.5 : 2,
+            opacity:     w.watch ? 0.75 : 0.9,
+            fillOpacity: w.watch ? 0.07 : 0.18,
+            dashArray:   w.watch ? '7 4' : null,
+        };
+    });
+
+    /* Build legend */
+    (function buildLegend() {
+        const legend = document.getElementById('warnings-legend');
+        WARNING_CONFIG.forEach(w => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            const swatch = document.createElement('div');
+            swatch.className = 'legend-swatch' + (w.watch ? ' watch' : '');
+            swatch.style.background    = w.fill;
+            swatch.style.borderColor   = w.border;
+            const label = document.createElement('span');
+            label.textContent = w.event;
+            item.appendChild(swatch);
+            item.appendChild(label);
+            legend.appendChild(item);
+        });
+    })();
+
+    let warningLayer = null;
+    let warningsVisible = true;
+    const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
+
+    function clearWarnings() {
+        if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
+    }
+
+    async function fetchWarnings() {
+        clearWarnings();
+        if (!warningsVisible) return;
+        try {
+            const resp = await fetch(
+                'https://api.weather.gov/alerts/active?status=actual&region_type=land',
+                { headers: { 'Accept': 'application/geo+json' } }
+            );
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+
+            const features = (data.features || []).filter(f =>
+                f.geometry && WARN_EVENTS.includes(f.properties.event)
+            );
+            if (!features.length) return;
+
+            warningLayer = L.geoJSON(
+                { type: 'FeatureCollection', features },
+                {
+                    style: f => WARN_STYLE_MAP[f.properties.event] || {},
+                    onEachFeature: (f, layer) => {
+                        const p = f.properties;
+                        layer.bindTooltip(
+                            `<strong>${p.event}</strong><br>${p.areaDesc || ''}`,
+                            { sticky: true, className: 'warning-tip' }
+                        );
+                    }
                 }
-            );
+            ).addTo(map);
+        } catch (e) {
+            console.warn('Could not load weather warnings:', e.message);
+        }
+    }
 
-            
+    document.getElementById('warnings-toggle').addEventListener('change', e => {
+        warningsVisible = e.target.checked;
+        if (warningsVisible) fetchWarnings();
+        else clearWarnings();
+    });
 
-        
-    
-            var tile_layer_985150f08655a912d38ab16f8d5c09fd = L.tileLayer(
-                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-                {
-  "minZoom": 0,
-  "maxZoom": 20,
-  "maxNativeZoom": 20,
-  "noWrap": false,
-  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
-  "subdomains": "abcd",
-  "detectRetina": false,
-  "tms": false,
-  "opacity": 1,
-}
-
-            );
-        
-    
-            tile_layer_985150f08655a912d38ab16f8d5c09fd.addTo(map_7d2203c42c23eeec4229d091de735913);
-        
-    
-            var image_overlay_bf902fa40e95b5be4a7067fc75f23a1e = L.imageOverlay(
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAAOnRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjEwLjgsIGh0dHBzOi8vbWF0cGxvdGxpYi5vcmcvwVt1zgAAAAlwSFlzAAAPYQAAD2EBqD+naQAAB1xJREFUeJztwTEBAAAAwqD1T20Gf6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgNQCwABboxE8wAAAABJRU5ErkJggg==",
-                [[39.0, -79.0], [42.0, -73.0]],
-                {
-  "opacity": 0.7,
-}
-            );
-        
-    
-            image_overlay_bf902fa40e95b5be4a7067fc75f23a1e.addTo(map_7d2203c42c23eeec4229d091de735913);
-        
-    
-            var image_overlay_3785ddff5fac72b5bd2a9570da9dbae1 = L.imageOverlay(
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAAOnRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjEwLjgsIGh0dHBzOi8vbWF0cGxvdGxpYi5vcmcvwVt1zgAAAAlwSFlzAAAPYQAAD2EBqD+naQAAB1xJREFUeJztwTEBAAAAwqD1T20Gf6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgNQCwABboxE8wAAAABJRU5ErkJggg==",
-                [[39.0, -79.0], [42.0, -73.0]],
-                {
-  "opacity": 0.7,
-}
-            );
-        
-    
-            var image_overlay_ba1c42878595b83b3ecc74e2162006af = L.imageOverlay(
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAAOnRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjEwLjgsIGh0dHBzOi8vbWF0cGxvdGxpYi5vcmcvwVt1zgAAAAlwSFlzAAAPYQAAD2EBqD+naQAAB1xJREFUeJztwTEBAAAAwqD1T20Gf6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgNQCwABboxE8wAAAABJRU5ErkJggg==",
-                [[39.0, -79.0], [42.0, -73.0]],
-                {
-  "opacity": 0.7,
-}
-            );
-        
-    
-            var layer_control_dacc057b5bd2e5f2c1b11ec317d9ee6a_layers = {
-                base_layers : {
-                    "cartodbpositron" : tile_layer_985150f08655a912d38ab16f8d5c09fd,
-                },
-                overlays :  {
-                    "Reflectivity" : image_overlay_bf902fa40e95b5be4a7067fc75f23a1e,
-                    "Velocity" : image_overlay_3785ddff5fac72b5bd2a9570da9dbae1,
-                    "Correlation Coeff" : image_overlay_ba1c42878595b83b3ecc74e2162006af,
-                },
-            };
-            let layer_control_dacc057b5bd2e5f2c1b11ec317d9ee6a = L.control.layers(
-                layer_control_dacc057b5bd2e5f2c1b11ec317d9ee6a_layers.base_layers,
-                layer_control_dacc057b5bd2e5f2c1b11ec317d9ee6a_layers.overlays,
-                {
-  "position": "topright",
-  "collapsed": false,
-  "autoZIndex": true,
-}
-            ).addTo(map_7d2203c42c23eeec4229d091de735913);
-
-        
+    /* ── Initial render ── */
+    updateOverlay();
+    fetchWarnings();
 </script>
+</body>
 </html>
