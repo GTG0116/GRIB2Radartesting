@@ -69,6 +69,7 @@ def generate_png(radar_data, field, radar_code):
         vmin, vmax = -20, 20
     else:  # correlation_coefficient
         cmap = 'RefDiff'
+        vmin, vmax = 0, 1
     
     # Plot the radar data
     mesh = display.plot_ppi_map(

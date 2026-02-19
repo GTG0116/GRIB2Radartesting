@@ -311,6 +311,95 @@
 
         @keyframes fadein { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
 
+        /* ── Toggle switch ───────────────────────────────── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle input { display: none; }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle input:checked + .toggle-track { background: var(--accent); }
+
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+        /* ── Warning legend ──────────────────────────────── */
+        .warnings-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .legend-swatch {
+            width: 13px;
+            height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1.5px solid;
+            opacity: 0.85;
+        }
+
+        .legend-swatch.watch { border-style: dashed; }
+
+        /* ── Leaflet warning tooltip ─────────────────────── */
+        .leaflet-tooltip.warning-tip {
+            background: rgba(13,17,23,0.92);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 12px;
+            padding: 5px 9px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .leaflet-tooltip.warning-tip::before { display: none; }
+
         /* ── Leaflet overrides ────────────────────────────── */
         .leaflet-bar {
             border: 1px solid var(--border) !important;
@@ -418,6 +507,19 @@
                     <input type="range" id="opacity" min="20" max="100" value="80">
                     <span class="slider-val" id="opacity-val">80%</span>
                 </div>
+            </div>
+
+            <!-- Weather Warnings -->
+            <div class="section">
+                <div class="section-label">Weather Warnings</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show on map</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="warnings-toggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="warnings-legend" id="warnings-legend"></div>
             </div>
 
             <!-- Refresh -->
@@ -539,10 +641,109 @@
     });
 
     /* ── Refresh button ── */
-    document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        updateOverlay();
+        fetchWarnings();
+    });
+
+    /* ── Weather Warnings ── */
+    const WARNING_CONFIG = [
+        // Warnings (solid)
+        { event: 'Tornado Warning',           fill: '#FF0000', border: '#CC0000', watch: false },
+        { event: 'Severe Thunderstorm Warning',fill: '#FF8C00', border: '#CC6600', watch: false },
+        { event: 'Flash Flood Warning',        fill: '#00AA00', border: '#007700', watch: false },
+        { event: 'Snow Squall Warning',        fill: '#00BFFF', border: '#0090CC', watch: false },
+        { event: 'Special Weather Statement',  fill: '#A0A000', border: '#787800', watch: false },
+        { event: 'Winter Storm Warning',       fill: '#FF69B4', border: '#CC3090', watch: false },
+        { event: 'Blizzard Warning',           fill: '#8B008B', border: '#660066', watch: false },
+        // Watches (dashed outline)
+        { event: 'Tornado Watch',              fill: '#FF6060', border: '#CC0000', watch: true  },
+        { event: 'Severe Thunderstorm Watch',  fill: '#FFD700', border: '#CCAA00', watch: true  },
+        { event: 'Winter Storm Watch',         fill: '#6495ED', border: '#3060BB', watch: true  },
+        { event: 'Blizzard Watch',             fill: '#DA70D6', border: '#A040A0', watch: true  },
+    ];
+
+    const WARN_STYLE_MAP = {};
+    WARNING_CONFIG.forEach(w => {
+        WARN_STYLE_MAP[w.event] = {
+            color:       w.border,
+            fillColor:   w.fill,
+            weight:      w.watch ? 1.5 : 2,
+            opacity:     w.watch ? 0.75 : 0.9,
+            fillOpacity: w.watch ? 0.07 : 0.18,
+            dashArray:   w.watch ? '7 4' : null,
+        };
+    });
+
+    /* Build legend */
+    (function buildLegend() {
+        const legend = document.getElementById('warnings-legend');
+        WARNING_CONFIG.forEach(w => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            const swatch = document.createElement('div');
+            swatch.className = 'legend-swatch' + (w.watch ? ' watch' : '');
+            swatch.style.background    = w.fill;
+            swatch.style.borderColor   = w.border;
+            const label = document.createElement('span');
+            label.textContent = w.event;
+            item.appendChild(swatch);
+            item.appendChild(label);
+            legend.appendChild(item);
+        });
+    })();
+
+    let warningLayer = null;
+    let warningsVisible = true;
+    const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
+
+    function clearWarnings() {
+        if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
+    }
+
+    async function fetchWarnings() {
+        clearWarnings();
+        if (!warningsVisible) return;
+        try {
+            const resp = await fetch(
+                'https://api.weather.gov/alerts/active?status=actual&region_type=land',
+                { headers: { 'Accept': 'application/geo+json' } }
+            );
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+
+            const features = (data.features || []).filter(f =>
+                f.geometry && WARN_EVENTS.includes(f.properties.event)
+            );
+            if (!features.length) return;
+
+            warningLayer = L.geoJSON(
+                { type: 'FeatureCollection', features },
+                {
+                    style: f => WARN_STYLE_MAP[f.properties.event] || {},
+                    onEachFeature: (f, layer) => {
+                        const p = f.properties;
+                        layer.bindTooltip(
+                            `<strong>${p.event}</strong><br>${p.areaDesc || ''}`,
+                            { sticky: true, className: 'warning-tip' }
+                        );
+                    }
+                }
+            ).addTo(map);
+        } catch (e) {
+            console.warn('Could not load weather warnings:', e.message);
+        }
+    }
+
+    document.getElementById('warnings-toggle').addEventListener('change', e => {
+        warningsVisible = e.target.checked;
+        if (warningsVisible) fetchWarnings();
+        else clearWarnings();
+    });
 
     /* ── Initial render ── */
     updateOverlay();
+    fetchWarnings();
 </script>
 </body>
 </html>
