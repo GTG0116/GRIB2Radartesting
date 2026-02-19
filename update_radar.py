@@ -115,6 +115,9 @@ for radar in RADARS:
     radar_data = pyart.io.read_nexrad_archive(local_file)
     
     for display_name, field in PRODUCTS.items():
+        if field not in radar_data.fields:
+            print(f"Field '{field}' not available in {radar} data, skipping.")
+            continue
         png_path, bounds = generate_png(radar_data, field, radar)
         bounds_data[f"{radar}_{display_name}"] = list(bounds)
     
