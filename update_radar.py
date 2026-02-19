@@ -6,7 +6,6 @@ import datetime
 import json
 import os
 import pyart
-import pyart.graph.cm          # ← This ensures pyart_NWSRef, pyart_BuDRd18, etc. are registered
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
