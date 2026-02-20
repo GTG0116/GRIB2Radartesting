@@ -144,8 +144,10 @@ for radar in RADARS:
     except Exception as e:
         print(f"Error processing {radar}: {e}")
  
-# Write bounds to JS file
+# Write bounds to JS file.
+# Use window.RADAR_BOUNDS (not const) so the script can be reloaded at runtime
+# without a "Cannot redeclare block-scoped variable" SyntaxError on the second call.
 with open(f"{OUTPUT_DIR}/bounds.js", 'w') as f:
-    f.write("const RADAR_BOUNDS = " + json.dumps(bounds_data) + ";")
+    f.write("window.RADAR_BOUNDS = " + json.dumps(bounds_data) + ";")
  
 print("Done. Bounds written to", f"{OUTPUT_DIR}/bounds.js")
