@@ -391,12 +391,15 @@
  
         .legend-swatch.watch { border-style: dashed; }
  
-        /* ── Alert detail panel ───────────────────────────── */
+                /* ── Alert detail panel ───────────────────────────── */
         .alert-panel {
             position: absolute;
             top: 12px;
             right: 12px;
             width: 320px;
+            min-width: 220px;
+            max-width: 600px;
+            min-height: 160px;
             background: rgba(22, 27, 34, 0.97);
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -404,10 +407,11 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.6);
             transform: translateX(calc(100% + 24px));
             transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-            overflow: hidden;
+            overflow: auto;
             backdrop-filter: blur(12px);
             font-family: 'Roboto', sans-serif;
             resize: both;
+            --scale: 1;
         }
  
         /* Panel-visible */
@@ -415,144 +419,212 @@
             transform: translateX(0);
         }
  
-        /* ── Alert panel header ─────────────────────────── */
+                /* ── Alert panel header ─────────────────────────── */
         .ap-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 11px 16px 10px;
+            padding: calc(11px * var(--scale)) calc(16px * var(--scale)) calc(10px * var(--scale));
             border-bottom: 1px solid rgba(255,255,255,0.08);
             cursor: move;
+            position: sticky;
+            top: 0;
+            background: rgba(22,27,34,0.97);
+            z-index: 1;
         }
- 
+
         .ap-header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: calc(10px * var(--scale));
             flex: 1;
             min-width: 0;
+            flex-wrap: wrap;
         }
- 
+
         .ap-event {
-            font-size: 14px;
+            font-size: calc(14px * var(--scale));
             font-weight: 700;
             letter-spacing: 0.4px;
             text-transform: uppercase;
             line-height: 1.2;
-            white-space: nowrap;
         }
- 
+
         .ap-badges-inline {
             display: flex;
-            gap: 5px;
+            gap: calc(5px * var(--scale));
             flex-wrap: wrap;
         }
- 
+
         .ap-close {
             background: rgba(255,255,255,0.08);
             border: none;
             color: var(--text);
-            width: 26px;
-            height: 26px;
+            width: calc(26px * var(--scale));
+            height: calc(26px * var(--scale));
             border-radius: 50%;
             cursor: pointer;
-            font-size: 13px;
+            font-size: calc(13px * var(--scale));
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            margin-left: 12px;
+            margin-left: calc(12px * var(--scale));
             transition: background 0.15s;
         }
         .ap-close:hover { background: rgba(255,255,255,0.18); }
- 
+
         /* Status badges */
         .ap-badge {
-            font-size: 10px;
+            font-size: calc(10px * var(--scale));
             font-weight: 700;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            padding: 3px 8px;
-            border-radius: 4px;
+            padding: calc(3px * var(--scale)) calc(8px * var(--scale));
+            border-radius: calc(4px * var(--scale));
             border: 1px solid;
             white-space: nowrap;
         }
- 
+
         .ap-badge.radar    { background: rgba(79,142,247,0.18); color: #7ab3ff; border-color: rgba(79,142,247,0.4); }
         .ap-badge.observed { background: rgba(255,80,80,0.22);  color: #ff7070; border-color: rgba(255,80,80,0.5); }
         .ap-badge.pds      { background: rgba(255,140,0,0.18);  color: #ffb347; border-color: rgba(255,140,0,0.45); }
         .ap-badge.emerg    { background: rgba(220,20,60,0.28);  color: #ff5050; border-color: rgba(220,20,60,0.6); }
- 
+
         /* ── Alert panel body ────────────────────────────── */
         .ap-body {
-            padding: 9px 16px 6px;
+            padding: calc(9px * var(--scale)) calc(16px * var(--scale)) calc(6px * var(--scale));
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: calc(5px * var(--scale));
         }
- 
+
         .ap-row {
             display: flex;
-            gap: 7px;
-            font-size: 12px;
+            gap: calc(7px * var(--scale));
+            font-size: calc(12px * var(--scale));
             line-height: 1.35;
         }
- 
+
         .ap-label {
             color: var(--accent);
             flex-shrink: 0;
-            width: 52px;
-            padding-top: 1px;
-            font-size: 11px;
+            width: calc(52px * var(--scale));
+            padding-top: calc(1px * var(--scale));
+            font-size: calc(11px * var(--scale));
             font-weight: 700;
         }
- 
+
         .ap-value {
             color: var(--text);
-            font-size: 13px;
+            font-size: calc(13px * var(--scale));
             font-weight: 500;
         }
- 
+
         /* ── Towns row ─────────────────────────────────── */
         .ap-towns-row {
             display: flex;
-            gap: 7px;
-            font-size: 12px;
+            gap: calc(7px * var(--scale));
+            font-size: calc(12px * var(--scale));
             line-height: 1.4;
-            padding: 5px 16px 4px;
+            padding: calc(5px * var(--scale)) calc(16px * var(--scale)) calc(4px * var(--scale));
             border-top: 1px solid rgba(255,255,255,0.05);
         }
- 
+
         .ap-towns-label {
             color: var(--text-muted);
             flex-shrink: 0;
-            font-size: 11px;
-            padding-top: 1px;
-            width: 52px;
+            font-size: calc(11px * var(--scale));
+            padding-top: calc(1px * var(--scale));
+            width: calc(52px * var(--scale));
         }
- 
+
         .ap-towns-value {
             color: #c8d8e8;
-            font-size: 11.5px;
+            font-size: calc(11.5px * var(--scale));
             line-height: 1.5;
         }
- 
+
         /* Hide towns row if no towns found */
         .ap-towns-row.empty { display: none; }
- 
+
         /* ── Description / headline ─────────────────────── */
         .ap-desc {
-            margin: 4px 16px 10px;
-            font-size: 11.5px;
+            margin: calc(4px * var(--scale)) calc(16px * var(--scale)) calc(10px * var(--scale));
+            font-size: calc(11.5px * var(--scale));
             color: #9dafc2;
             line-height: 1.55;
             border-top: 1px solid rgba(255,255,255,0.06);
-            padding-top: 7px;
+            padding-top: calc(7px * var(--scale));
             max-height: 90px;
             overflow-y: auto;
         }
  
-        /* ── Polygon selection animation ─────────────────── */
+
+        /* Dark-themed popup for alert selection */
+        .dark-popup .leaflet-popup-content-wrapper {
+            background: rgba(22, 27, 34, 0.97);
+            border: 1px solid #2a3040;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            color: #e6edf3;
+            overflow: hidden;
+        }
+        .dark-popup .leaflet-popup-content {
+            margin: 0;
+            width: auto !important;
+        }
+        .dark-popup .leaflet-popup-tip-container .leaflet-popup-tip {
+            background: rgba(32, 38, 50, 0.97);
+        }
+        .dark-popup .leaflet-popup-close-button {
+            color: #6e7b8f !important;
+            font-size: 16px !important;
+            top: 8px !important;
+            right: 10px !important;
+        }
+        .dark-popup .leaflet-popup-close-button:hover { color: #e6edf3 !important; }
+        .alert-select-popup {
+            font-family: 'Roboto', sans-serif;
+            min-width: 220px;
+        }
+        .alert-select-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #6e7b8f;
+            padding: 10px 14px 7px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .alert-select-item {
+            padding: 9px 16px 9px 11px;
+            cursor: pointer;
+            border-left: 3px solid #888;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.12s;
+        }
+        .alert-select-item:last-child { border-bottom: none; }
+        .alert-select-item:hover { background: rgba(255,255,255,0.07); }
+        .alert-select-event {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+        .alert-select-area {
+            font-size: 10.5px;
+            color: #6e7b8f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+        }
+
+        /* ── Polygon selection animation ───────────────── */
         @keyframes warn-march {
             from { stroke-dashoffset: 30; }
             to   { stroke-dashoffset: 0; }
@@ -848,6 +920,24 @@
         tileSize: 512,
         zoomOffset: -1,
     }).addTo(map);
+
+    // Custom panes for layer ordering
+    map.createPane('radarPane');
+    map.getPane('radarPane').style.zIndex = 210;
+    map.getPane('radarPane').style.pointerEvents = 'none';
+    map.createPane('warningPane');
+    map.getPane('warningPane').style.zIndex = 220;
+    map.createPane('labelPane');
+    map.getPane('labelPane').style.zIndex = 230;
+    map.getPane('labelPane').style.pointerEvents = 'none';
+
+    // Labels/roads/borders overlay on top of everything
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png', {
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
+        pane: 'labelPane',
+    }).addTo(map);
  
     /* ── Error helper ── */
     let errorTimer;
@@ -866,48 +956,51 @@
             PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
     }
  
-    /* ── Overlay update ── */
+        /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
- 
-        if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
-            showError('Radar data not yet available — check back in a few minutes.');
-            return;
-        }
- 
-        let key    = `${selectedRadar}_${selectedProduct}`;
-        let imageUrl = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
-        let bounds = RADAR_BOUNDS[key];
- 
+
+        let imageUrl, bounds;
+
         if (selectedRadar === 'MRMS') {
-            // Special case for MRMS composite (reflectivity only)
             if (selectedProduct !== 'reflectivity') {
                 showError('MRMS supports Reflectivity only.');
+                refreshNowViewing();
                 return;
             }
             imageUrl = `https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.png?cb=${Date.now()}`;
-            bounds = [20, -130, 55, -65];  // Approximate CONUS bounds
+            bounds = [20, -130, 55, -65];
+        } else {
+            if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
+                showError('Radar data not yet available — check back in a few minutes.');
+                return;
+            }
+            const key = `${selectedRadar}_${selectedProduct}`;
+            imageUrl = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
+            bounds = RADAR_BOUNDS[key];
+            if (!bounds) {
+                showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
+                refreshNowViewing();
+                return;
+            }
         }
- 
-        if (!bounds) {
-            showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
-            refreshNowViewing();
-            return;
-        }
- 
+
         const sw = [bounds[0], bounds[1]];
         const ne = [bounds[2], bounds[3]];
- 
+
         currentOverlay = L.imageOverlay(
             imageUrl,
             [sw, ne],
-            { opacity, interactive: false }
+            { opacity, interactive: false, pane: 'radarPane' }
         ).addTo(map);
- 
+
         map.fitBounds([sw, ne], { padding: [24, 24] });
         refreshNowViewing();
+
+        // Ensure warning layer stays above radar
+        if (warningLayer) warningLayer.bringToFront();
     }
- 
+
     /* ── Radio group factory ── */
     function initRadioGroup(groupId, onChange) {
         document.getElementById(groupId).querySelectorAll('.radio-opt').forEach(opt => {
@@ -976,6 +1069,16 @@
     function dragStop() {
         document.removeEventListener('mousemove', dragMove);
         document.removeEventListener('mouseup', dragStop);
+    }
+
+    // Responsive text scaling when panel is resized
+    if (typeof ResizeObserver !== 'undefined') {
+        const apResizeObserver = new ResizeObserver(([entry]) => {
+            const w = entry.contentRect.width;
+            const scale = Math.max(0.72, Math.min(1.6, w / 320));
+            alertPanel.style.setProperty('--scale', scale.toFixed(3));
+        });
+        apResizeObserver.observe(alertPanel);
     }
  
     /* Track the currently highlighted polygon */
@@ -1250,11 +1353,29 @@
  
     let warningLayer    = null;
     let warningsVisible = true;
- 
+
     function clearWarnings() {
         if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
     }
- 
+
+    // Cache for zone geometries to avoid re-fetching on refresh
+    const zoneGeomCache = {};
+
+    async function fetchZoneGeom(url) {
+        if (zoneGeomCache[url] !== undefined) return zoneGeomCache[url];
+        try {
+            const r = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+            if (!r.ok) { zoneGeomCache[url] = null; return null; }
+            const d = await r.json();
+            zoneGeomCache[url] = d.geometry || null;
+            return zoneGeomCache[url];
+        } catch {
+            zoneGeomCache[url] = null;
+            return null;
+        }
+    }
+
+
     async function fetchWarnings() {
         clearWarnings();
         if (!warningsVisible) return;
@@ -1265,20 +1386,50 @@
             );
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
- 
-            const features = (data.features || []).filter(f =>
+
+            // Polygon-based alerts (have geometry)
+            const polyFeatures = (data.features || []).filter(f =>
                 f.geometry && WARN_EVENTS.includes(f.properties.event)
             );
-            if (!features.length) return;
- 
+
+            // Zone/county-based alerts (null geometry, have affectedZones)
+            const zoneAlerts = (data.features || []).filter(f =>
+                !f.geometry && WARN_EVENTS.includes(f.properties.event) &&
+                Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
+            );
+
+            // Collect unique zone URLs (cap at 40 to avoid too many requests)
+            const uniqueZones = [...new Set(
+                zoneAlerts.flatMap(f => f.properties.affectedZones || [])
+            )].slice(0, 40);
+
+            // Fetch zone geometries in parallel
+            if (uniqueZones.length > 0) {
+                await Promise.allSettled(uniqueZones.map(url => fetchZoneGeom(url)));
+            }
+
+            // Build zone-based alert features with fetched geometry
+            const zoneFeatures = [];
+            for (const feature of zoneAlerts) {
+                for (const zoneUrl of (feature.properties.affectedZones || [])) {
+                    const geom = zoneGeomCache[zoneUrl];
+                    if (geom) {
+                        zoneFeatures.push({ ...feature, geometry: geom });
+                        break; // one geometry per alert is enough
+                    }
+                }
+            }
+
+            const allFeatures = [...polyFeatures, ...zoneFeatures];
+            if (!allFeatures.length) return;
+
             warningLayer = L.geoJSON(
-                { type: 'FeatureCollection', features },
+                { type: 'FeatureCollection', features: allFeatures },
                 {
+                    pane: 'warningPane',
                     style: f => WARN_STYLE_MAP[f.properties.event] || {},
                     onEachFeature: (feature, layer) => {
                         const p   = feature.properties;
-                        const cfg = WARN_CFG_MAP[p.event];
- 
                         layer.bindTooltip(
                             `<strong>${p.event}</strong><br><span style="font-size:11px">${p.areaDesc || ''}</span>`,
                             { sticky: true, className: 'warning-tip' }
@@ -1316,11 +1467,16 @@
             map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
             showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
         } else {
-            let content = '<div>Select Alert:</div>';
-            for (let i = 0; i < currentMatching.length; i++) {
-                content += `<a href="#" style="display:block;" onclick="selectAlert(${i})">${currentMatching[i].feature.properties.event}</a>`;
-            }
-            L.popup()
+            const items = currentMatching.map((l, i) => {
+                const p = l.feature.properties;
+                const cfg = WARN_CFG_MAP[p.event];
+                return `<div class="alert-select-item" style="border-left-color:${cfg?.border || '#888'}" onclick="selectAlert(${i}); map.closePopup();">
+                    <span class="alert-select-event" style="color:${cfg?.fill || '#e6edf3'}">${p.event}</span>
+                    <span class="alert-select-area">${p.areaDesc || ''}</span>
+                </div>`;
+            }).join('');
+            const content = `<div class="alert-select-popup"><div class="alert-select-title">Multiple Alerts — Select One</div>${items}</div>`;
+            L.popup({ className: 'dark-popup', maxWidth: 300, closeButton: true })
                 .setLatLng(point)
                 .setContent(content)
                 .openOn(map);
