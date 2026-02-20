@@ -7,6 +7,7 @@
     <title>Weather Radar Viewer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
  
@@ -420,6 +421,7 @@
                         border-radius 0.28s ease;
             overflow: hidden;
             backdrop-filter: blur(12px);
+            font-family: 'Roboto', sans-serif;
         }
  
         /* Panel-visible in compact (right) mode */
@@ -536,16 +538,18 @@
         }
  
         .ap-label {
-            color: var(--text-muted);
+            color: var(--accent);
             flex-shrink: 0;
             width: 52px;
             padding-top: 1px;
             font-size: 11px;
+            font-weight: 700;
         }
  
         .ap-value {
             color: var(--text);
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 500;
         }
  
         /* ── Towns row ─────────────────────────────────── */
@@ -715,6 +719,13 @@
                             <div class="radio-desc">Binghamton, NY</div>
                         </div>
                     </div>
+                    <div class="radio-opt" data-value="MRMS">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">MRMS</div>
+                            <div class="radio-desc">US Composite (IEM)</div>
+                        </div>
+                    </div>
                 </div>
             </div>
  
@@ -781,8 +792,10 @@
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
  
-            <!-- Alert detail panel -->
+            <!-- Alert detail panel: compact right panel normally,
+                 becomes a full-width top bar in warning-mode         -->
             <div class="alert-panel" id="alert-panel">
+                <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
                     <div class="ap-header-left">
                         <div class="ap-event" id="ap-event"></div>
@@ -791,6 +804,7 @@
                     <button class="ap-close" id="ap-close" title="Close">&#10005;</button>
                 </div>
  
+                <!-- Meta rows -->
                 <div class="ap-body">
                     <div class="ap-row">
                         <span class="ap-label">Area</span>
@@ -805,20 +819,18 @@
                         <span class="ap-value" id="ap-expires"></span>
                     </div>
                     <div class="ap-row">
-                        <span class="ap-label">Hail</span>
-                        <span class="ap-value" id="ap-hail"></span>
-                    </div>
-                    <div class="ap-row">
-                        <span class="ap-label">Wind</span>
-                        <span class="ap-value" id="ap-wind"></span>
+                        <span class="ap-label">Hazards</span>
+                        <span class="ap-value" id="ap-hazards"></span>
                     </div>
                 </div>
  
+                <!-- Towns impacted -->
                 <div class="ap-towns-row empty" id="ap-towns-row">
                     <span class="ap-towns-label">Towns</span>
                     <span class="ap-towns-value" id="ap-towns"></span>
                 </div>
  
+                <!-- Headline / description -->
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
         </div>
@@ -842,15 +854,10 @@
             s.onload = () => {
                 if (typeof window.RADAR_BOUNDS !== 'undefined') {
                     RADAR_BOUNDS = window.RADAR_BOUNDS;
-                } else {
-                    console.warn('bounds.js loaded but RADAR_BOUNDS not defined');
                 }
                 resolve();
             };
-            s.onerror = () => {
-                showError('Failed to load radar bounds data.');
-                resolve();
-            };
+            s.onerror = resolve;   // still resolve; showError handles missing data
             document.head.appendChild(s);
         });
     }
@@ -867,6 +874,7 @@
         KIND: 'Indianapolis, IN',
         KDIX: 'Philadelphia, NJ',
         KBGM: 'Binghamton, NY',
+        MRMS: 'US Composite',
     };
  
     const PRODUCT_NAMES = {
@@ -878,9 +886,8 @@
     /* ── Map init ── */
     const map = L.map('map', { zoomControl: true }).setView([40.0, -78.0], 7);
  
-    // Replace with your Mapbox access token
-    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';
- 
+    // Mapbox tile layer
+    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';  // Replace with your Mapbox token
     L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${accessToken}`, {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
@@ -914,43 +921,28 @@
             return;
         }
  
-        const key    = `${selectedRadar}_${selectedProduct}`;
+        let key    = `${selectedRadar}_${selectedProduct}`;
+        let imageUrl = `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
         let bounds = RADAR_BOUNDS[key];
  
-        if (!bounds) {
-            // Fallback approximate bounds for testing
-            const fallbackBounds = {
-                'KCCX_reflectivity': [38.9, -79.8, 42.9, -75.8],
-                'KCCX_velocity': [38.9, -79.8, 42.9, -75.8],
-                'KCCX_correlation_coefficient': [38.9, -79.8, 42.9, -75.8],
-                'KDOX_reflectivity': [36.8, -77.4, 40.8, -73.4],
-                'KDOX_velocity': [36.8, -77.4, 40.8, -73.4],
-                'KDOX_correlation_coefficient': [36.8, -77.4, 40.8, -73.4],
-                'KIND_reflectivity': [37.7, -88.3, 41.7, -84.3],
-                'KIND_velocity': [37.7, -88.3, 41.7, -84.3],
-                'KIND_correlation_coefficient': [37.7, -88.3, 41.7, -84.3],
-                'KDIX_reflectivity': [38.0, -76.4, 42.0, -72.4],
-                'KDIX_velocity': [38.0, -76.4, 42.0, -72.4],
-                'KDIX_correlation_coefficient': [38.0, -76.4, 42.0, -72.4],
-                'KBGM_reflectivity': [40.2, -77.9, 44.2, -74.0],
-                'KBGM_velocity': [40.2, -77.9, 44.2, -74.0],
-                'KBGM_correlation_coefficient': [40.2, -77.9, 44.2, -74.0],
-            };
-            bounds = fallbackBounds[key];
-            if (bounds) {
-                showError(`No bounds for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]} - using fallback.`);
-            } else {
-                showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
-                refreshNowViewing();
+        if (selectedRadar === 'MRMS') {
+            // Special case for MRMS composite (reflectivity only)
+            if (selectedProduct !== 'reflectivity') {
+                showError('MRMS supports Reflectivity only.');
                 return;
             }
+            imageUrl = 'https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.png';
+            bounds = [20, -130, 55, -65];  // Approximate CONUS bounds
+        }
+ 
+        if (!bounds) {
+            showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
+            refreshNowViewing();
+            return;
         }
  
         const sw = [bounds[0], bounds[1]];
         const ne = [bounds[2], bounds[3]];
- 
-        // Use absolute GitHub URL for radar PNG to ensure loading
-        const imageUrl = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
  
         currentOverlay = L.imageOverlay(
             imageUrl,
@@ -1009,10 +1001,12 @@
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
     map.on('click', closeAlertPanel);
  
+    /* Track the currently highlighted polygon */
     let selectedLayer = null;
     let selectedEvent = null;
  
     function highlightLayer(layer, event) {
+        // Restore previous selection
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
             if (selectedLayer._path) {
@@ -1038,19 +1032,18 @@
         }
     }
  
-    // ── Adjust zoom control to avoid overlapping top alert bar ──
     function adjustZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
         if (zoomControl) {
             const alertHeight = alertPanel.offsetHeight || 0;
-            zoomControl.style.top = `${alertHeight + 10}px`;
+            zoomControl.style.top = `${alertHeight + 10}px`;  // +10 for small gap
         }
     }
  
     function resetZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
         if (zoomControl) {
-            zoomControl.style.top = '10px';
+            zoomControl.style.top = '10px';  // Leaflet default is usually ~10px
         }
     }
  
@@ -1124,21 +1117,6 @@
         return [...new Set(towns)];
     }
  
-    function parseImpacts(description) {
-        if (!description) return { hail: '', wind: '' };
- 
-        let hail = '';
-        let wind = '';
- 
-        const hailMatch = description.match(/HAIL\s*(?:THREAT|SIZE)?\s*\.*\s*(?:RADAR INDICATED|EXPECTED|OBSERVED)?\s*\.*\s*(\d+\.\d+|\.?\d+)IN/i);
-        if (hailMatch) hail = hailMatch[1] + ' in';
- 
-        const windMatch = description.match(/WIND\s*(?:THREAT|GUST)?\s*\.*\s*(?:RADAR INDICATED|EXPECTED|OBSERVED)?\s*\.*\s*(\d+)MPH/i);
-        if (windMatch) wind = windMatch[1] + ' mph';
- 
-        return { hail, wind };
-    }
- 
     function excerptDesc(p) {
         if (p.headline) return p.headline;
         if (!p.description) return '';
@@ -1152,7 +1130,6 @@
         alertPanel.classList.add('visible');
         appBody.classList.add('warning-mode');
  
-        // Adjust zoom control after layout has updated
         setTimeout(adjustZoomControlPosition, 50);
  
         const hdr = document.getElementById('ap-header');
@@ -1173,10 +1150,6 @@
         document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
         document.getElementById('ap-expires').textContent = fmtTime(props.expires);
  
-        const impacts = parseImpacts(props.description || '');
-        document.getElementById('ap-hail').textContent = impacts.hail || '—';
-        document.getElementById('ap-wind').textContent = impacts.wind || '—';
- 
         const towns    = parseImpactedTowns(props.description || '');
         const townsRow = document.getElementById('ap-towns-row');
         const townsEl  = document.getElementById('ap-towns');
@@ -1194,7 +1167,6 @@
        Weather Warnings
     ══════════════════════════════════════════════════════════ */
     const WARNING_CONFIG = [
-        // Warnings (solid fill)
         { event: 'Tornado Warning',            fill: '#FF0000', border: '#CC0000', watch: false },
         { event: 'Severe Thunderstorm Warning', fill: '#FF8C00', border: '#CC6600', watch: false },
         { event: 'Flash Flood Warning',         fill: '#00AA00', border: '#007700', watch: false },
@@ -1202,14 +1174,12 @@
         { event: 'Special Weather Statement',   fill: '#A0A000', border: '#787800', watch: false },
         { event: 'Winter Storm Warning',        fill: '#FF69B4', border: '#CC3090', watch: false },
         { event: 'Blizzard Warning',            fill: '#8B008B', border: '#660066', watch: false },
-        // Watches (dashed outline, lighter fill)
         { event: 'Tornado Watch',               fill: '#FF6060', border: '#CC0000', watch: true  },
         { event: 'Severe Thunderstorm Watch',   fill: '#FFD700', border: '#CCAA00', watch: true  },
         { event: 'Winter Storm Watch',          fill: '#6495ED', border: '#3060BB', watch: true  },
         { event: 'Blizzard Watch',              fill: '#DA70D6', border: '#A040A0', watch: true  },
     ];
  
-    /* Build lookups */
     const WARN_CFG_MAP   = {};
     const WARN_STYLE_MAP = {};
     WARNING_CONFIG.forEach(w => {
@@ -1225,7 +1195,6 @@
     });
     const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
  
-    /* Build legend */
     (function buildLegend() {
         const legend = document.getElementById('warnings-legend');
         WARNING_CONFIG.forEach(w => {
