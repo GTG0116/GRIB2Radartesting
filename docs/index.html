@@ -793,7 +793,25 @@
                     <span class="slider-val" id="opacity-val">80%</span>
                 </div>
             </div>
- 
+
+            <div class="section">
+                <div class="section-label">Storm Prediction Center</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Day 1 Outlook</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="spc-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Mesoscale Discussions</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="mcd-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+            
             <!-- Weather Warnings -->
             <div class="section">
                 <div class="section-label">Weather Warnings</div>
@@ -1142,6 +1160,13 @@
         selectedLayer = null;
         selectedEvent = null;
         resetZoomControlPosition();
+
+        // Wait for the CSS slide-out transition to finish, then clear inline dragging coordinates
+        setTimeout(() => {
+            alertPanel.style.left = '';
+            alertPanel.style.top = '';
+        }, 300); 
+    }
     }
  
     function fmtTime(iso) {
@@ -1391,7 +1416,77 @@
         }
     }
 
+// Custom panes to sit under warnings but above radar
+    map.createPane('spcPane');
+    map.getPane('spcPane').style.zIndex = 215;
 
+    let spcLayer = null;
+    let mcdLayer = null;
+
+    async function fetchSPC() {
+        if (spcLayer) { map.removeLayer(spcLayer); spcLayer = null; }
+        if (!document.getElementById('spc-toggle').checked) return;
+
+        try {
+            // Official NOAA SPC Day 1 GeoJSON
+            const resp = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson');
+            const data = await resp.json();
+
+            spcLayer = L.geoJSON(data, {
+                pane: 'spcPane',
+                style: feature => {
+                    const label = feature.properties.LABEL;
+                    const colors = {
+                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00',
+                        'SLGT': '#ffff00', 'ENH': '#ffa500',
+                        'MDT': '#ff0000',  'HIGH': '#ff00ff'
+                    };
+                    return {
+                        color: colors[label] || '#888',
+                        weight: 2,
+                        opacity: 0.9,
+                        fillOpacity: 0.15,
+                        dashArray: '5 5'
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.bindTooltip(`<strong>SPC Day 1: ${feature.properties.LABEL}</strong>`, { className: 'warning-tip' });
+                }
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load SPC Outlook:', e);
+        }
+    }
+
+    async function fetchMCD() {
+        if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
+        if (!document.getElementById('mcd-toggle').checked) return;
+
+        try {
+            // Unofficial Iowa Environmental Mesonet GeoJSON archive for live MCDs
+            const resp = await fetch('https://mesonet.agron.iastate.edu/geojson/mcd.geojson');
+            const data = await resp.json();
+
+            mcdLayer = L.geoJSON(data, {
+                pane: 'spcPane',
+                style: {
+                    color: '#9370DB', // Purple
+                    weight: 3,
+                    opacity: 0.8,
+                    fillOpacity: 0.1
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.bindTooltip(`<strong>Mesoscale Discussion #${feature.properties.num || ''}</strong>`, { className: 'warning-tip' });
+                }
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load MCDs:', e);
+        }
+    }
+
+    document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
+    document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
+    
     async function fetchWarnings() {
         clearWarnings();
         if (!warningsVisible) return;
@@ -1403,39 +1498,45 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            // Polygon-based alerts (have geometry)
+            // Polygon-based alerts (warnings with specific drawn geometry)
             const polyFeatures = (data.features || []).filter(f =>
                 f.geometry && WARN_EVENTS.includes(f.properties.event)
             );
 
-            // Zone/county-based alerts (null geometry, have affectedZones)
+            // Zone/county-based alerts (watches)
             const zoneAlerts = (data.features || []).filter(f =>
                 !f.geometry && WARN_EVENTS.includes(f.properties.event) &&
                 Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
             );
 
-            // Collect unique zone URLs (cap at 150; watches routinely cover 30-80 counties)
+            // Get ALL unique zones (removed the 150 limit)
             const uniqueZones = [...new Set(
                 zoneAlerts.flatMap(f => f.properties.affectedZones || [])
-            )].slice(0, 150);
+            )];
 
-            // Fetch zone geometries in parallel
-            if (uniqueZones.length > 0) {
-                await Promise.allSettled(uniqueZones.map(url => fetchZoneGeom(url)));
+            // Fetch zone geometries in chunks of 50 to avoid stalling the browser or hitting API limits
+            const chunkSize = 50;
+            for (let i = 0; i < uniqueZones.length; i += chunkSize) {
+                const chunk = uniqueZones.slice(i, i + chunkSize);
+                await Promise.allSettled(chunk.map(url => fetchZoneGeom(url)));
             }
 
-            // Build zone-based alert features with fetched geometry.
-            // We push one GeoJSON feature per zone so that every affected county /
-            // forecast zone gets its own polygon on the map (critical for watches
-            // that can span dozens of counties across multiple states).
+            // Group all county polygons into a SINGLE geometry per alert
             const zoneFeatures = [];
             for (const feature of zoneAlerts) {
+                const polygons = [];
                 for (const zoneUrl of (feature.properties.affectedZones || [])) {
                     const geom = zoneGeomCache[zoneUrl];
                     if (geom) {
-                        zoneFeatures.push({ ...feature, geometry: geom });
-                        // Do NOT break — keep iterating so every zone gets a polygon
+                        if (geom.type === 'Polygon') polygons.push(geom.coordinates);
+                        else if (geom.type === 'MultiPolygon') polygons.push(...geom.coordinates);
                     }
+                }
+                
+                if (polygons.length > 0) {
+                    // Create a MultiPolygon out of all the constituent counties
+                    const mergedGeom = { type: 'MultiPolygon', coordinates: polygons };
+                    zoneFeatures.push({ ...feature, geometry: mergedGeom });
                 }
             }
 
@@ -1448,7 +1549,7 @@
                     pane: 'warningPane',
                     style: f => WARN_STYLE_MAP[f.properties.event] || {},
                     onEachFeature: (feature, layer) => {
-                        const p   = feature.properties;
+                        const p = feature.properties;
                         layer.bindTooltip(
                             `<strong>${p.event}</strong><br><span style="font-size:11px">${p.areaDesc || ''}</span>`,
                             { sticky: true, className: 'warning-tip' }
