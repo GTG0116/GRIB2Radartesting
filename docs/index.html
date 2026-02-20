@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
         :root {
             --bg:            #0d1117;
             --surface:       #161b22;
@@ -27,7 +27,7 @@
             --radius:        8px;
             --panel:         272px;
         }
-
+ 
         html, body {
             height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
@@ -35,14 +35,14 @@
             color: var(--text);
             overflow: hidden;
         }
-
+ 
         /* ── Layout ───────────────────────────────────────── */
         .app {
             display: flex;
             flex-direction: column;
             height: 100vh;
         }
-
+ 
         /* ── Header ───────────────────────────────────────── */
         .header {
             display: flex;
@@ -55,7 +55,7 @@
             flex-shrink: 0;
             z-index: 400;
         }
-
+ 
         .header-logo {
             display: flex;
             align-items: center;
@@ -68,13 +68,13 @@
             font-size: 15px;
             line-height: 1;
         }
-
+ 
         .header-title {
             font-size: 14px;
             font-weight: 600;
             letter-spacing: 0.2px;
         }
-
+ 
         .header-badge {
             font-size: 10px;
             font-weight: 700;
@@ -85,9 +85,9 @@
             border-radius: 20px;
             letter-spacing: 0.5px;
         }
-
+ 
         .header-spacer { flex: 1; }
-
+ 
         .live-indicator {
             display: flex;
             align-items: center;
@@ -95,7 +95,7 @@
             font-size: 12px;
             color: var(--text-muted);
         }
-
+ 
         .live-dot {
             width: 6px;
             height: 6px;
@@ -103,19 +103,19 @@
             border-radius: 50%;
             animation: pulse 2.5s ease-in-out infinite;
         }
-
+ 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50%       { opacity: 0.4; }
         }
-
+ 
         /* ── Body ─────────────────────────────────────────── */
         .body {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
-
+ 
         /* ── Side Panel ───────────────────────────────────── */
         .panel {
             width: var(--panel);
@@ -124,16 +124,28 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            overflow-x: hidden;
             flex-shrink: 0;
+            transition: width 0.30s cubic-bezier(0.4,0,0.2,1),
+                        opacity 0.22s ease,
+                        border-color 0.30s ease;
         }
-
+ 
+        /* Panel hides when a warning is selected */
+        .body.warning-mode .panel {
+            width: 0;
+            opacity: 0;
+            pointer-events: none;
+            border-color: transparent;
+        }
+ 
         .section {
             padding: 14px 14px;
             border-bottom: 1px solid var(--border);
         }
-
+ 
         .section:last-child { border-bottom: none; }
-
+ 
         .section-label {
             font-size: 10px;
             font-weight: 700;
@@ -142,7 +154,7 @@
             color: var(--text-muted);
             margin-bottom: 10px;
         }
-
+ 
         /* ── Now Viewing Card ─────────────────────────────── */
         .now-viewing {
             background: var(--accent-dim);
@@ -150,7 +162,7 @@
             border-radius: var(--radius);
             padding: 11px 13px;
         }
-
+ 
         .nv-eyebrow {
             font-size: 9px;
             font-weight: 700;
@@ -159,26 +171,26 @@
             color: var(--accent);
             margin-bottom: 4px;
         }
-
+ 
         .nv-name {
             font-size: 17px;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-
+ 
         .nv-detail {
             font-size: 11px;
             color: var(--text-muted);
             margin-top: 3px;
         }
-
+ 
         /* ── Radio Options ────────────────────────────────── */
         .radio-group {
             display: flex;
             flex-direction: column;
             gap: 3px;
         }
-
+ 
         .radio-opt {
             display: flex;
             align-items: center;
@@ -190,14 +202,14 @@
             transition: background 0.12s, border-color 0.12s;
             user-select: none;
         }
-
+ 
         .radio-opt:hover { background: var(--surface-2); }
-
+ 
         .radio-opt.active {
             background: var(--accent-dim);
             border-color: var(--accent-border);
         }
-
+ 
         .radio-pip {
             width: 15px;
             height: 15px;
@@ -207,9 +219,9 @@
             position: relative;
             transition: border-color 0.12s;
         }
-
+ 
         .radio-opt.active .radio-pip { border-color: var(--accent); }
-
+ 
         .radio-pip::after {
             content: '';
             position: absolute;
@@ -219,42 +231,42 @@
             opacity: 0;
             transition: opacity 0.12s;
         }
-
+ 
         .radio-opt.active .radio-pip::after { opacity: 1; }
-
+ 
         .radio-text { flex: 1; }
-
+ 
         .radio-name {
             font-size: 13px;
             font-weight: 500;
         }
-
+ 
         .radio-desc {
             font-size: 11px;
             color: var(--text-muted);
             margin-top: 1px;
         }
-
+ 
         /* ── Opacity Slider ───────────────────────────────── */
         .slider-row {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
+ 
         .slider-row label {
             font-size: 12px;
             color: var(--text-muted);
             width: 52px;
             flex-shrink: 0;
         }
-
+ 
         input[type="range"] {
             flex: 1;
             accent-color: var(--accent);
             cursor: pointer;
         }
-
+ 
         .slider-val {
             font-size: 12px;
             color: var(--text);
@@ -262,7 +274,7 @@
             text-align: right;
             flex-shrink: 0;
         }
-
+ 
         /* ── Refresh Button ───────────────────────────────── */
         .refresh-btn {
             width: 100%;
@@ -277,19 +289,19 @@
             letter-spacing: 0.2px;
             transition: filter 0.15s, transform 0.1s;
         }
-
+ 
         .refresh-btn:hover  { filter: brightness(1.12); }
         .refresh-btn:active { transform: scale(0.98); }
-
+ 
         /* ── Map Area ─────────────────────────────────────── */
         .map-wrap {
             flex: 1;
             position: relative;
             overflow: hidden;
         }
-
+ 
         #map { width: 100%; height: 100%; }
-
+ 
         /* ── Error Banner ─────────────────────────────────── */
         .error-banner {
             position: absolute;
@@ -308,9 +320,9 @@
             display: none;
             animation: fadein 0.2s ease;
         }
-
+ 
         @keyframes fadein { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
-
+ 
         /* ── Toggle switch ───────────────────────────────── */
         .toggle-row {
             display: flex;
@@ -318,12 +330,12 @@
             justify-content: space-between;
             margin-bottom: 10px;
         }
-
+ 
         .toggle-label {
             font-size: 12px;
             color: var(--text-muted);
         }
-
+ 
         .toggle {
             position: relative;
             display: inline-block;
@@ -331,9 +343,9 @@
             height: 20px;
             flex-shrink: 0;
         }
-
+ 
         .toggle input { display: none; }
-
+ 
         .toggle-track {
             position: absolute;
             inset: 0;
@@ -342,9 +354,9 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
+ 
         .toggle input:checked + .toggle-track { background: var(--accent); }
-
+ 
         .toggle-track::after {
             content: '';
             position: absolute;
@@ -356,16 +368,16 @@
             border-radius: 50%;
             transition: transform 0.2s;
         }
-
+ 
         .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
-
+ 
         /* ── Warning legend ──────────────────────────────── */
         .warnings-legend {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 5px 8px;
         }
-
+ 
         .legend-item {
             display: flex;
             align-items: center;
@@ -374,7 +386,7 @@
             color: var(--text);
             line-height: 1.2;
         }
-
+ 
         .legend-swatch {
             width: 13px;
             height: 9px;
@@ -383,51 +395,92 @@
             border: 1.5px solid;
             opacity: 0.85;
         }
-
+ 
         .legend-swatch.watch { border-style: dashed; }
-
-        /* ── Alert detail panel ──────────────────────────── */
+ 
+        /* ── Alert detail panel ─────────────────────────────
+           Default (no warning selected): hidden off-screen right.
+           In warning-mode (.body.warning-mode): becomes a wide top bar.
+        ─────────────────────────────────────────────────── */
         .alert-panel {
             position: absolute;
             top: 12px;
             right: 12px;
-            width: 310px;
+            width: 320px;
             background: rgba(22, 27, 34, 0.97);
             border: 1px solid var(--border);
             border-radius: 10px;
             z-index: 700;
             box-shadow: 0 8px 32px rgba(0,0,0,0.6);
             transform: translateX(calc(100% + 24px));
-            transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
+                        width 0.28s cubic-bezier(0.4,0,0.2,1),
+                        top 0.28s cubic-bezier(0.4,0,0.2,1),
+                        right 0.28s cubic-bezier(0.4,0,0.2,1),
+                        border-radius 0.28s ease;
             overflow: hidden;
+            backdrop-filter: blur(12px);
         }
-
-        .alert-panel.visible { transform: translateX(0); }
-
-        /* Coloured header strip */
+ 
+        /* Panel-visible in compact (right) mode */
+        .alert-panel.visible {
+            transform: translateX(0);
+        }
+ 
+        /* Expanded top-bar mode (when sidebar is hidden) */
+        .body.warning-mode .alert-panel {
+            top: 0;
+            right: 0;
+            left: 0;
+            width: auto;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            transform: translateY(-100%);
+        }
+        .body.warning-mode .alert-panel.visible {
+            transform: translateY(0);
+        }
+ 
+        /* ── Alert panel header ─────────────────────────── */
         .ap-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 14px 10px;
+            padding: 11px 16px 10px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-
+ 
+        .ap-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+ 
         .ap-event {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
             line-height: 1.2;
-            flex: 1;
+            white-space: nowrap;
         }
-
+ 
+        .ap-badges-inline {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+ 
         .ap-close {
             background: rgba(255,255,255,0.08);
             border: none;
             color: var(--text);
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 13px;
@@ -435,71 +488,130 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            margin-left: 10px;
+            margin-left: 12px;
             transition: background 0.15s;
         }
         .ap-close:hover { background: rgba(255,255,255,0.18); }
-
-        /* Status badge bar */
-        .ap-badges {
-            display: flex;
-            gap: 6px;
-            padding: 8px 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            flex-wrap: wrap;
-            min-height: 36px;
-        }
-
+ 
+        /* Status badges */
         .ap-badge {
             font-size: 10px;
             font-weight: 700;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             padding: 3px 8px;
             border-radius: 4px;
             border: 1px solid;
+            white-space: nowrap;
         }
-
-        .ap-badge.radar  { background: rgba(79,142,247,0.18); color: #7ab3ff; border-color: rgba(79,142,247,0.4); }
-        .ap-badge.pds    { background: rgba(255,140,0,0.18);  color: #ffb347; border-color: rgba(255,140,0,0.45); }
-        .ap-badge.emerg  { background: rgba(220,20,60,0.22);  color: #ff6060; border-color: rgba(220,20,60,0.5); }
-
-        /* Body rows */
+ 
+        .ap-badge.radar    { background: rgba(79,142,247,0.18); color: #7ab3ff; border-color: rgba(79,142,247,0.4); }
+        .ap-badge.observed { background: rgba(255,80,80,0.22);  color: #ff7070; border-color: rgba(255,80,80,0.5); }
+        .ap-badge.pds      { background: rgba(255,140,0,0.18);  color: #ffb347; border-color: rgba(255,140,0,0.45); }
+        .ap-badge.emerg    { background: rgba(220,20,60,0.28);  color: #ff5050; border-color: rgba(220,20,60,0.6); }
+ 
+        /* ── Alert panel body ──────────────────────────────
+           Compact mode: stacked rows
+           Expanded mode: grid layout
+        ─────────────────────────────────────────────────── */
         .ap-body {
-            padding: 10px 14px 4px;
+            padding: 9px 16px 6px;
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 5px;
         }
-
+ 
+        .body.warning-mode .ap-body {
+            display: grid;
+            grid-template-columns: minmax(200px, 2fr) 1fr 1fr;
+            gap: 4px 20px;
+            padding: 8px 16px 6px;
+        }
+ 
         .ap-row {
             display: flex;
-            gap: 8px;
+            gap: 7px;
             font-size: 12px;
             line-height: 1.35;
         }
-
+ 
         .ap-label {
             color: var(--text-muted);
             flex-shrink: 0;
-            width: 54px;
+            width: 52px;
             padding-top: 1px;
+            font-size: 11px;
         }
-
-        .ap-value { color: var(--text); }
-
-        /* Headline / description excerpt */
-        .ap-desc {
-            margin: 6px 14px 12px;
+ 
+        .ap-value {
+            color: var(--text);
+            font-size: 12px;
+        }
+ 
+        /* ── Towns row ─────────────────────────────────── */
+        .ap-towns-row {
+            display: flex;
+            gap: 7px;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 5px 16px 4px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+ 
+        .ap-towns-label {
+            color: var(--text-muted);
+            flex-shrink: 0;
+            font-size: 11px;
+            padding-top: 1px;
+            width: 52px;
+        }
+ 
+        .ap-towns-value {
+            color: #c8d8e8;
             font-size: 11.5px;
-            color: #b0bac6;
             line-height: 1.5;
+        }
+ 
+        /* Hide towns row if no towns found */
+        .ap-towns-row.empty { display: none; }
+ 
+        /* ── Description / headline ─────────────────────── */
+        .ap-desc {
+            margin: 4px 16px 10px;
+            font-size: 11.5px;
+            color: #9dafc2;
+            line-height: 1.55;
             border-top: 1px solid rgba(255,255,255,0.06);
-            padding-top: 8px;
-            max-height: 130px;
+            padding-top: 7px;
+            max-height: 90px;
             overflow-y: auto;
         }
-
+ 
+        /* In expanded mode, description gets more room */
+        .body.warning-mode .ap-desc {
+            max-height: 72px;
+            grid-column: 1 / -1;
+        }
+ 
+        /* ── Polygon selection animation ─────────────────── */
+        @keyframes warn-march {
+            from { stroke-dashoffset: 30; }
+            to   { stroke-dashoffset: 0; }
+        }
+ 
+        @keyframes warn-glow-weight {
+            0%,  100% { stroke-width: 3.5; stroke-opacity: 1; }
+            50%        { stroke-width: 6;   stroke-opacity: 0.55; }
+        }
+ 
+        path.warn-selected {
+            stroke-dasharray: 14 7 !important;
+            stroke-width: 4 !important;
+            animation:
+                warn-march      0.65s linear       infinite,
+                warn-glow-weight 1.6s ease-in-out  infinite !important;
+        }
+ 
         /* ── Leaflet warning tooltip ─────────────────────── */
         .leaflet-tooltip.warning-tip {
             background: rgba(13,17,23,0.92);
@@ -511,9 +623,9 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.5);
             pointer-events: none;
         }
-
+ 
         .leaflet-tooltip.warning-tip::before { display: none; }
-
+ 
         /* ── Leaflet overrides ────────────────────────────── */
         .leaflet-bar {
             border: 1px solid var(--border) !important;
@@ -535,7 +647,7 @@
 </head>
 <body>
 <div class="app">
-
+ 
     <!-- Header -->
     <header class="header">
         <div class="header-logo">&#127783;</div>
@@ -547,13 +659,13 @@
             <span>Live</span>
         </div>
     </header>
-
+ 
     <!-- Main body -->
-    <div class="body">
-
+    <div class="body" id="app-body">
+ 
         <!-- Side panel -->
         <aside class="panel">
-
+ 
             <!-- Now Viewing -->
             <div class="section">
                 <div class="section-label">Now Viewing</div>
@@ -563,7 +675,7 @@
                     <div class="nv-detail" id="nv-detail">Reflectivity &middot; State College, PA</div>
                 </div>
             </div>
-
+ 
             <!-- Radar site -->
             <div class="section">
                 <div class="section-label">Radar Site</div>
@@ -605,7 +717,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Product -->
             <div class="section">
                 <div class="section-label">Product</div>
@@ -633,7 +745,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Opacity -->
             <div class="section">
                 <div class="section-label">Radar Opacity</div>
@@ -643,7 +755,7 @@
                     <span class="slider-val" id="opacity-val">80%</span>
                 </div>
             </div>
-
+ 
             <!-- Weather Warnings -->
             <div class="section">
                 <div class="section-label">Weather Warnings</div>
@@ -656,26 +768,32 @@
                 </div>
                 <div class="warnings-legend" id="warnings-legend"></div>
             </div>
-
+ 
             <!-- Refresh -->
             <div class="section">
                 <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
             </div>
-
+ 
         </aside>
-
+ 
         <!-- Map -->
         <div class="map-wrap">
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
-
-            <!-- Alert detail panel (slides in on warning click) -->
+ 
+            <!-- Alert detail panel: compact right panel normally,
+                 becomes a full-width top bar in warning-mode         -->
             <div class="alert-panel" id="alert-panel">
+                <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
-                    <div class="ap-event" id="ap-event"></div>
+                    <div class="ap-header-left">
+                        <div class="ap-event" id="ap-event"></div>
+                        <div class="ap-badges-inline" id="ap-badges"></div>
+                    </div>
                     <button class="ap-close" id="ap-close" title="Close">&#10005;</button>
                 </div>
-                <div class="ap-badges" id="ap-badges"></div>
+ 
+                <!-- Meta rows -->
                 <div class="ap-body">
                     <div class="ap-row">
                         <span class="ap-label">Area</span>
@@ -690,21 +808,52 @@
                         <span class="ap-value" id="ap-expires"></span>
                     </div>
                 </div>
+ 
+                <!-- Towns impacted -->
+                <div class="ap-towns-row empty" id="ap-towns-row">
+                    <span class="ap-towns-label">Towns</span>
+                    <span class="ap-towns-value" id="ap-towns"></span>
+                </div>
+ 
+                <!-- Headline / description -->
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
         </div>
-
+ 
     </div>
 </div>
-
-<script src="assets/bounds.js"></script>
+ 
 <script>
+    /* ══════════════════════════════════════════════════════════
+       Bounds — loaded dynamically so refresh busts the cache
+    ══════════════════════════════════════════════════════════ */
+    let RADAR_BOUNDS = {};
+ 
+    function reloadBounds() {
+        return new Promise(resolve => {
+            const old = document.querySelector('script[data-bounds]');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.dataset.bounds = '1';
+            s.src = `assets/bounds.js?t=${Date.now()}`;
+            s.onload = () => {
+                // bounds.js re-declares RADAR_BOUNDS as a global
+                if (typeof window.RADAR_BOUNDS !== 'undefined') {
+                    RADAR_BOUNDS = window.RADAR_BOUNDS;
+                }
+                resolve();
+            };
+            s.onerror = resolve;   // still resolve; showError handles missing data
+            document.head.appendChild(s);
+        });
+    }
+ 
     /* ── State ── */
     let selectedRadar   = 'KCCX';
     let selectedProduct = 'reflectivity';
     let currentOverlay  = null;
     let opacity         = 0.80;
-
+ 
     const RADAR_NAMES = {
         KCCX: 'State College, PA',
         KDOX: 'Dover, DE',
@@ -712,20 +861,20 @@
         KDIX: 'Philadelphia, NJ',
         KBGM: 'Binghamton, NY',
     };
-
+ 
     const PRODUCT_NAMES = {
         reflectivity:             'Reflectivity',
         velocity:                 'Velocity',
         correlation_coefficient:  'Corr. Coeff.',
     };
-
+ 
     /* ── Map init ── */
     const map = L.map('map', { zoomControl: true }).setView([40.0, -78.0], 7);
-
+ 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
-
+ 
     /* ── Error helper ── */
     let errorTimer;
     function showError(msg) {
@@ -735,45 +884,45 @@
         clearTimeout(errorTimer);
         errorTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
     }
-
+ 
     /* ── Now-viewing card ── */
     function refreshNowViewing() {
         document.getElementById('nv-name').textContent   = selectedRadar;
         document.getElementById('nv-detail').textContent =
             PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
     }
-
+ 
     /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
-
-        if (typeof RADAR_BOUNDS === 'undefined') {
+ 
+        if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
             showError('Radar data not yet available — check back in a few minutes.');
             return;
         }
-
+ 
         const key    = `${selectedRadar}_${selectedProduct}`;
         const bounds = RADAR_BOUNDS[key];
-
+ 
         if (!bounds) {
             showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
             refreshNowViewing();
             return;
         }
-
+ 
         const sw = [bounds[0], bounds[1]];
         const ne = [bounds[2], bounds[3]];
-
+ 
         currentOverlay = L.imageOverlay(
             `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`,
             [sw, ne],
             { opacity, interactive: false }
         ).addTo(map);
-
+ 
         map.fitBounds([sw, ne], { padding: [24, 24] });
         refreshNowViewing();
     }
-
+ 
     /* ── Radio group factory ── */
     function initRadioGroup(groupId, onChange) {
         document.getElementById(groupId).querySelectorAll('.radio-opt').forEach(opt => {
@@ -786,10 +935,10 @@
             });
         });
     }
-
+ 
     initRadioGroup('radar-group',   val => { selectedRadar   = val; updateOverlay(); });
     initRadioGroup('product-group', val => { selectedProduct = val; updateOverlay(); });
-
+ 
     /* ── Opacity slider ── */
     const opacityInput = document.getElementById('opacity');
     opacityInput.addEventListener('input', () => {
@@ -797,25 +946,67 @@
         document.getElementById('opacity-val').textContent = opacityInput.value + '%';
         if (currentOverlay) currentOverlay.setOpacity(opacity);
     });
-
+ 
     /* ── Refresh button ── */
-    document.getElementById('refresh-btn').addEventListener('click', () => {
+    document.getElementById('refresh-btn').addEventListener('click', async () => {
+        await reloadBounds();
         updateOverlay();
         fetchWarnings();
     });
-
+ 
+    /* ── Auto-refresh every 5 minutes ── */
+    setInterval(async () => {
+        await reloadBounds();
+        updateOverlay();
+        fetchWarnings();
+    }, 5 * 60 * 1000);
+ 
     /* ══════════════════════════════════════════════════════════
        Alert detail panel
     ══════════════════════════════════════════════════════════ */
+    const appBody   = document.getElementById('app-body');
     const alertPanel = document.getElementById('alert-panel');
-
+ 
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
     map.on('click', closeAlertPanel);
-
+ 
+    /* Track the currently highlighted polygon */
+    let selectedLayer = null;
+    let selectedEvent = null;
+ 
+    function highlightLayer(layer, event) {
+        // Restore previous selection
+        if (selectedLayer) {
+            selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
+            if (selectedLayer._path) {
+                selectedLayer._path.classList.remove('warn-selected');
+            }
+        }
+        selectedLayer = layer;
+        selectedEvent = event;
+        layer.bringToFront();
+        if (layer._path) {
+            layer._path.classList.add('warn-selected');
+        }
+    }
+ 
+    function clearLayerHighlight() {
+        if (selectedLayer) {
+            selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
+            if (selectedLayer._path) {
+                selectedLayer._path.classList.remove('warn-selected');
+            }
+            selectedLayer = null;
+            selectedEvent = null;
+        }
+    }
+ 
     function closeAlertPanel() {
         alertPanel.classList.remove('visible');
+        appBody.classList.remove('warning-mode');
+        clearLayerHighlight();
     }
-
+ 
     function fmtTime(iso) {
         if (!iso) return '—';
         try {
@@ -825,56 +1016,124 @@
             });
         } catch (_) { return iso; }
     }
-
+ 
     function detectFlags(p) {
         const src = [
             p.description || '',
             p.headline    || '',
             (p.parameters && p.parameters.NWSheadline ? p.parameters.NWSheadline.join(' ') : ''),
         ].join(' ').toUpperCase();
-
+ 
+        const isTornado = (p.event || '').toUpperCase().includes('TORNADO');
+ 
         return {
-            radarIndicated: src.includes('RADAR INDICATED'),
-            pds:            src.includes('PARTICULARLY DANGEROUS SITUATION'),
-            emergency:      src.includes('TORNADO EMERGENCY') ||
-                            src.includes('FLASH FLOOD EMERGENCY') ||
-                            (p.event || '').toUpperCase().includes('EMERGENCY'),
+            radarIndicated: src.includes('RADAR INDICATED') || src.includes('RADAR-INDICATED'),
+            // "Observed" means a tornado has been visually confirmed on the ground
+            observed: isTornado && (
+                src.includes('OBSERVED') ||
+                src.includes('CONFIRMED TORNADO') ||
+                src.includes('TORNADO CONFIRMED')
+            ) && !src.includes('RADAR INDICATED') && !src.includes('RADAR-INDICATED'),
+            pds:       src.includes('PARTICULARLY DANGEROUS SITUATION'),
+            emergency: src.includes('TORNADO EMERGENCY') ||
+                       src.includes('FLASH FLOOD EMERGENCY') ||
+                       (p.event || '').toUpperCase().includes('EMERGENCY'),
         };
     }
-
-    /* Pull the first few meaningful lines from the full description */
+ 
+    /**
+     * Parse towns from NWS "LOCATIONS IMPACTED INCLUDE" text.
+     * NWS format: "LOCATIONS IMPACTED INCLUDE...TOWN1...TOWN2...TOWN3 AND TOWN4."
+     */
+    function parseImpactedTowns(description) {
+        if (!description) return [];
+        const upper = description.toUpperCase();
+ 
+        // Find the start of the impacted locations block
+        const markers = [
+            'LOCATIONS IMPACTED INCLUDE',
+            'SOME LOCATIONS THAT WILL EXPERIENCE',
+            'LOCATIONS IMPACTED',
+            'TOWNS AND CITIES IN THE PATH',
+        ];
+        let startIdx = -1;
+        for (const m of markers) {
+            const i = upper.indexOf(m);
+            if (i !== -1) { startIdx = i + m.length; break; }
+        }
+        if (startIdx === -1) return [];
+ 
+        // Take up to 400 chars after the marker (towns section ends at blank line or end)
+        let snippet = description.slice(startIdx, startIdx + 400);
+        // Strip leading "..." or whitespace
+        snippet = snippet.replace(/^[\s.]+/, '');
+        // Trim at the first blank line or next section header (all-caps word followed by ...)
+        snippet = snippet.split(/\n\n/)[0].split(/\n[A-Z]{4,}\.{3}/)[0];
+        // Remove trailing period
+        snippet = snippet.replace(/\.\s*$/, '');
+ 
+        // Split by "...", " AND ", or ", " separators
+        const towns = snippet
+            .split(/\.{2,}|\s+AND\s+|,\s*/)
+            .map(t => t.replace(/[^a-zA-Z\s\-']/g, '').trim())
+            .filter(t => t.length > 1 && t.length < 40 && /[a-zA-Z]/.test(t));
+ 
+        return [...new Set(towns)];  // deduplicate
+    }
+ 
+    /** Pull headline or short description for the detail panel */
     function excerptDesc(p) {
         if (p.headline) return p.headline;
         if (!p.description) return '';
-        // Return up to ~300 chars, trimmed at sentence boundary
         const raw = p.description.replace(/\*/g, '').trim();
         return raw.length > 320 ? raw.slice(0, 320).replace(/\s+\S+$/, '') + '…' : raw;
     }
-
-    function showAlertPanel(props, warnColor) {
-        document.getElementById('ap-event').textContent      = props.event || 'Weather Alert';
-        document.getElementById('ap-header').style.background =
-            warnColor ? warnColor + '22' : 'transparent';
-        document.getElementById('ap-header').style.borderBottomColor =
-            warnColor ? warnColor + '44' : '';
+ 
+    function showAlertPanel(props, warnColor, layer) {
+        // Highlight polygon
+        if (layer) highlightLayer(layer, props.event);
+ 
+        // Switch to expanded warning-mode (hides sidebar, top-bars alert)
+        appBody.classList.add('warning-mode');
+ 
+        // Header colour tint
+        const hdr = document.getElementById('ap-header');
+        hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
+        hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
         document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
-
-        // Badges
+        document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
+ 
+        // Badges (inline, next to the title)
         const badgesEl = document.getElementById('ap-badges');
         badgesEl.innerHTML = '';
         const flags = detectFlags(props);
+        if (flags.observed)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge observed">Observed</span>');
         if (flags.radarIndicated) badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge radar">Radar Indicated</span>');
         if (flags.pds)            badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge pds">PDS</span>');
         if (flags.emergency)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge emerg">Emergency</span>');
-
+ 
+        // Meta rows
         document.getElementById('ap-area').textContent    = props.areaDesc || '—';
         document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
         document.getElementById('ap-expires').textContent = fmtTime(props.expires);
-        document.getElementById('ap-desc').textContent    = excerptDesc(props);
-
+ 
+        // Towns impacted
+        const towns    = parseImpactedTowns(props.description || '');
+        const townsRow = document.getElementById('ap-towns-row');
+        const townsEl  = document.getElementById('ap-towns');
+        if (towns.length) {
+            townsEl.textContent = towns.join(', ');
+            townsRow.classList.remove('empty');
+        } else {
+            townsRow.classList.add('empty');
+        }
+ 
+        // Headline / description
+        document.getElementById('ap-desc').textContent = excerptDesc(props);
+ 
         alertPanel.classList.add('visible');
     }
-
+ 
     /* ══════════════════════════════════════════════════════════
        Weather Warnings
     ══════════════════════════════════════════════════════════ */
@@ -893,9 +1152,9 @@
         { event: 'Winter Storm Watch',          fill: '#6495ED', border: '#3060BB', watch: true  },
         { event: 'Blizzard Watch',              fill: '#DA70D6', border: '#A040A0', watch: true  },
     ];
-
-    /* Build a lookup: event → config */
-    const WARN_CFG_MAP = {};
+ 
+    /* Build lookups */
+    const WARN_CFG_MAP   = {};
     const WARN_STYLE_MAP = {};
     WARNING_CONFIG.forEach(w => {
         WARN_CFG_MAP[w.event]   = w;
@@ -909,7 +1168,7 @@
         };
     });
     const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
-
+ 
     /* Build legend */
     (function buildLegend() {
         const legend = document.getElementById('warnings-legend');
@@ -927,14 +1186,14 @@
             legend.appendChild(item);
         });
     })();
-
-    let warningLayer   = null;
+ 
+    let warningLayer    = null;
     let warningsVisible = true;
-
+ 
     function clearWarnings() {
         if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
     }
-
+ 
     async function fetchWarnings() {
         clearWarnings();
         if (!warningsVisible) return;
@@ -945,12 +1204,12 @@
             );
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
-
+ 
             const features = (data.features || []).filter(f =>
                 f.geometry && WARN_EVENTS.includes(f.properties.event)
             );
             if (!features.length) return;
-
+ 
             warningLayer = L.geoJSON(
                 { type: 'FeatureCollection', features },
                 {
@@ -958,20 +1217,16 @@
                     onEachFeature: (feature, layer) => {
                         const p   = feature.properties;
                         const cfg = WARN_CFG_MAP[p.event];
-
-                        // Hover tooltip (event name only — details come from click)
+ 
                         layer.bindTooltip(
                             `<strong>${p.event}</strong><br><span style="font-size:11px">${p.areaDesc || ''}</span>`,
                             { sticky: true, className: 'warning-tip' }
                         );
-
-                        // Click: zoom to polygon + show detail panel
+ 
                         layer.on('click', e => {
                             L.DomEvent.stopPropagation(e);
-                            // Zoom to the polygon bounds
-                            map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 10 });
-                            // Show the detail panel
-                            showAlertPanel(p, cfg ? cfg.fill : null);
+                            map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 10 });
+                            showAlertPanel(p, cfg ? cfg.fill : null, layer);
                         });
                     },
                 }
@@ -980,16 +1235,18 @@
             console.warn('Could not load weather warnings:', e.message);
         }
     }
-
+ 
     document.getElementById('warnings-toggle').addEventListener('change', e => {
         warningsVisible = e.target.checked;
         if (warningsVisible) fetchWarnings();
         else { clearWarnings(); closeAlertPanel(); }
     });
-
+ 
     /* ── Initial render ── */
-    updateOverlay();
-    fetchWarnings();
+    reloadBounds().then(() => {
+        updateOverlay();
+        fetchWarnings();
+    });
 </script>
 </body>
 </html>
