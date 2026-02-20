@@ -132,14 +132,6 @@
                         border-color 0.30s ease;
         }
  
-        /* Panel hides when a warning is selected */
-        .body.warning-mode .panel {
-            width: 0;
-            opacity: 0;
-            pointer-events: none;
-            border-color: transparent;
-        }
- 
         .section {
             padding: 14px 14px;
             border-bottom: 1px solid var(--border);
@@ -399,10 +391,7 @@
  
         .legend-swatch.watch { border-style: dashed; }
  
-        /* ── Alert detail panel ─────────────────────────────
-           Default (no warning selected): hidden off-screen right.
-           In warning-mode (.body.warning-mode): becomes a wide top bar.
-        ─────────────────────────────────────────────────── */
+        /* ── Alert detail panel ───────────────────────────── */
         .alert-panel {
             position: absolute;
             top: 12px;
@@ -414,35 +403,16 @@
             z-index: 700;
             box-shadow: 0 8px 32px rgba(0,0,0,0.6);
             transform: translateX(calc(100% + 24px));
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
-                        width 0.28s cubic-bezier(0.4,0,0.2,1),
-                        top 0.28s cubic-bezier(0.4,0,0.2,1),
-                        right 0.28s cubic-bezier(0.4,0,0.2,1),
-                        border-radius 0.28s ease;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
             overflow: hidden;
             backdrop-filter: blur(12px);
             font-family: 'Roboto', sans-serif;
+            resize: both;
         }
  
-        /* Panel-visible in compact (right) mode */
+        /* Panel-visible */
         .alert-panel.visible {
             transform: translateX(0);
-        }
- 
-        /* Expanded top-bar mode (when sidebar is hidden) */
-        .body.warning-mode .alert-panel {
-            top: 0;
-            right: 0;
-            left: 0;
-            width: auto;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
-            border-top: none;
-            transform: translateY(-100%);
-        }
-        .body.warning-mode .alert-panel.visible {
-            transform: translateY(0);
         }
  
         /* ── Alert panel header ─────────────────────────── */
@@ -452,6 +422,7 @@
             justify-content: space-between;
             padding: 11px 16px 10px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
+            cursor: move;
         }
  
         .ap-header-left {
@@ -512,22 +483,12 @@
         .ap-badge.pds      { background: rgba(255,140,0,0.18);  color: #ffb347; border-color: rgba(255,140,0,0.45); }
         .ap-badge.emerg    { background: rgba(220,20,60,0.28);  color: #ff5050; border-color: rgba(220,20,60,0.6); }
  
-        /* ── Alert panel body ──────────────────────────────
-           Compact mode: stacked rows
-           Expanded mode: grid layout
-        ─────────────────────────────────────────────────── */
+        /* ── Alert panel body ────────────────────────────── */
         .ap-body {
             padding: 9px 16px 6px;
             display: flex;
             flex-direction: column;
             gap: 5px;
-        }
- 
-        .body.warning-mode .ap-body {
-            display: grid;
-            grid-template-columns: minmax(200px, 2fr) 1fr 1fr 1fr 1fr;
-            gap: 4px 20px;
-            padding: 8px 16px 6px;
         }
  
         .ap-row {
@@ -589,12 +550,6 @@
             padding-top: 7px;
             max-height: 90px;
             overflow-y: auto;
-        }
- 
-        /* In expanded mode, description gets more room */
-        .body.warning-mode .ap-desc {
-            max-height: 72px;
-            grid-column: 1 / -1;
         }
  
         /* ── Polygon selection animation ─────────────────── */
@@ -792,8 +747,7 @@
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
  
-            <!-- Alert detail panel: compact right panel normally,
-                 becomes a full-width top bar in warning-mode         -->
+            <!-- Alert detail panel -->
             <div class="alert-panel" id="alert-panel">
                 <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
@@ -850,7 +804,7 @@
             if (old) old.remove();
             const s = document.createElement('script');
             s.dataset.bounds = '1';
-            s.src = `assets/bounds.js?t=${Date.now()}`;
+            s.src = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/bounds.js?t=${Date.now()}`;
             s.onload = () => {
                 if (typeof window.RADAR_BOUNDS !== 'undefined') {
                     RADAR_BOUNDS = window.RADAR_BOUNDS;
@@ -922,7 +876,7 @@
         }
  
         let key    = `${selectedRadar}_${selectedProduct}`;
-        let imageUrl = `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
+        let imageUrl = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
         let bounds = RADAR_BOUNDS[key];
  
         if (selectedRadar === 'MRMS') {
@@ -931,7 +885,7 @@
                 showError('MRMS supports Reflectivity only.');
                 return;
             }
-            imageUrl = 'https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.png';
+            imageUrl = `https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.png?cb=${Date.now()}`;
             bounds = [20, -130, 55, -65];  // Approximate CONUS bounds
         }
  
@@ -997,9 +951,32 @@
     ══════════════════════════════════════════════════════════ */
     const appBody   = document.getElementById('app-body');
     const alertPanel = document.getElementById('alert-panel');
+    const apHeader = document.getElementById('ap-header');
  
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
-    map.on('click', closeAlertPanel);
+ 
+    // Make panel draggable
+    let dragStartX, dragStartY, initialLeft, initialTop;
+    apHeader.addEventListener('mousedown', e => {
+        e.preventDefault();
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        initialLeft = alertPanel.offsetLeft;
+        initialTop = alertPanel.offsetTop;
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', dragStop);
+    });
+ 
+    function dragMove(e) {
+        alertPanel.style.right = '';
+        alertPanel.style.left = initialLeft + e.clientX - dragStartX + 'px';
+        alertPanel.style.top = initialTop + e.clientY - dragStartY + 'px';
+    }
+ 
+    function dragStop() {
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('mouseup', dragStop);
+    }
  
     /* Track the currently highlighted polygon */
     let selectedLayer = null;
@@ -1035,22 +1012,28 @@
     function adjustZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
         if (zoomControl) {
-            const alertHeight = alertPanel.offsetHeight || 0;
-            zoomControl.style.top = `${alertHeight + 10}px`;  // +10 for small gap
+            zoomControl.style.top = '10px';
         }
     }
  
     function resetZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
         if (zoomControl) {
-            zoomControl.style.top = '10px';  // Leaflet default is usually ~10px
+            zoomControl.style.top = '10px';
         }
     }
  
     function closeAlertPanel() {
         alertPanel.classList.remove('visible');
-        appBody.classList.remove('warning-mode');
-        clearLayerHighlight();
+        if (warningLayer) {
+            warningLayer.eachLayer(l => {
+                const event = l.feature.properties.event;
+                l.setStyle(WARN_STYLE_MAP[event] || {});
+                if (l._path) l._path.classList.remove('warn-selected');
+            });
+        }
+        selectedLayer = null;
+        selectedEvent = null;
         resetZoomControlPosition();
     }
  
@@ -1124,11 +1107,36 @@
         return raw.length > 320 ? raw.slice(0, 320).replace(/\s+\S+$/, '') + '…' : raw;
     }
  
+    function extractHazards(p) {
+        const desc = p.description || '';
+        const match = desc.match(/\*?\s*(WHAT|HAZARD)\.{3}(.+?)(?=\*?\s*(WHERE|SOURCE|IMPACTS)|\n\n|$)/is);
+        if (match) {
+            return match[2].trim().replace(/\n/g, ' ');
+        }
+        return p.headline || '—';
+    }
+ 
+    let currentMatching = [];
+ 
+    window.selectAlert = function(index) {
+        const l = currentMatching[index];
+        map.closePopup();
+        map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
+        showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
+    };
+ 
     function showAlertPanel(props, warnColor, layer) {
-        if (layer) highlightLayer(layer, props.event);
+        if (warningLayer) {
+            warningLayer.eachLayer(l => {
+                if (l === layer) {
+                    highlightLayer(l, props.event);
+                } else {
+                    l.setStyle({opacity: 0, fillOpacity: 0});
+                }
+            });
+        }
  
         alertPanel.classList.add('visible');
-        appBody.classList.add('warning-mode');
  
         setTimeout(adjustZoomControlPosition, 50);
  
@@ -1149,6 +1157,7 @@
         document.getElementById('ap-area').textContent    = props.areaDesc || '—';
         document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
         document.getElementById('ap-expires').textContent = fmtTime(props.expires);
+        document.getElementById('ap-hazards').textContent = extractHazards(props);
  
         const towns    = parseImpactedTowns(props.description || '');
         const townsRow = document.getElementById('ap-towns-row');
@@ -1161,6 +1170,33 @@
         }
  
         document.getElementById('ap-desc').textContent = excerptDesc(props);
+    }
+ 
+    /* Point in polygon function */
+    function isPointInPoly(pt, geo) {
+        if (geo.type === 'Polygon') {
+            return isPointInRing(pt, geo.coordinates[0]);
+        } else if (geo.type === 'MultiPolygon') {
+            for (let polygon of geo.coordinates) {
+                if (isPointInRing(pt, polygon[0])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+ 
+    function isPointInRing(pt, ring) {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            let xi = ring[i][0], yi = ring[i][1];
+            let xj = ring[j][0], yj = ring[j][1];
+            let intersect = ((yi > pt.lat) !== (yj > pt.lat)) &&
+                (pt.lng < (xj - xi) * (pt.lat - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
     }
  
     /* ══════════════════════════════════════════════════════════
@@ -1247,12 +1283,6 @@
                             `<strong>${p.event}</strong><br><span style="font-size:11px">${p.areaDesc || ''}</span>`,
                             { sticky: true, className: 'warning-tip' }
                         );
- 
-                        layer.on('click', e => {
-                            L.DomEvent.stopPropagation(e);
-                            map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 10 });
-                            showAlertPanel(p, cfg ? cfg.fill : null, layer);
-                        });
                     },
                 }
             ).addTo(map);
@@ -1265,6 +1295,36 @@
         warningsVisible = e.target.checked;
         if (warningsVisible) fetchWarnings();
         else { clearWarnings(); closeAlertPanel(); }
+    });
+ 
+    map.on('click', function(e) {
+        closeAlertPanel();
+        if (!warningLayer) return;
+ 
+        const point = e.latlng;
+        currentMatching = [];
+        warningLayer.eachLayer(l => {
+            if (isPointInPoly(point, l.feature.geometry)) {
+                currentMatching.push(l);
+            }
+        });
+ 
+        if (currentMatching.length === 0) return;
+ 
+        if (currentMatching.length === 1) {
+            const l = currentMatching[0];
+            map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
+            showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
+        } else {
+            let content = '<div>Select Alert:</div>';
+            for (let i = 0; i < currentMatching.length; i++) {
+                content += `<a href="#" style="display:block;" onclick="selectAlert(${i})">${currentMatching[i].feature.properties.event}</a>`;
+            }
+            L.popup()
+                .setLatLng(point)
+                .setContent(content)
+                .openOn(map);
+        }
     });
  
     /* ── Initial render ── */
