@@ -421,7 +421,22 @@
             overflow: hidden;
             backdrop-filter: blur(12px);
         }
- 
+
+        // ── Adjust zoom control to avoid overlapping top alert bar ──
+function adjustZoomControlPosition() {
+    const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
+    if (zoomControl) {
+        const alertHeight = alertPanel.offsetHeight || 0;
+        zoomControl.style.top = `${alertHeight + 10}px`;  // +10 for small gap
+    }
+}
+
+function resetZoomControlPosition() {
+    const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
+    if (zoomControl) {
+        zoomControl.style.top = '10px';  // Leaflet default is usually ~10px
+    }
+}
         /* Panel-visible in compact (right) mode */
         .alert-panel.visible {
             transform: translateX(0);
@@ -1002,9 +1017,10 @@
     }
  
     function closeAlertPanel() {
-        alertPanel.classList.remove('visible');
-        appBody.classList.remove('warning-mode');
-        clearLayerHighlight();
+    alertPanel.classList.remove('visible');
+    appBody.classList.remove('warning-mode');
+    clearLayerHighlight();
+    resetZoomControlPosition();
     }
  
     function fmtTime(iso) {
@@ -1090,18 +1106,21 @@
     }
  
     function showAlertPanel(props, warnColor, layer) {
-        // Highlight polygon
-        if (layer) highlightLayer(layer, props.event);
- 
-        // Switch to expanded warning-mode (hides sidebar, top-bars alert)
-        appBody.classList.add('warning-mode');
- 
-        // Header colour tint
-        const hdr = document.getElementById('ap-header');
-        hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
-        hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
-        document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
-        document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
+    // Highlight polygon
+    if (layer) highlightLayer(layer, props.event);
+
+    alertPanel.classList.add('visible');
+    appBody.classList.add('warning-mode');
+
+    // Adjust zoom control position after layout has updated
+    setTimeout(adjustZoomControlPosition, 50);   // small delay ensures correct height
+
+    // Header colour tint
+    const hdr = document.getElementById('ap-header');
+    hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
+    hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
+    document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
+    document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
  
         // Badges (inline, next to the title)
         const badgesEl = document.getElementById('ap-badges');
