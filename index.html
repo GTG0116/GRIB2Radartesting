@@ -386,6 +386,120 @@
 
         .legend-swatch.watch { border-style: dashed; }
 
+        /* ── Alert detail panel ──────────────────────────── */
+        .alert-panel {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 310px;
+            background: rgba(22, 27, 34, 0.97);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            z-index: 700;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            transform: translateX(calc(100% + 24px));
+            transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+
+        .alert-panel.visible { transform: translateX(0); }
+
+        /* Coloured header strip */
+        .ap-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .ap-event {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        .ap-close {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 10px;
+            transition: background 0.15s;
+        }
+        .ap-close:hover { background: rgba(255,255,255,0.18); }
+
+        /* Status badge bar */
+        .ap-badges {
+            display: flex;
+            gap: 6px;
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+            min-height: 36px;
+        }
+
+        .ap-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid;
+        }
+
+        .ap-badge.radar  { background: rgba(79,142,247,0.18); color: #7ab3ff; border-color: rgba(79,142,247,0.4); }
+        .ap-badge.pds    { background: rgba(255,140,0,0.18);  color: #ffb347; border-color: rgba(255,140,0,0.45); }
+        .ap-badge.emerg  { background: rgba(220,20,60,0.22);  color: #ff6060; border-color: rgba(220,20,60,0.5); }
+
+        /* Body rows */
+        .ap-body {
+            padding: 10px 14px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .ap-row {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .ap-label {
+            color: var(--text-muted);
+            flex-shrink: 0;
+            width: 54px;
+            padding-top: 1px;
+        }
+
+        .ap-value { color: var(--text); }
+
+        /* Headline / description excerpt */
+        .ap-desc {
+            margin: 6px 14px 12px;
+            font-size: 11.5px;
+            color: #b0bac6;
+            line-height: 1.5;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 8px;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+
         /* ── Leaflet warning tooltip ─────────────────────── */
         .leaflet-tooltip.warning-tip {
             background: rgba(13,17,23,0.92);
@@ -468,6 +582,27 @@
                             <div class="radio-desc">Dover, DE</div>
                         </div>
                     </div>
+                    <div class="radio-opt" data-value="KIND">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KIND</div>
+                            <div class="radio-desc">Indianapolis, IN</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KDIX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KDIX</div>
+                            <div class="radio-desc">Philadelphia, NJ</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KBGM">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KBGM</div>
+                            <div class="radio-desc">Binghamton, NY</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -533,6 +668,30 @@
         <div class="map-wrap">
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
+
+            <!-- Alert detail panel (slides in on warning click) -->
+            <div class="alert-panel" id="alert-panel">
+                <div class="ap-header" id="ap-header">
+                    <div class="ap-event" id="ap-event"></div>
+                    <button class="ap-close" id="ap-close" title="Close">&#10005;</button>
+                </div>
+                <div class="ap-badges" id="ap-badges"></div>
+                <div class="ap-body">
+                    <div class="ap-row">
+                        <span class="ap-label">Area</span>
+                        <span class="ap-value" id="ap-area"></span>
+                    </div>
+                    <div class="ap-row">
+                        <span class="ap-label">Issued</span>
+                        <span class="ap-value" id="ap-issued"></span>
+                    </div>
+                    <div class="ap-row">
+                        <span class="ap-label">Expires</span>
+                        <span class="ap-value" id="ap-expires"></span>
+                    </div>
+                </div>
+                <div class="ap-desc" id="ap-desc"></div>
+            </div>
         </div>
 
     </div>
@@ -549,6 +708,9 @@
     const RADAR_NAMES = {
         KCCX: 'State College, PA',
         KDOX: 'Dover, DE',
+        KIND: 'Indianapolis, IN',
+        KDIX: 'Philadelphia, NJ',
+        KBGM: 'Binghamton, NY',
     };
 
     const PRODUCT_NAMES = {
@@ -558,7 +720,7 @@
     };
 
     /* ── Map init ── */
-    const map = L.map('map', { zoomControl: true }).setView([40.0, -75.0], 7);
+    const map = L.map('map', { zoomControl: true }).setView([40.0, -78.0], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -581,13 +743,9 @@
             PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
     }
 
-    /* ── Overlay update (single-radar enforcement) ── */
+    /* ── Overlay update ── */
     function updateOverlay() {
-        // Always remove any existing overlay before adding a new one
-        if (currentOverlay) {
-            map.removeLayer(currentOverlay);
-            currentOverlay = null;
-        }
+        if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
 
         if (typeof RADAR_BOUNDS === 'undefined') {
             showError('Radar data not yet available — check back in a few minutes.');
@@ -629,7 +787,7 @@
         });
     }
 
-    initRadioGroup('radar-group', val => { selectedRadar   = val; updateOverlay(); });
+    initRadioGroup('radar-group',   val => { selectedRadar   = val; updateOverlay(); });
     initRadioGroup('product-group', val => { selectedProduct = val; updateOverlay(); });
 
     /* ── Opacity slider ── */
@@ -646,25 +804,101 @@
         fetchWarnings();
     });
 
-    /* ── Weather Warnings ── */
+    /* ══════════════════════════════════════════════════════════
+       Alert detail panel
+    ══════════════════════════════════════════════════════════ */
+    const alertPanel = document.getElementById('alert-panel');
+
+    document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
+    map.on('click', closeAlertPanel);
+
+    function closeAlertPanel() {
+        alertPanel.classList.remove('visible');
+    }
+
+    function fmtTime(iso) {
+        if (!iso) return '—';
+        try {
+            return new Date(iso).toLocaleString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+            });
+        } catch (_) { return iso; }
+    }
+
+    function detectFlags(p) {
+        const src = [
+            p.description || '',
+            p.headline    || '',
+            (p.parameters && p.parameters.NWSheadline ? p.parameters.NWSheadline.join(' ') : ''),
+        ].join(' ').toUpperCase();
+
+        return {
+            radarIndicated: src.includes('RADAR INDICATED'),
+            pds:            src.includes('PARTICULARLY DANGEROUS SITUATION'),
+            emergency:      src.includes('TORNADO EMERGENCY') ||
+                            src.includes('FLASH FLOOD EMERGENCY') ||
+                            (p.event || '').toUpperCase().includes('EMERGENCY'),
+        };
+    }
+
+    /* Pull the first few meaningful lines from the full description */
+    function excerptDesc(p) {
+        if (p.headline) return p.headline;
+        if (!p.description) return '';
+        // Return up to ~300 chars, trimmed at sentence boundary
+        const raw = p.description.replace(/\*/g, '').trim();
+        return raw.length > 320 ? raw.slice(0, 320).replace(/\s+\S+$/, '') + '…' : raw;
+    }
+
+    function showAlertPanel(props, warnColor) {
+        document.getElementById('ap-event').textContent      = props.event || 'Weather Alert';
+        document.getElementById('ap-header').style.background =
+            warnColor ? warnColor + '22' : 'transparent';
+        document.getElementById('ap-header').style.borderBottomColor =
+            warnColor ? warnColor + '44' : '';
+        document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
+
+        // Badges
+        const badgesEl = document.getElementById('ap-badges');
+        badgesEl.innerHTML = '';
+        const flags = detectFlags(props);
+        if (flags.radarIndicated) badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge radar">Radar Indicated</span>');
+        if (flags.pds)            badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge pds">PDS</span>');
+        if (flags.emergency)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge emerg">Emergency</span>');
+
+        document.getElementById('ap-area').textContent    = props.areaDesc || '—';
+        document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
+        document.getElementById('ap-expires').textContent = fmtTime(props.expires);
+        document.getElementById('ap-desc').textContent    = excerptDesc(props);
+
+        alertPanel.classList.add('visible');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       Weather Warnings
+    ══════════════════════════════════════════════════════════ */
     const WARNING_CONFIG = [
-        // Warnings (solid)
-        { event: 'Tornado Warning',           fill: '#FF0000', border: '#CC0000', watch: false },
-        { event: 'Severe Thunderstorm Warning',fill: '#FF8C00', border: '#CC6600', watch: false },
-        { event: 'Flash Flood Warning',        fill: '#00AA00', border: '#007700', watch: false },
-        { event: 'Snow Squall Warning',        fill: '#00BFFF', border: '#0090CC', watch: false },
-        { event: 'Special Weather Statement',  fill: '#A0A000', border: '#787800', watch: false },
-        { event: 'Winter Storm Warning',       fill: '#FF69B4', border: '#CC3090', watch: false },
-        { event: 'Blizzard Warning',           fill: '#8B008B', border: '#660066', watch: false },
-        // Watches (dashed outline)
-        { event: 'Tornado Watch',              fill: '#FF6060', border: '#CC0000', watch: true  },
-        { event: 'Severe Thunderstorm Watch',  fill: '#FFD700', border: '#CCAA00', watch: true  },
-        { event: 'Winter Storm Watch',         fill: '#6495ED', border: '#3060BB', watch: true  },
-        { event: 'Blizzard Watch',             fill: '#DA70D6', border: '#A040A0', watch: true  },
+        // Warnings (solid fill)
+        { event: 'Tornado Warning',            fill: '#FF0000', border: '#CC0000', watch: false },
+        { event: 'Severe Thunderstorm Warning', fill: '#FF8C00', border: '#CC6600', watch: false },
+        { event: 'Flash Flood Warning',         fill: '#00AA00', border: '#007700', watch: false },
+        { event: 'Snow Squall Warning',         fill: '#00BFFF', border: '#0090CC', watch: false },
+        { event: 'Special Weather Statement',   fill: '#A0A000', border: '#787800', watch: false },
+        { event: 'Winter Storm Warning',        fill: '#FF69B4', border: '#CC3090', watch: false },
+        { event: 'Blizzard Warning',            fill: '#8B008B', border: '#660066', watch: false },
+        // Watches (dashed outline, lighter fill)
+        { event: 'Tornado Watch',               fill: '#FF6060', border: '#CC0000', watch: true  },
+        { event: 'Severe Thunderstorm Watch',   fill: '#FFD700', border: '#CCAA00', watch: true  },
+        { event: 'Winter Storm Watch',          fill: '#6495ED', border: '#3060BB', watch: true  },
+        { event: 'Blizzard Watch',              fill: '#DA70D6', border: '#A040A0', watch: true  },
     ];
 
+    /* Build a lookup: event → config */
+    const WARN_CFG_MAP = {};
     const WARN_STYLE_MAP = {};
     WARNING_CONFIG.forEach(w => {
+        WARN_CFG_MAP[w.event]   = w;
         WARN_STYLE_MAP[w.event] = {
             color:       w.border,
             fillColor:   w.fill,
@@ -674,18 +908,19 @@
             dashArray:   w.watch ? '7 4' : null,
         };
     });
+    const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
 
     /* Build legend */
     (function buildLegend() {
         const legend = document.getElementById('warnings-legend');
         WARNING_CONFIG.forEach(w => {
-            const item = document.createElement('div');
+            const item   = document.createElement('div');
             item.className = 'legend-item';
             const swatch = document.createElement('div');
-            swatch.className = 'legend-swatch' + (w.watch ? ' watch' : '');
-            swatch.style.background    = w.fill;
-            swatch.style.borderColor   = w.border;
-            const label = document.createElement('span');
+            swatch.className       = 'legend-swatch' + (w.watch ? ' watch' : '');
+            swatch.style.background  = w.fill;
+            swatch.style.borderColor = w.border;
+            const label  = document.createElement('span');
             label.textContent = w.event;
             item.appendChild(swatch);
             item.appendChild(label);
@@ -693,9 +928,8 @@
         });
     })();
 
-    let warningLayer = null;
+    let warningLayer   = null;
     let warningsVisible = true;
-    const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
 
     function clearWarnings() {
         if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
@@ -721,13 +955,25 @@
                 { type: 'FeatureCollection', features },
                 {
                     style: f => WARN_STYLE_MAP[f.properties.event] || {},
-                    onEachFeature: (f, layer) => {
-                        const p = f.properties;
+                    onEachFeature: (feature, layer) => {
+                        const p   = feature.properties;
+                        const cfg = WARN_CFG_MAP[p.event];
+
+                        // Hover tooltip (event name only — details come from click)
                         layer.bindTooltip(
-                            `<strong>${p.event}</strong><br>${p.areaDesc || ''}`,
+                            `<strong>${p.event}</strong><br><span style="font-size:11px">${p.areaDesc || ''}</span>`,
                             { sticky: true, className: 'warning-tip' }
                         );
-                    }
+
+                        // Click: zoom to polygon + show detail panel
+                        layer.on('click', e => {
+                            L.DomEvent.stopPropagation(e);
+                            // Zoom to the polygon bounds
+                            map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 10 });
+                            // Show the detail panel
+                            showAlertPanel(p, cfg ? cfg.fill : null);
+                        });
+                    },
                 }
             ).addTo(map);
         } catch (e) {
@@ -738,7 +984,7 @@
     document.getElementById('warnings-toggle').addEventListener('change', e => {
         warningsVisible = e.target.checked;
         if (warningsVisible) fetchWarnings();
-        else clearWarnings();
+        else { clearWarnings(); closeAlertPanel(); }
     });
 
     /* ── Initial render ── */
