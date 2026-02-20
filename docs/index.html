@@ -931,13 +931,10 @@
     map.getPane('labelPane').style.zIndex = 230;
     map.getPane('labelPane').style.pointerEvents = 'none';
 
-    // Labels/roads/borders overlay on top of everything
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png', {
-        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19,
-        pane: 'labelPane',
-    }).addTo(map);
+    // Mapbox dark-v11 already includes labels in its tiles, so no separate
+    // label overlay is needed. Adding one (e.g. CartoDB dark_only_labels)
+    // duplicates city names / roads on top of Mapbox's own labels and makes
+    // the MRMS full-US view look like two stacked maps.
  
     /* ── Error helper ── */
     let errorTimer;
@@ -992,7 +989,11 @@
             imageUrl,
             [sw, ne],
             { opacity, interactive: false, pane: 'radarPane' }
-        ).addTo(map);
+        );
+        currentOverlay.on('error', () => {
+            showError(`Could not load radar image for ${selectedRadar} — try refreshing.`);
+        });
+        currentOverlay.addTo(map);
 
         map.fitBounds([sw, ne], { padding: [24, 24] });
         refreshNowViewing();
@@ -1047,6 +1048,9 @@
     const apHeader = document.getElementById('ap-header');
  
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
+    // Prevent mousedown on close from bubbling to the drag handler (which calls
+    // e.preventDefault() and kills the click event before it can fire).
+    document.getElementById('ap-close').addEventListener('mousedown', e => e.stopPropagation());
  
     // Make panel draggable
     let dragStartX, dragStartY, initialLeft, initialTop;
@@ -1212,10 +1216,22 @@
  
     function extractHazards(p) {
         const desc = p.description || '';
-        const match = desc.match(/\*?\s*(WHAT|HAZARD)\.{3}(.+?)(?=\*?\s*(WHERE|SOURCE|IMPACTS)|\n\n|$)/is);
-        if (match) {
-            return match[2].trim().replace(/\n/g, ' ');
+
+        // NWS descriptions use "* WHAT..." or "HAZARD..." sections.
+        // Dot count after keyword varies (3-4 are common), use \.+.
+        // \r?\n\r?\n handles both Unix (\n\n) and Windows (\r\n\r\n) line endings.
+        const patterns = [
+            /\*?\s*WHAT\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME|LOCATIONS)\.{3,}|\r?\n\r?\n|$)/is,
+            /\*?\s*HAZARD\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME)\.{3,}|\r?\n\r?\n|$)/is,
+        ];
+
+        for (const re of patterns) {
+            const m = desc.match(re);
+            if (m && m[1].trim()) {
+                return m[1].trim().replace(/\s+/g, ' ');
+            }
         }
+
         return p.headline || '—';
     }
  
@@ -1398,24 +1414,27 @@
                 Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
             );
 
-            // Collect unique zone URLs (cap at 40 to avoid too many requests)
+            // Collect unique zone URLs (cap at 150; watches routinely cover 30-80 counties)
             const uniqueZones = [...new Set(
                 zoneAlerts.flatMap(f => f.properties.affectedZones || [])
-            )].slice(0, 40);
+            )].slice(0, 150);
 
             // Fetch zone geometries in parallel
             if (uniqueZones.length > 0) {
                 await Promise.allSettled(uniqueZones.map(url => fetchZoneGeom(url)));
             }
 
-            // Build zone-based alert features with fetched geometry
+            // Build zone-based alert features with fetched geometry.
+            // We push one GeoJSON feature per zone so that every affected county /
+            // forecast zone gets its own polygon on the map (critical for watches
+            // that can span dozens of counties across multiple states).
             const zoneFeatures = [];
             for (const feature of zoneAlerts) {
                 for (const zoneUrl of (feature.properties.affectedZones || [])) {
                     const geom = zoneGeomCache[zoneUrl];
                     if (geom) {
                         zoneFeatures.push({ ...feature, geometry: geom });
-                        break; // one geometry per alert is enough
+                        // Do NOT break — keep iterating so every zone gets a polygon
                     }
                 }
             }
