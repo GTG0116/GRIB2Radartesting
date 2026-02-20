@@ -421,22 +421,7 @@
             overflow: hidden;
             backdrop-filter: blur(12px);
         }
-
-        // ── Adjust zoom control to avoid overlapping top alert bar ──
-function adjustZoomControlPosition() {
-    const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-    if (zoomControl) {
-        const alertHeight = alertPanel.offsetHeight || 0;
-        zoomControl.style.top = `${alertHeight + 10}px`;  // +10 for small gap
-    }
-}
-
-function resetZoomControlPosition() {
-    const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-    if (zoomControl) {
-        zoomControl.style.top = '10px';  // Leaflet default is usually ~10px
-    }
-}
+ 
         /* Panel-visible in compact (right) mode */
         .alert-panel.visible {
             transform: translateX(0);
@@ -796,10 +781,8 @@ function resetZoomControlPosition() {
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
  
-            <!-- Alert detail panel: compact right panel normally,
-                 becomes a full-width top bar in warning-mode         -->
+            <!-- Alert detail panel -->
             <div class="alert-panel" id="alert-panel">
-                <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
                     <div class="ap-header-left">
                         <div class="ap-event" id="ap-event"></div>
@@ -808,7 +791,6 @@ function resetZoomControlPosition() {
                     <button class="ap-close" id="ap-close" title="Close">&#10005;</button>
                 </div>
  
-                <!-- Meta rows -->
                 <div class="ap-body">
                     <div class="ap-row">
                         <span class="ap-label">Area</span>
@@ -824,13 +806,11 @@ function resetZoomControlPosition() {
                     </div>
                 </div>
  
-                <!-- Towns impacted -->
                 <div class="ap-towns-row empty" id="ap-towns-row">
                     <span class="ap-towns-label">Towns</span>
                     <span class="ap-towns-value" id="ap-towns"></span>
                 </div>
  
-                <!-- Headline / description -->
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
         </div>
@@ -852,13 +832,12 @@ function resetZoomControlPosition() {
             s.dataset.bounds = '1';
             s.src = `assets/bounds.js?t=${Date.now()}`;
             s.onload = () => {
-                // bounds.js re-declares RADAR_BOUNDS as a global
                 if (typeof window.RADAR_BOUNDS !== 'undefined') {
                     RADAR_BOUNDS = window.RADAR_BOUNDS;
                 }
                 resolve();
             };
-            s.onerror = resolve;   // still resolve; showError handles missing data
+            s.onerror = resolve;
             document.head.appendChild(s);
         });
     }
@@ -985,12 +964,10 @@ function resetZoomControlPosition() {
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
     map.on('click', closeAlertPanel);
  
-    /* Track the currently highlighted polygon */
     let selectedLayer = null;
     let selectedEvent = null;
  
     function highlightLayer(layer, event) {
-        // Restore previous selection
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
             if (selectedLayer._path) {
@@ -1016,11 +993,27 @@ function resetZoomControlPosition() {
         }
     }
  
+    // ── Adjust zoom control to avoid overlapping top alert bar ──
+    function adjustZoomControlPosition() {
+        const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
+        if (zoomControl) {
+            const alertHeight = alertPanel.offsetHeight || 0;
+            zoomControl.style.top = `${alertHeight + 10}px`;
+        }
+    }
+ 
+    function resetZoomControlPosition() {
+        const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
+        if (zoomControl) {
+            zoomControl.style.top = '10px';
+        }
+    }
+ 
     function closeAlertPanel() {
-    alertPanel.classList.remove('visible');
-    appBody.classList.remove('warning-mode');
-    clearLayerHighlight();
-    resetZoomControlPosition();
+        alertPanel.classList.remove('visible');
+        appBody.classList.remove('warning-mode');
+        clearLayerHighlight();
+        resetZoomControlPosition();
     }
  
     function fmtTime(iso) {
@@ -1044,7 +1037,6 @@ function resetZoomControlPosition() {
  
         return {
             radarIndicated: src.includes('RADAR INDICATED') || src.includes('RADAR-INDICATED'),
-            // "Observed" means a tornado has been visually confirmed on the ground
             observed: isTornado && (
                 src.includes('OBSERVED') ||
                 src.includes('CONFIRMED TORNADO') ||
@@ -1057,15 +1049,10 @@ function resetZoomControlPosition() {
         };
     }
  
-    /**
-     * Parse towns from NWS "LOCATIONS IMPACTED INCLUDE" text.
-     * NWS format: "LOCATIONS IMPACTED INCLUDE...TOWN1...TOWN2...TOWN3 AND TOWN4."
-     */
     function parseImpactedTowns(description) {
         if (!description) return [];
         const upper = description.toUpperCase();
  
-        // Find the start of the impacted locations block
         const markers = [
             'LOCATIONS IMPACTED INCLUDE',
             'SOME LOCATIONS THAT WILL EXPERIENCE',
@@ -1079,25 +1066,19 @@ function resetZoomControlPosition() {
         }
         if (startIdx === -1) return [];
  
-        // Take up to 400 chars after the marker (towns section ends at blank line or end)
         let snippet = description.slice(startIdx, startIdx + 400);
-        // Strip leading "..." or whitespace
         snippet = snippet.replace(/^[\s.]+/, '');
-        // Trim at the first blank line or next section header (all-caps word followed by ...)
         snippet = snippet.split(/\n\n/)[0].split(/\n[A-Z]{4,}\.{3}/)[0];
-        // Remove trailing period
         snippet = snippet.replace(/\.\s*$/, '');
  
-        // Split by "...", " AND ", or ", " separators
         const towns = snippet
             .split(/\.{2,}|\s+AND\s+|,\s*/)
             .map(t => t.replace(/[^a-zA-Z\s\-']/g, '').trim())
             .filter(t => t.length > 1 && t.length < 40 && /[a-zA-Z]/.test(t));
  
-        return [...new Set(towns)];  // deduplicate
+        return [...new Set(towns)];
     }
  
-    /** Pull headline or short description for the detail panel */
     function excerptDesc(p) {
         if (p.headline) return p.headline;
         if (!p.description) return '';
@@ -1106,23 +1087,20 @@ function resetZoomControlPosition() {
     }
  
     function showAlertPanel(props, warnColor, layer) {
-    // Highlight polygon
-    if (layer) highlightLayer(layer, props.event);
-
-    alertPanel.classList.add('visible');
-    appBody.classList.add('warning-mode');
-
-    // Adjust zoom control position after layout has updated
-    setTimeout(adjustZoomControlPosition, 50);   // small delay ensures correct height
-
-    // Header colour tint
-    const hdr = document.getElementById('ap-header');
-    hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
-    hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
-    document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
-    document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
+        if (layer) highlightLayer(layer, props.event);
  
-        // Badges (inline, next to the title)
+        alertPanel.classList.add('visible');
+        appBody.classList.add('warning-mode');
+ 
+        // Adjust zoom control after layout has updated
+        setTimeout(adjustZoomControlPosition, 50);
+ 
+        const hdr = document.getElementById('ap-header');
+        hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
+        hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
+        document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
+        document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
+ 
         const badgesEl = document.getElementById('ap-badges');
         badgesEl.innerHTML = '';
         const flags = detectFlags(props);
@@ -1131,12 +1109,10 @@ function resetZoomControlPosition() {
         if (flags.pds)            badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge pds">PDS</span>');
         if (flags.emergency)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge emerg">Emergency</span>');
  
-        // Meta rows
         document.getElementById('ap-area').textContent    = props.areaDesc || '—';
         document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
         document.getElementById('ap-expires').textContent = fmtTime(props.expires);
  
-        // Towns impacted
         const towns    = parseImpactedTowns(props.description || '');
         const townsRow = document.getElementById('ap-towns-row');
         const townsEl  = document.getElementById('ap-towns');
@@ -1147,17 +1123,13 @@ function resetZoomControlPosition() {
             townsRow.classList.add('empty');
         }
  
-        // Headline / description
         document.getElementById('ap-desc').textContent = excerptDesc(props);
- 
-        alertPanel.classList.add('visible');
     }
  
     /* ══════════════════════════════════════════════════════════
        Weather Warnings
     ══════════════════════════════════════════════════════════ */
     const WARNING_CONFIG = [
-        // Warnings (solid fill)
         { event: 'Tornado Warning',            fill: '#FF0000', border: '#CC0000', watch: false },
         { event: 'Severe Thunderstorm Warning', fill: '#FF8C00', border: '#CC6600', watch: false },
         { event: 'Flash Flood Warning',         fill: '#00AA00', border: '#007700', watch: false },
@@ -1165,14 +1137,12 @@ function resetZoomControlPosition() {
         { event: 'Special Weather Statement',   fill: '#A0A000', border: '#787800', watch: false },
         { event: 'Winter Storm Warning',        fill: '#FF69B4', border: '#CC3090', watch: false },
         { event: 'Blizzard Warning',            fill: '#8B008B', border: '#660066', watch: false },
-        // Watches (dashed outline, lighter fill)
         { event: 'Tornado Watch',               fill: '#FF6060', border: '#CC0000', watch: true  },
         { event: 'Severe Thunderstorm Watch',   fill: '#FFD700', border: '#CCAA00', watch: true  },
         { event: 'Winter Storm Watch',          fill: '#6495ED', border: '#3060BB', watch: true  },
         { event: 'Blizzard Watch',              fill: '#DA70D6', border: '#A040A0', watch: true  },
     ];
  
-    /* Build lookups */
     const WARN_CFG_MAP   = {};
     const WARN_STYLE_MAP = {};
     WARNING_CONFIG.forEach(w => {
@@ -1188,7 +1158,6 @@ function resetZoomControlPosition() {
     });
     const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
  
-    /* Build legend */
     (function buildLegend() {
         const legend = document.getElementById('warnings-legend');
         WARNING_CONFIG.forEach(w => {
