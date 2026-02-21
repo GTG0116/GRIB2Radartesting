@@ -1034,6 +1034,7 @@
     let mcdLayer = null;
     let lsrLayer = null;
     let highlightedNonWarnLayer = null;
+    let skipNextMapClick = false;  // Prevents map click from closing panel after layer click
 
     /* ── SPC Risk Level Definitions ── */
     const SPC_RISK_LEVELS = {
@@ -1131,9 +1132,10 @@
                 onEachFeature: (feature, layer) => {
                     layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
+                        skipNextMapClick = true;
                         const p = feature.properties;
                         const label = String(p.LABEL);
-                        
+
                         const riskMap = {
                             'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk',
                             'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk',
@@ -1177,6 +1179,7 @@
                 onEachFeature: (feature, layer) => {
                     layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
+                        skipNextMapClick = true;
                         const p = feature.properties;
                         const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
 
@@ -1239,6 +1242,7 @@
                 onEachFeature: (feature, layer) => {
                     layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
+                        skipNextMapClick = true;
                         const p = feature.properties;
                         const lsrProps = {
                             event: `Local Storm Report`,
@@ -1274,7 +1278,7 @@
             if (old) old.remove();
             const s = document.createElement('script');
             s.dataset.bounds = '1';
-            s.src = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/bounds.js?t=${Date.now()}`;
+            s.src = `assets/bounds.js?t=${Date.now()}`;
             s.onload = () => {
                 if (typeof window.RADAR_BOUNDS !== 'undefined') {
                     RADAR_BOUNDS = window.RADAR_BOUNDS;
@@ -1362,15 +1366,22 @@
                 refreshNowViewing();
                 return;
             }
-            imageUrl = `https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.png?cb=${Date.now()}`;
-            bounds = [20, -130, 55, -65];
+            // Use IEM's tiled NEXRAD composite — tiles are transparent PNGs (no background tint)
+            currentOverlay = L.tileLayer(
+                'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png',
+                { opacity: opacity, pane: 'radarPane' }
+            ).addTo(map);
+            map.fitBounds([[20, -130], [55, -65]], { padding: [24, 24] });
+            refreshNowViewing();
+            if (warningLayer) warningLayer.bringToFront();
+            return;
         } else {
             if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
                 showError('Radar data not yet available — check back in a few minutes.');
                 return;
             }
             const key = `${selectedRadar}_${selectedProduct}`;
-            imageUrl = `https://raw.githubusercontent.com/GTG0116/GRIB2Radartesting/main/docs/assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
+            imageUrl = `assets/${selectedRadar}_${selectedProduct}.png?t=${Date.now()}`;
             bounds = RADAR_BOUNDS[key];
             if (!bounds) {
                 showError(`No data available for ${selectedRadar} ${PRODUCT_NAMES[selectedProduct]}.`);
@@ -2026,6 +2037,7 @@
     });
  
     map.on('click', function(e) {
+        if (skipNextMapClick) { skipNextMapClick = false; return; }
         closeAlertPanel();
         if (!warningLayer) return;
  
