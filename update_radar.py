@@ -72,15 +72,16 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
     ax = plt.axes(projection=projection)
  
     # Colormap / range keyed on output_name (not the internal PyART field name)
+    # Colormap / range keyed on output_name (not the internal PyART field name)
     if output_name == 'reflectivity':
-        cmap = 'NWSRef'
-        vmin, vmax = -30, 70
+        cmap = 'pyart_NWSRef'
+        vmin, vmax = -20, 75
     elif output_name == 'velocity':
-        cmap = 'BuDRd18'
-        vmin, vmax = -30, 30
+        cmap = 'pyart_NWSVel'
+        vmin, vmax = -50, 50
     else:  # correlation_coefficient
-        cmap = 'RefDiff'
-        vmin, vmax = 0, 1
+        cmap = 'pyart_RefDiff'
+        vmin, vmax = 0.5, 1.05
  
     sweep_idx = find_best_sweep(radar_data, pyart_field)
  
@@ -110,7 +111,7 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
  
     png_path = f"{OUTPUT_DIR}/{radar_code}_{output_name}.png"
     plt.savefig(png_path, bbox_inches='tight', pad_inches=0,
-                transparent=True, dpi=150)
+                transparent=True, dpi=600)
     plt.close()
  
     return png_path, (lat_min, lon_min, lat_max, lon_max)
