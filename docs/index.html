@@ -798,6 +798,74 @@
         .radar-image {
             mix-blend-mode: screen;
         }
+
+        /* ── Floating screenshot button ── */
+        .map-screenshot-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            z-index: 500;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: background 0.15s, transform 0.1s;
+        }
+        .map-screenshot-btn:hover { background: var(--surface-2); }
+        .map-screenshot-btn:active { transform: scale(0.95); }
+
+        /* ── Screenshot legend overlay ── */
+        .screenshot-legend {
+            display: none;
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 800;
+            background: rgba(13,17,23,0.95);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .screenshot-legend-title {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .screenshot-legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .screenshot-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text);
+        }
+        .screenshot-legend-swatch {
+            width: 13px;
+            height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1.5px solid;
+            opacity: 0.85;
+        }
+        .screenshot-legend-swatch.watch { border-style: dashed; }
+        .screenshot-mode .map-screenshot-btn { display: none !important; }
+        .screenshot-mode .screenshot-legend { display: block !important; }
     </style>
 </head>
 <body>
@@ -870,6 +938,13 @@
                         <div class="radio-text">
                             <div class="radio-name">MRMS</div>
                             <div class="radio-desc">US Composite (IEM)</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="RainViewer">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">RainViewer</div>
+                            <div class="radio-desc">Global Radar w/ Snow</div>
                         </div>
                     </div>
                 </div>
@@ -984,6 +1059,8 @@
         <div class="map-wrap">
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
+            <button class="map-screenshot-btn" id="map-screenshot-btn" title="Take Screenshot">&#128247;</button>
+            <div class="screenshot-legend" id="screenshot-legend"></div>
  
             <div class="alert-panel" id="alert-panel">
                 <div class="ap-header" id="ap-header">
@@ -1085,6 +1162,16 @@
     };
     const SPC_THREAT_NAMES = { cat: 'Categorical', torn: 'Tornado', hail: 'Hail', wind: 'Wind' };
 
+    /* Convert SPC LABEL from decimal fraction (0.02) to percentage integer string ("2") */
+    function normalizeSPCLabel(raw) {
+        const s = String(raw).trim();
+        if (/^[A-Z]/i.test(s)) return s; // categorical: TSTM, MRGL, SIGN, etc.
+        const n = parseFloat(s);
+        if (isNaN(n)) return s;
+        if (n > 0 && n < 1) return String(Math.round(n * 100));
+        return String(Math.round(n));
+    }
+
     // Listeners for the SPC/MCD UI elements
     document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
     document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
@@ -1121,7 +1208,7 @@
             spcLayer = L.geoJSON(data, {
                 pane: 'spcPane', // Sit below warnings, above radar
                 style: feature => {
-                    const label = String(feature.properties.LABEL);
+                    const label = normalizeSPCLabel(feature.properties.LABEL);
                     const colors = {
                         // Categorical
                         'TSTM': '#c0e8c0', 'MRGL': '#00ff00', 'SLGT': '#ffff00',
@@ -1269,6 +1356,7 @@
         KDIX: 'Philadelphia, NJ',
         KBGM: 'Binghamton, NY',
         MRMS: 'US Composite',
+        RainViewer: 'Global Radar w/ Snow',
     };
  
     const PRODUCT_NAMES = {
@@ -1276,6 +1364,23 @@
         velocity:                 'Velocity',
         correlation_coefficient:  'Corr. Coeff.',
     };
+
+    /* ── RainViewer API state ── */
+    let rainviewerApiData = null;
+
+    async function fetchRainViewerFrames() {
+        try {
+            const resp = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            rainviewerApiData = await resp.json();
+        } catch (e) {
+            console.warn('Could not load RainViewer API:', e);
+            rainviewerApiData = null;
+        }
+    }
+
+    /* Pre-fetch RainViewer data on load */
+    fetchRainViewerFrames();
  
     /* ── Map init ── */
     const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
@@ -1341,6 +1446,32 @@
             refreshNowViewing();
             if (warningLayer) warningLayer.bringToFront();
             return;
+        } else if (selectedRadar === 'RainViewer') {
+            if (selectedProduct !== 'reflectivity') {
+                showError('RainViewer supports Reflectivity only.');
+                refreshNowViewing();
+                return;
+            }
+            if (!rainviewerApiData || !rainviewerApiData.radar || !rainviewerApiData.radar.past || !rainviewerApiData.radar.past.length) {
+                showError('RainViewer data not available yet — try refreshing.');
+                refreshNowViewing();
+                return;
+            }
+            const frames = rainviewerApiData.radar.past;
+            const latestFrame = frames[frames.length - 1];
+            const tileSize = window.devicePixelRatio > 1 ? 512 : 256;
+            // Color scheme 2 (universal blue), smooth=1, snow=1
+            const tileUrl = `${rainviewerApiData.host}${latestFrame.path}/${tileSize}/{z}/{x}/{y}/2/1_1.png`;
+            currentOverlay = L.tileLayer(tileUrl, {
+                tileSize: 256,
+                opacity: opacity,
+                pane: 'radarPane',
+                maxNativeZoom: 7,
+                maxZoom: 18
+            }).addTo(map);
+            refreshNowViewing();
+            if (warningLayer) warningLayer.bringToFront();
+            return;
         } else {
             if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
                 showError('Radar data not yet available — check back in a few minutes.');
@@ -1402,16 +1533,18 @@
     /* ── Refresh button ── */
     document.getElementById('refresh-btn').addEventListener('click', async () => {
         await reloadBounds();
+        await fetchRainViewerFrames();
         updateOverlay();
         fetchWarnings();
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
         if (document.getElementById('spc-toggle').checked) fetchSPC();
         if (document.getElementById('mcd-toggle').checked) fetchMCD();
     });
- 
+
     /* ── Auto-refresh every 5 minutes ── */
     setInterval(async () => {
         await reloadBounds();
+        await fetchRainViewerFrames();
         updateOverlay();
         fetchWarnings();
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
@@ -1645,7 +1778,7 @@
     function handleSPCClick(layer) {
         const feature = layer.feature;
         const p = feature.properties;
-        const label = String(p.LABEL);
+        const label = normalizeSPCLabel(p.LABEL);
         const day = document.getElementById('spc-day').value;
         const threat = document.getElementById('spc-threat').value;
 
@@ -2160,8 +2293,9 @@
                     borderColor = '#ffa500';
                     textColor = '#ffb347';
                     const riskMap = { 'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk', 'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk', 'MDT': 'Moderate Risk', 'HIGH': 'High Risk', 'SIGN': 'Significant Severe' };
+                    const normalizedLabel = normalizeSPCLabel(p.LABEL);
                     label = 'SPC Outlook';
-                    area = riskMap[String(p.LABEL)] || `${p.LABEL}% Probability`;
+                    area = riskMap[normalizedLabel] || `${normalizedLabel}% Probability`;
                 } else if (meta.type === 'mcd') {
                     borderColor = '#9370DB';
                     textColor = '#c0a0ff';
@@ -2182,22 +2316,65 @@
         }
     });
 
-    document.getElementById('ap-screenshot').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        
+    /* ── Shared screenshot logic ── */
+    async function takeScreenshot() {
+        /* Build a temporary legend showing visible alert types */
+        const legendEl = document.getElementById('screenshot-legend');
+        legendEl.innerHTML = '';
+        const sections = [];
+
+        /* Warnings legend */
+        if (warningsVisible && warningLayer) {
+            const visibleEvents = new Set();
+            warningLayer.eachLayer(l => {
+                const ev = l.feature.properties.event;
+                if (!hiddenAlertTypes.has(ev)) visibleEvents.add(ev);
+            });
+            if (visibleEvents.size > 0) {
+                const items = WARNING_CONFIG
+                    .filter(w => visibleEvents.has(w.event))
+                    .map(w => {
+                        const watchCls = w.watch ? ' watch' : '';
+                        return `<div class="screenshot-legend-item"><div class="screenshot-legend-swatch${watchCls}" style="background:${w.fill};border-color:${w.border}"></div><span>${w.event}</span></div>`;
+                    }).join('');
+                sections.push(`<div class="screenshot-legend-title">Alerts</div><div class="screenshot-legend-items">${items}</div>`);
+            }
+        }
+
+        /* SPC legend */
+        if (spcLayer) {
+            const threat = document.getElementById('spc-threat').value;
+            const day = document.getElementById('spc-day').value;
+            const levels = SPC_RISK_LEVELS[threat] || [];
+            const visibleLabels = new Set();
+            spcLayer.eachLayer(l => {
+                if (l.feature) visibleLabels.add(normalizeSPCLabel(l.feature.properties.LABEL));
+            });
+            if (visibleLabels.size > 0) {
+                const items = levels.filter(lvl => visibleLabels.has(lvl.label)).map(lvl =>
+                    `<div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:${lvl.color};border-color:${lvl.color}"></div><span>${lvl.name}</span></div>`
+                ).join('');
+                if (items) sections.push(`<div class="screenshot-legend-title">SPC ${day.replace('day','Day ')} ${SPC_THREAT_NAMES[threat] || ''}</div><div class="screenshot-legend-items">${items}</div>`);
+            }
+        }
+
+        legendEl.innerHTML = sections.join('');
+
         document.body.classList.add('screenshot-mode');
-        
-        await new Promise(r => setTimeout(r, 150));
-        
+        await new Promise(r => setTimeout(r, 200));
+
         try {
             const canvas = await html2canvas(document.body, {
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#0d1117'
             });
-            
+
             const link = document.createElement('a');
-            const eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
+            const alertOpen = alertPanel.classList.contains('visible');
+            const eventName = alertOpen
+                ? document.getElementById('ap-event').textContent.replace(/\s+/g, '_')
+                : 'Map';
             link.download = `RadarViewer_${eventName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
@@ -2206,7 +2383,17 @@
             showError('Failed to capture screenshot.');
         } finally {
             document.body.classList.remove('screenshot-mode');
+            legendEl.innerHTML = '';
         }
+    }
+
+    document.getElementById('ap-screenshot').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await takeScreenshot();
+    });
+
+    document.getElementById('map-screenshot-btn').addEventListener('click', async () => {
+        await takeScreenshot();
     });
  
     /* ── Initial render ── */
