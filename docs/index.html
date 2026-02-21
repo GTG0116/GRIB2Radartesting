@@ -1130,9 +1130,9 @@
                     };
                 },
                 onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
                         skipNextMapClick = true;
+                        const p = feature.properties;
                         const p = feature.properties;
                         const label = String(p.LABEL);
 
@@ -1177,7 +1177,6 @@
                 pane: 'spcPane',
                 style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' },
                 onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
                         skipNextMapClick = true;
                         const p = feature.properties;
@@ -1240,7 +1239,6 @@
                     });
                 },
                 onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
                         skipNextMapClick = true;
                         const p = feature.properties;
