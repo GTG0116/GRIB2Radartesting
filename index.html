@@ -1,4 +1,3 @@
-<!-- docs/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -391,6 +390,57 @@
         }
  
         .legend-swatch.watch { border-style: dashed; }
+
+        /* ── Panel type badge ─────────────────────────────── */
+        .ap-type-badge {
+            font-size: calc(9px * var(--scale));
+            font-weight: 700;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+            padding: calc(2px * var(--scale)) calc(8px * var(--scale));
+            border-radius: calc(4px * var(--scale));
+            border: 1px solid;
+            display: none;
+            white-space: nowrap;
+        }
+        .ap-type-badge.spc { background: rgba(255,140,0,0.18);   color: #ffb347; border-color: rgba(255,140,0,0.4); }
+        .ap-type-badge.mcd { background: rgba(147,112,219,0.22); color: #c0a0ff; border-color: rgba(147,112,219,0.5); }
+        .ap-type-badge.lsr { background: rgba(255,255,80,0.12);  color: #dddd55; border-color: rgba(255,255,80,0.3); }
+
+        /* ── SPC Risk levels chips ─────────────────────────── */
+        .ap-risk-section {
+            padding: calc(8px * var(--scale)) calc(16px * var(--scale)) calc(10px * var(--scale));
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: none;
+        }
+        .ap-risk-label {
+            font-size: calc(10px * var(--scale));
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: calc(6px * var(--scale));
+        }
+        .ap-risk-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: calc(5px * var(--scale));
+        }
+        .ap-risk-chip {
+            font-size: calc(10px * var(--scale));
+            font-weight: 700;
+            padding: calc(3px * var(--scale)) calc(9px * var(--scale));
+            border-radius: calc(4px * var(--scale));
+            border: 1.5px solid transparent;
+            opacity: 0.38;
+            cursor: default;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+        .ap-risk-chip.active {
+            opacity: 1;
+            box-shadow: 0 0 6px rgba(255,255,255,0.15);
+        }
  
                 /* ── Alert detail panel ───────────────────────────── */
         .alert-panel {
@@ -693,15 +743,21 @@
         .screenshot-mode .alert-panel {
             top: auto !important;
             bottom: 40px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
+            /* Center without transform to prevent html2canvas clipping */
+            left: 0 !important;
+            right: 0 !important;
+            margin: auto !important;
             width: 85% !important;
             max-width: 600px !important;
-            background: rgba(13, 17, 23, 0.95) !important;
+            /* Remove backdrop-filter to prevent the dark solid box bug */
+            backdrop-filter: none !important;
+            background: rgba(13, 17, 23, 0.98) !important;
             border: 2px solid var(--accent) !important;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
+            transform: none !important;
         }
         .screenshot-mode .ap-header {
+            position: static !important; /* Fixes missing header */
             flex-direction: column;
             text-align: center;
             padding-top: 18px;
@@ -729,12 +785,14 @@
             font-size: 11px !important;
         }
         .leaflet-control-attribution a { color: var(--accent) !important; }
+        .radar-image {
+            mix-blend-mode: screen;
+        }
     </style>
 </head>
 <body>
 <div class="app">
  
-    <!-- Header -->
     <header class="header">
         <div class="header-logo">&#127783;</div>
         <span class="header-title">Weather Radar Viewer</span>
@@ -746,13 +804,10 @@
         </div>
     </header>
  
-    <!-- Main body -->
     <div class="body" id="app-body">
  
-        <!-- Side panel -->
         <aside class="panel">
  
-            <!-- Now Viewing -->
             <div class="section">
                 <div class="section-label">Now Viewing</div>
                 <div class="now-viewing">
@@ -762,7 +817,6 @@
                 </div>
             </div>
  
-            <!-- Radar site -->
             <div class="section">
                 <div class="section-label">Radar Site</div>
                 <div class="radio-group" id="radar-group">
@@ -811,7 +865,6 @@
                 </div>
             </div>
  
-            <!-- Product -->
             <div class="section">
                 <div class="section-label">Product</div>
                 <div class="radio-group" id="product-group">
@@ -839,7 +892,6 @@
                 </div>
             </div>
  
-            <!-- Opacity -->
             <div class="section">
                 <div class="section-label">Radar Opacity</div>
                 <div class="slider-row">
@@ -850,24 +902,57 @@
             </div>
 
             <div class="section">
-                <div class="section-label">Storm Prediction Center</div>
+                <div class="section-label">SPC Outlooks</div>
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <select id="spc-day" style="flex: 1; padding: 4px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
+                        <option value="day1">Day 1</option>
+                        <option value="day2">Day 2</option>
+                        <option value="day3">Day 3</option>
+                    </select>
+                    <select id="spc-threat" style="flex: 1; padding: 4px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
+                        <option value="cat">Categorical</option>
+                        <option value="torn">Tornado</option>
+                        <option value="hail">Hail</option>
+                        <option value="wind">Wind</option>
+                    </select>
+                </div>
                 <div class="toggle-row">
-                    <span class="toggle-label">Day 1 Outlook</span>
+                    <span class="toggle-label">Show SPC Outlook</span>
                     <label class="toggle">
                         <input type="checkbox" id="spc-toggle">
                         <span class="toggle-track"></span>
                     </label>
                 </div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">Mesoscale Discussions</div>
                 <div class="toggle-row">
-                    <span class="toggle-label">Mesoscale Discussions</span>
+                    <span class="toggle-label">Show Active MCDs</span>
                     <label class="toggle">
                         <input type="checkbox" id="mcd-toggle">
                         <span class="toggle-track"></span>
                     </label>
                 </div>
             </div>
+
+            <div class="section">
+                <div class="section-label">Local Storm Reports (24h)</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Reports</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="lsr-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="warnings-legend" style="margin-top: 8px;">
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ff0000;border-radius:50%;width:10px;height:10px;"></div><span>Tornado</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#00ff00;border-radius:50%;width:10px;height:10px;"></div><span>Hail</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#0000ff;border-radius:50%;width:10px;height:10px;"></div><span>Wind</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ffff00;border-radius:50%;width:10px;height:10px;"></div><span>Other</span></div>
+                </div>
+            </div>
             
-            <!-- Weather Warnings -->
             <div class="section">
                 <div class="section-label">Weather Warnings</div>
                 <div class="toggle-row">
@@ -880,59 +965,62 @@
                 <div class="warnings-legend" id="warnings-legend"></div>
             </div>
  
-            <!-- Refresh -->
             <div class="section">
                 <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
             </div>
  
         </aside>
  
-        <!-- Map -->
         <div class="map-wrap">
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
  
-            <!-- Alert detail panel -->
             <div class="alert-panel" id="alert-panel">
-                <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
                     <div class="ap-header-left">
                         <div class="ap-event" id="ap-event"></div>
                         <div class="ap-badges-inline" id="ap-badges"></div>
+                        <span class="ap-type-badge" id="ap-type-badge"></span>
                     </div>
                     <div class="ap-header-right">
                         <button class="ap-action-btn" id="ap-screenshot" title="Take Screenshot">&#128247;</button>
                         <button class="ap-action-btn" id="ap-close" title="Close">&#10005;</button>
                     </div>
                 </div>
- 
-                <!-- Meta rows -->
+
+                <div class="ap-risk-section" id="ap-risk-section">
+                    <div class="ap-risk-label" id="ap-risk-label">Risk Levels</div>
+                    <div class="ap-risk-chips" id="ap-risk-chips"></div>
+                </div>
+
                 <div class="ap-body">
-                    <div class="ap-row">
-                        <span class="ap-label">Area</span>
+                    <div class="ap-row" id="ap-row-area">
+                        <span class="ap-label" id="ap-label-area">Area</span>
                         <span class="ap-value" id="ap-area"></span>
                     </div>
-                    <div class="ap-row">
-                        <span class="ap-label">Issued</span>
+                    <div class="ap-row" id="ap-row-issued">
+                        <span class="ap-label" id="ap-label-issued">Issued</span>
                         <span class="ap-value" id="ap-issued"></span>
                     </div>
-                    <div class="ap-row">
-                        <span class="ap-label">Expires</span>
+                    <div class="ap-row" id="ap-row-expires">
+                        <span class="ap-label" id="ap-label-expires">Expires</span>
                         <span class="ap-value" id="ap-expires"></span>
                     </div>
-                    <div class="ap-row">
-                        <span class="ap-label">Hazards</span>
+                    <div class="ap-row" id="ap-row-hazards">
+                        <span class="ap-label" id="ap-label-hazards">Hazards</span>
                         <span class="ap-value" id="ap-hazards"></span>
                     </div>
+                    <div class="ap-row" id="ap-row-watchprob" style="display:none;">
+                        <span class="ap-label" id="ap-label-watchprob">Watch Prob</span>
+                        <span class="ap-value" id="ap-watchprob"></span>
+                    </div>
                 </div>
- 
-                <!-- Towns impacted -->
+
                 <div class="ap-towns-row empty" id="ap-towns-row">
                     <span class="ap-towns-label">Towns</span>
                     <span class="ap-towns-value" id="ap-towns"></span>
                 </div>
- 
-                <!-- Headline / description -->
+
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
         </div>
@@ -941,6 +1029,240 @@
 </div>
  
 <script>
+    /* ── Layer globals ── */
+    let spcLayer = null;
+    let mcdLayer = null;
+    let lsrLayer = null;
+    let highlightedNonWarnLayer = null;
+
+    /* ── SPC Risk Level Definitions ── */
+    const SPC_RISK_LEVELS = {
+        cat: [
+            { label: 'TSTM', name: 'Gen. Thunderstorms', color: '#c0e8c0' },
+            { label: 'MRGL', name: 'Marginal',           color: '#00ff00' },
+            { label: 'SLGT', name: 'Slight',             color: '#ffff00' },
+            { label: 'ENH',  name: 'Enhanced',           color: '#ffa500' },
+            { label: 'MDT',  name: 'Moderate',           color: '#ff0000' },
+            { label: 'HIGH', name: 'High',               color: '#ff00ff' },
+        ],
+        torn: [
+            { label: '2',    name: '2%',          color: '#008000' },
+            { label: '5',    name: '5%',          color: '#8B4513' },
+            { label: '10',   name: '10%',         color: '#ffff00' },
+            { label: '15',   name: '15%',         color: '#ff0000' },
+            { label: '30',   name: '30%',         color: '#ff00ff' },
+            { label: '45',   name: '45%',         color: '#800080' },
+            { label: '60',   name: '60%',         color: '#4444ff' },
+            { label: 'SIGN', name: 'Significant', color: '#bbbbbb' },
+        ],
+        hail: [
+            { label: '5',    name: '5%',          color: '#8B4513' },
+            { label: '15',   name: '15%',         color: '#ff0000' },
+            { label: '30',   name: '30%',         color: '#ff00ff' },
+            { label: '45',   name: '45%',         color: '#800080' },
+            { label: '60',   name: '60%',         color: '#4444ff' },
+            { label: 'SIGN', name: 'Sig. Hail',   color: '#bbbbbb' },
+        ],
+        wind: [
+            { label: '5',    name: '5%',          color: '#8B4513' },
+            { label: '15',   name: '15%',         color: '#ff0000' },
+            { label: '30',   name: '30%',         color: '#ff00ff' },
+            { label: '45',   name: '45%',         color: '#800080' },
+            { label: '60',   name: '60%',         color: '#4444ff' },
+            { label: 'SIGN', name: 'Sig. Wind',   color: '#bbbbbb' },
+        ],
+    };
+    const SPC_THREAT_NAMES = { cat: 'Categorical', torn: 'Tornado', hail: 'Hail', wind: 'Wind' };
+
+    // Listeners for the SPC/MCD UI elements
+    document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
+    document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
+    
+    // Day 3 restriction logic
+    document.getElementById('spc-day').addEventListener('change', (e) => {
+        const threatSelect = document.getElementById('spc-threat');
+        if (e.target.value === 'day3') {
+            threatSelect.value = 'cat';
+            threatSelect.disabled = true;
+        } else {
+            threatSelect.disabled = false;
+        }
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+    });
+
+    document.getElementById('spc-threat').addEventListener('change', () => {
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+    });
+
+    async function fetchSPC() {
+        if (spcLayer) { map.removeLayer(spcLayer); spcLayer = null; }
+        if (!document.getElementById('spc-toggle').checked) return;
+
+        const day = document.getElementById('spc-day').value;
+        const threat = document.getElementById('spc-threat').value;
+        const url = `https://www.spc.noaa.gov/products/outlook/${day}otlk_${threat}.nolyr.geojson`;
+
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Data not available');
+            const data = await resp.json();
+
+            spcLayer = L.geoJSON(data, {
+                pane: 'spcPane', // Sit below warnings, above radar
+                style: feature => {
+                    const label = String(feature.properties.LABEL);
+                    const colors = {
+                        // Categorical
+                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00', 'SLGT': '#ffff00',
+                        'ENH': '#ffa500',  'MDT': '#ff0000',  'HIGH': '#ff00ff',
+                        // Probabilistic (%)
+                        '2': '#008000', '5': '#8B4513', '10': '#FFFF00',
+                        '15': '#ff0000', '30': '#ff00ff', '45': '#800080',
+                        '60': '#0000FF', 'SIGN': '#000000'
+                    };
+                    return { 
+                        color: colors[label] || '#888', 
+                        weight: label === 'SIGN' ? 3 : 2, 
+                        opacity: 0.9, 
+                        fillOpacity: label === 'SIGN' ? 0.0 : 0.15, 
+                        dashArray: label === 'SIGN' ? '8 4' : null 
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const label = String(p.LABEL);
+                        
+                        const riskMap = {
+                            'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk',
+                            'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk',
+                            'MDT': 'Moderate Risk', 'HIGH': 'High Risk',
+                            'SIGN': 'Significant Severe (Hatched)'
+                        };
+                        
+                        const riskLevel = riskMap[label] || `${label}% Probability`;
+                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
+
+                        const dayLabel = day.replace(/^day(\d)$/, 'Day $1');
+                        const spcProps = {
+                            event: `SPC ${dayLabel} ${SPC_THREAT_NAMES[threat] || threat.toUpperCase()} Outlook`,
+                            areaDesc: riskLevel,
+                            effective: parseTime(p.ISSUE),
+                            expires: parseTime(p.EXPIRE),
+                            spcThreat: threat,
+                            spcLabel: label,
+                            parameters: {}
+                        };
+
+                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
+                        showAlertPanel(spcProps, layer.options.color, layer, 'spc');
+                    });
+                }
+            }).addTo(map);
+        } catch (e) { console.warn('Could not load SPC Outlook:', e); showError(`Could not load SPC ${day.toUpperCase()} ${threat.toUpperCase()} outlook.`); }
+    }
+
+    async function fetchMCD() {
+        if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
+        if (!document.getElementById('mcd-toggle').checked) return;
+
+        try {
+            const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
+            const data = await resp.json();
+
+            mcdLayer = L.geoJSON(data, {
+                pane: 'spcPane',
+                style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
+
+                        const probStr = p.prob_of_watch;
+                        const watchProb = probStr != null && probStr !== ''
+                            ? (String(probStr).endsWith('%') ? probStr : `${probStr}%`)
+                            : null;
+                        const mcdProps = {
+                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
+                            effective: parseNOAATime(p.issue_time),
+                            expires: parseNOAATime(p.expire_time),
+                            concerning: p.concerning || 'Hazardous Weather',
+                            watchProb: watchProb,
+                            parameters: {}
+                        };
+                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
+                        showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+                    });
+                }
+            }).addTo(map);
+        } catch (e) { console.warn('Could not load MCDs:', e); showError('Could not load Mesoscale Discussions.'); }
+    }
+
+    /* ── Local Storm Reports (LSR) ── */
+    document.getElementById('lsr-toggle').addEventListener('change', fetchLSR);
+
+    function getLSRColor(type) {
+        if (!type) return '#ffff00';
+        const t = type.toUpperCase();
+        if (t.includes('TORNADO')) return '#ff0000';
+        if (t.includes('HAIL')) return '#00ff00';
+        if (t.includes('WIND') || t.includes('DMG')) return '#0000ff';
+        if (t.includes('FLOOD')) return '#00ffaa';
+        if (t.includes('SNOW') || t.includes('ICE') || t.includes('FREEZ')) return '#ff00ff';
+        return '#ffff00'; // Default/Other
+    }
+
+    async function fetchLSR() {
+        if (lsrLayer) { map.removeLayer(lsrLayer); lsrLayer = null; }
+        if (!document.getElementById('lsr-toggle').checked) return;
+
+        try {
+            // Using IEM LSR GeoJSON (defaults to the last 24 hours)
+            const resp = await fetch('https://mesonet.agron.iastate.edu/geojson/lsr.php');
+            if (!resp.ok) throw new Error('Data not available');
+            const data = await resp.json();
+
+            lsrLayer = L.geoJSON(data, {
+                pane: 'warningPane', // Keeps it above radar/spc layers
+                pointToLayer: (feature, latlng) => {
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: getLSRColor(feature.properties.typetext),
+                        color: '#0d1117',
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.85
+                    });
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const lsrProps = {
+                            event: `Local Storm Report`,
+                            areaDesc: `${p.city}, ${p.state}`,
+                            effective: p.valid,
+                            expires: null,
+                            lsrType: `${p.typetext}${p.magnitude ? ' \u00b7 Magnitude: ' + p.magnitude : ''}`,
+                            description: p.remark || 'No remarks provided.',
+                            parameters: {}
+                        };
+                        map.setView(layer.getLatLng(), Math.max(map.getZoom(), 8));
+                        showAlertPanel(lsrProps, getLSRColor(p.typetext), layer, 'lsr');
+                    });
+                    
+                    // Simple tooltip on hover
+                    layer.bindTooltip(`<b>${feature.properties.typetext}</b><br>${feature.properties.city}, ${feature.properties.state}`, {className: 'warning-tip'});
+                }
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load LSRs:', e);
+            showError('Could not load Local Storm Reports.');
+        }
+    }
+
     /* ══════════════════════════════════════════════════════════
        Bounds — loaded dynamically so refresh busts the cache
     ══════════════════════════════════════════════════════════ */
@@ -959,7 +1281,7 @@
                 }
                 resolve();
             };
-            s.onerror = resolve;   // still resolve; showError handles missing data
+            s.onerror = resolve;   
             document.head.appendChild(s);
         });
     }
@@ -986,10 +1308,9 @@
     };
  
     /* ── Map init ── */
-    const map = L.map('map', { zoomControl: true }).setView([40.0, -78.0], 7);
+    const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
  
-    // Mapbox tile layer
-    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';  // Replace with your Mapbox token
+    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';
     L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${accessToken}`, {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
@@ -1001,16 +1322,16 @@
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 210;
     map.getPane('radarPane').style.pointerEvents = 'none';
+
+    map.createPane('spcPane');
+    map.getPane('spcPane').style.zIndex = 215; // Set SPC safely between radar and warnings
+
     map.createPane('warningPane');
     map.getPane('warningPane').style.zIndex = 220;
+
     map.createPane('labelPane');
     map.getPane('labelPane').style.zIndex = 230;
     map.getPane('labelPane').style.pointerEvents = 'none';
-
-    // Mapbox dark-v11 already includes labels in its tiles, so no separate
-    // label overlay is needed. Adding one (e.g. CartoDB dark_only_labels)
-    // duplicates city names / roads on top of Mapbox's own labels and makes
-    // the MRMS full-US view look like two stacked maps.
  
     /* ── Error helper ── */
     let errorTimer;
@@ -1029,7 +1350,7 @@
             PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
     }
  
-        /* ── Overlay update ── */
+    /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
 
@@ -1064,7 +1385,7 @@
         currentOverlay = L.imageOverlay(
             imageUrl,
             [sw, ne],
-            { opacity, interactive: false, pane: 'radarPane' }
+            { opacity, interactive: false, pane: 'radarPane', className: 'radar-image' }
         );
         currentOverlay.on('error', () => {
             showError(`Could not load radar image for ${selectedRadar} — try refreshing.`);
@@ -1074,7 +1395,6 @@
         map.fitBounds([sw, ne], { padding: [24, 24] });
         refreshNowViewing();
 
-        // Ensure warning layer stays above radar
         if (warningLayer) warningLayer.bringToFront();
     }
 
@@ -1107,6 +1427,9 @@
         await reloadBounds();
         updateOverlay();
         fetchWarnings();
+        if (document.getElementById('lsr-toggle').checked) fetchLSR();
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+        if (document.getElementById('mcd-toggle').checked) fetchMCD();
     });
  
     /* ── Auto-refresh every 5 minutes ── */
@@ -1114,6 +1437,9 @@
         await reloadBounds();
         updateOverlay();
         fetchWarnings();
+        if (document.getElementById('lsr-toggle').checked) fetchLSR();
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+        if (document.getElementById('mcd-toggle').checked) fetchMCD();
     }, 5 * 60 * 1000);
  
     /* ══════════════════════════════════════════════════════════
@@ -1124,8 +1450,6 @@
     const apHeader = document.getElementById('ap-header');
  
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
-    // Prevent mousedown on close from bubbling to the drag handler (which calls
-    // e.preventDefault() and kills the click event before it can fire).
     document.getElementById('ap-close').addEventListener('mousedown', e => e.stopPropagation());
  
     // Make panel draggable
@@ -1151,7 +1475,6 @@
         document.removeEventListener('mouseup', dragStop);
     }
 
-    // Responsive text scaling when panel is resized
     if (typeof ResizeObserver !== 'undefined') {
         const apResizeObserver = new ResizeObserver(([entry]) => {
             const w = entry.contentRect.width;
@@ -1161,17 +1484,13 @@
         apResizeObserver.observe(alertPanel);
     }
  
-    /* Track the currently highlighted polygon */
     let selectedLayer = null;
     let selectedEvent = null;
  
     function highlightLayer(layer, event) {
-        // Restore previous selection
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
-            if (selectedLayer._path) {
-                selectedLayer._path.classList.remove('warn-selected');
-            }
+            if (selectedLayer._path) selectedLayer._path.classList.remove('warn-selected');
         }
         selectedLayer = layer;
         selectedEvent = event;
@@ -1184,9 +1503,7 @@
     function clearLayerHighlight() {
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
-            if (selectedLayer._path) {
-                selectedLayer._path.classList.remove('warn-selected');
-            }
+            if (selectedLayer._path) selectedLayer._path.classList.remove('warn-selected');
             selectedLayer = null;
             selectedEvent = null;
         }
@@ -1194,20 +1511,18 @@
  
     function adjustZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-        if (zoomControl) {
-            zoomControl.style.top = '10px';
-        }
+        if (zoomControl) zoomControl.style.top = '10px';
     }
  
     function resetZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-        if (zoomControl) {
-            zoomControl.style.top = '10px';
-        }
+        if (zoomControl) zoomControl.style.top = '10px';
     }
  
     function closeAlertPanel() {
         alertPanel.classList.remove('visible');
+
+        /* Reset NWS warning layers */
         if (warningLayer) {
             warningLayer.eachLayer(l => {
                 const event = l.feature.properties.event;
@@ -1217,13 +1532,34 @@
         }
         selectedLayer = null;
         selectedEvent = null;
+
+        /* Clear SPC/MCD polygon highlight */
+        if (highlightedNonWarnLayer && highlightedNonWarnLayer._path) {
+            highlightedNonWarnLayer._path.classList.remove('warn-selected');
+        }
+        highlightedNonWarnLayer = null;
+
+        /* Reset panel elements to defaults */
+        document.getElementById('ap-risk-section').style.display = 'none';
+        const typeBadge = document.getElementById('ap-type-badge');
+        typeBadge.style.display = 'none';
+        typeBadge.className = 'ap-type-badge';
+
+        ['area', 'issued', 'expires', 'hazards'].forEach(key => {
+            const rowEl   = document.getElementById(`ap-row-${key}`);
+            const labelEl = document.getElementById(`ap-label-${key}`);
+            if (rowEl)   rowEl.style.display   = '';
+            if (labelEl) labelEl.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+        });
+        document.getElementById('ap-row-watchprob').style.display = 'none';
+        document.getElementById('ap-desc').style.display = '';
+
         resetZoomControlPosition();
 
-        // Wait for the CSS slide-out transition to finish, then clear inline dragging coordinates
         setTimeout(() => {
             alertPanel.style.left = '';
-            alertPanel.style.top = '';
-        }, 300); 
+            alertPanel.style.top  = '';
+        }, 300);
     }
  
     function fmtTime(iso) {
@@ -1297,9 +1633,6 @@
     function extractHazards(p) {
         const desc = p.description || '';
 
-        // NWS descriptions use "* WHAT..." or "HAZARD..." sections.
-        // Dot count after keyword varies (3-4 are common), use \.+.
-        // \r?\n\r?\n handles both Unix (\n\n) and Windows (\r\n\r\n) line endings.
         const patterns = [
             /\*?\s*WHAT\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME|LOCATIONS)\.{3,}|\r?\n\r?\n|$)/is,
             /\*?\s*HAZARD\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME)\.{3,}|\r?\n\r?\n|$)/is,
@@ -1324,8 +1657,9 @@
         showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
     };
  
-    function showAlertPanel(props, warnColor, layer) {
-        if (warningLayer) {
+    function showAlertPanel(props, warnColor, layer, panelType = 'alert') {
+        /* ── Warning layer handling (only for NWS alert clicks) ── */
+        if (panelType === 'alert' && warningLayer) {
             warningLayer.eachLayer(l => {
                 if (l === layer) {
                     highlightLayer(l, props.event);
@@ -1333,45 +1667,191 @@
                     l.setStyle({opacity: 0, fillOpacity: 0});
                 }
             });
+        } else if ((panelType === 'spc' || panelType === 'mcd') && layer) {
+            if (highlightedNonWarnLayer && highlightedNonWarnLayer._path) {
+                highlightedNonWarnLayer._path.classList.remove('warn-selected');
+            }
+            highlightedNonWarnLayer = layer;
+            layer.bringToFront();
+            if (layer._path) layer._path.classList.add('warn-selected');
         }
- 
+
         alertPanel.classList.add('visible');
- 
         setTimeout(adjustZoomControlPosition, 50);
- 
+
+        /* ── Header ── */
         const hdr = document.getElementById('ap-header');
-        hdr.style.background       = warnColor ? warnColor + '22' : 'transparent';
+        hdr.style.background        = warnColor ? warnColor + '22' : 'transparent';
         hdr.style.borderBottomColor = warnColor ? warnColor + '44' : '';
         document.getElementById('ap-event').style.color = warnColor || 'var(--text)';
         document.getElementById('ap-event').textContent = props.event || 'Weather Alert';
- 
+
+        /* ── Type badge ── */
+        const typeBadge = document.getElementById('ap-type-badge');
+        typeBadge.className = 'ap-type-badge';
+        typeBadge.style.display = 'none';
+        typeBadge.textContent = '';
+        if (panelType === 'spc') {
+            typeBadge.textContent = 'SPC Outlook';
+            typeBadge.classList.add('spc');
+            typeBadge.style.display = 'inline-block';
+        } else if (panelType === 'mcd') {
+            typeBadge.textContent = 'SPC MCD';
+            typeBadge.classList.add('mcd');
+            typeBadge.style.display = 'inline-block';
+        } else if (panelType === 'lsr') {
+            typeBadge.textContent = 'Local Storm Report';
+            typeBadge.classList.add('lsr');
+            typeBadge.style.display = 'inline-block';
+        }
+
+        /* ── Standard NWS alert badges (alert type only) ── */
         const badgesEl = document.getElementById('ap-badges');
         badgesEl.innerHTML = '';
-        const flags = detectFlags(props);
-        if (flags.observed)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge observed">Observed</span>');
-        if (flags.radarIndicated) badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge radar">Radar Indicated</span>');
-        if (flags.pds)            badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge pds">PDS</span>');
-        if (flags.emergency)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge emerg">Emergency</span>');
- 
-        document.getElementById('ap-area').textContent    = props.areaDesc || '—';
-        document.getElementById('ap-issued').textContent  = fmtTime(props.effective || props.onset);
-        document.getElementById('ap-expires').textContent = fmtTime(props.expires);
-        document.getElementById('ap-hazards').textContent = extractHazards(props);
- 
-        const towns    = parseImpactedTowns(props.description || '');
+        if (panelType === 'alert') {
+            const flags = detectFlags(props);
+            if (flags.observed)       badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge observed">Observed</span>');
+            if (flags.radarIndicated) badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge radar">Radar Indicated</span>');
+            if (flags.pds)            badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge pds">PDS</span>');
+            if (flags.emergency)      badgesEl.insertAdjacentHTML('beforeend', '<span class="ap-badge emerg">Emergency</span>');
+        }
+
+        /* ── SPC Risk level chips ── */
+        const riskSection = document.getElementById('ap-risk-section');
+        const riskLabel   = document.getElementById('ap-risk-label');
+        const riskChips   = document.getElementById('ap-risk-chips');
+        if (panelType === 'spc' && props.spcThreat && props.spcLabel) {
+            riskLabel.textContent = `${SPC_THREAT_NAMES[props.spcThreat] || props.spcThreat} \u2014 Risk Levels`;
+            riskChips.innerHTML = '';
+            const levels = SPC_RISK_LEVELS[props.spcThreat] || SPC_RISK_LEVELS.cat;
+            levels.forEach(lvl => {
+                const chip = document.createElement('span');
+                chip.className = 'ap-risk-chip' + (lvl.label === props.spcLabel ? ' active' : '');
+                chip.textContent = lvl.name;
+                chip.style.color = lvl.color;
+                chip.style.background = lvl.color + '22';
+                chip.style.borderColor = lvl.label === props.spcLabel ? lvl.color : 'transparent';
+                chip.title = lvl.label;
+                riskChips.appendChild(chip);
+            });
+            riskSection.style.display = '';
+        } else {
+            riskSection.style.display = 'none';
+        }
+
+        /* ── Row elements ── */
+        const rows = {
+            area:      { el: document.getElementById('ap-row-area'),      label: document.getElementById('ap-label-area'),      val: document.getElementById('ap-area') },
+            issued:    { el: document.getElementById('ap-row-issued'),    label: document.getElementById('ap-label-issued'),    val: document.getElementById('ap-issued') },
+            expires:   { el: document.getElementById('ap-row-expires'),   label: document.getElementById('ap-label-expires'),   val: document.getElementById('ap-expires') },
+            hazards:   { el: document.getElementById('ap-row-hazards'),   label: document.getElementById('ap-label-hazards'),   val: document.getElementById('ap-hazards') },
+            watchprob: { el: document.getElementById('ap-row-watchprob'), label: document.getElementById('ap-label-watchprob'), val: document.getElementById('ap-watchprob') },
+        };
         const townsRow = document.getElementById('ap-towns-row');
         const townsEl  = document.getElementById('ap-towns');
-        if (towns.length) {
-            townsEl.textContent = towns.join(', ');
-            townsRow.classList.remove('empty');
-        } else {
+        const descEl   = document.getElementById('ap-desc');
+
+        if (panelType === 'spc') {
+            rows.area.label.textContent  = 'Risk Level';
+            rows.area.val.textContent    = props.areaDesc || '\u2014';
+            rows.area.el.style.display   = '';
+
+            rows.issued.label.textContent = 'Updated';
+            rows.issued.val.textContent   = fmtTime(props.effective);
+            rows.issued.el.style.display  = '';
+
+            rows.expires.label.textContent = 'Expires';
+            rows.expires.val.textContent   = fmtTime(props.expires);
+            rows.expires.el.style.display  = '';
+
+            rows.hazards.el.style.display   = 'none';
+            rows.watchprob.el.style.display = 'none';
             townsRow.classList.add('empty');
+            descEl.textContent   = '';
+            descEl.style.display = 'none';
+
+        } else if (panelType === 'mcd') {
+            rows.area.el.style.display = 'none';
+
+            rows.issued.label.textContent = 'Issued';
+            rows.issued.val.textContent   = fmtTime(props.effective);
+            rows.issued.el.style.display  = '';
+
+            rows.expires.label.textContent = 'Expires';
+            rows.expires.val.textContent   = fmtTime(props.expires);
+            rows.expires.el.style.display  = '';
+
+            rows.hazards.label.textContent = 'Concerning';
+            rows.hazards.val.textContent   = props.concerning || '\u2014';
+            rows.hazards.el.style.display  = '';
+
+            if (props.watchProb) {
+                rows.watchprob.label.textContent = 'Watch Prob';
+                rows.watchprob.val.textContent   = props.watchProb;
+                rows.watchprob.el.style.display  = '';
+            } else {
+                rows.watchprob.el.style.display = 'none';
+            }
+
+            townsRow.classList.add('empty');
+            descEl.textContent   = '';
+            descEl.style.display = 'none';
+
+        } else if (panelType === 'lsr') {
+            rows.area.label.textContent  = 'Location';
+            rows.area.val.textContent    = props.areaDesc || '\u2014';
+            rows.area.el.style.display   = '';
+
+            rows.issued.label.textContent = 'Time';
+            rows.issued.val.textContent   = fmtTime(props.effective);
+            rows.issued.el.style.display  = '';
+
+            rows.expires.el.style.display   = 'none';
+
+            rows.hazards.label.textContent = 'Type';
+            rows.hazards.val.textContent   = props.lsrType || '\u2014';
+            rows.hazards.el.style.display  = '';
+
+            rows.watchprob.el.style.display = 'none';
+            townsRow.classList.add('empty');
+
+            const rawDesc = props.description || '';
+            descEl.textContent   = rawDesc;
+            descEl.style.display = rawDesc ? '' : 'none';
+
+        } else {
+            /* Default: NWS weather warning */
+            rows.area.label.textContent  = 'Area';
+            rows.area.val.textContent    = props.areaDesc || '\u2014';
+            rows.area.el.style.display   = '';
+
+            rows.issued.label.textContent = 'Issued';
+            rows.issued.val.textContent   = fmtTime(props.effective || props.onset);
+            rows.issued.el.style.display  = '';
+
+            rows.expires.label.textContent = 'Expires';
+            rows.expires.val.textContent   = fmtTime(props.expires);
+            rows.expires.el.style.display  = '';
+
+            rows.hazards.label.textContent = 'Hazards';
+            rows.hazards.val.textContent   = extractHazards(props);
+            rows.hazards.el.style.display  = '';
+
+            rows.watchprob.el.style.display = 'none';
+
+            const towns = parseImpactedTowns(props.description || '');
+            if (towns.length) {
+                townsEl.textContent = towns.join(', ');
+                townsRow.classList.remove('empty');
+            } else {
+                townsRow.classList.add('empty');
+            }
+
+            descEl.textContent   = excerptDesc(props);
+            descEl.style.display = '';
         }
- 
-        document.getElementById('ap-desc').textContent = excerptDesc(props);
     }
  
-    /* Point in polygon function */
     function isPointInPoly(pt, geo) {
         if (geo.type === 'Polygon') {
             return isPointInRing(pt, geo.coordinates[0]);
@@ -1454,7 +1934,6 @@
         if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
     }
 
-    // Cache for zone geometries to avoid re-fetching on refresh
     const zoneGeomCache = {};
 
     async function fetchZoneGeom(url) {
@@ -1471,102 +1950,6 @@
         }
     }
 
-// Custom panes to sit under warnings but above radar
-    map.createPane('spcPane');
-    map.getPane('spcPane').style.zIndex = 215;
-
-    let spcLayer = null;
-    let mcdLayer = null;
-
-    async function fetchSPC() {
-        if (spcLayer) { map.removeLayer(spcLayer); spcLayer = null; }
-        if (!document.getElementById('spc-toggle').checked) return;
-
-        try {
-            const resp = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson');
-            const data = await resp.json();
-
-            spcLayer = L.geoJSON(data, {
-                pane: 'spcPane',
-                style: feature => {
-                    const label = feature.properties.LABEL;
-                    const colors = {
-                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00',
-                        'SLGT': '#ffff00', 'ENH': '#ffa500',
-                        'MDT': '#ff0000',  'HIGH': '#ff00ff'
-                    };
-                    return { color: colors[label] || '#888', weight: 2, opacity: 0.9, fillOpacity: 0.15, dashArray: '5 5' };
-                },
-                onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
-                    layer.on('click', () => {
-                        const p = feature.properties;
-                        const riskLevel = p.LABEL;
-                        const riskMap = {
-                            'TSTM': 'General Thunderstorms (0/5)',
-                            'MRGL': 'Marginal Risk (1/5)',
-                            'SLGT': 'Slight Risk (2/5)',
-                            'ENH':  'Enhanced Risk (3/5)',
-                            'MDT':  'Moderate Risk (4/5)',
-                            'HIGH': 'High Risk (5/5)'
-                        };
-                        
-                        // Parse SPC time (YYYYMMDDHHmm) to standard ISO
-                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
-
-                        const spcProps = {
-                            event: 'Day 1 Convective Outlook',
-                            areaDesc: riskMap[riskLevel] || riskLevel,
-                            effective: parseTime(p.ISSUE),
-                            expires: parseTime(p.EXPIRE),
-                            headline: `Maximum Threat Level: ${riskMap[riskLevel] || riskLevel}`,
-                            description: 'For full technical details and meteorological reasoning, please visit the Storm Prediction Center website.',
-                            parameters: {} 
-                        };
-                        
-                        // Zooming perfectly snaps to CONUS bounding box for that specific threat
-                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
-                        showAlertPanel(spcProps, layer.options.color, layer);
-                    });
-                }
-            }).addTo(map);
-        } catch (e) { console.warn('Could not load SPC:', e); }
-    }
-
-    async function fetchMCD() {
-        if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
-        if (!document.getElementById('mcd-toggle').checked) return;
-
-        try {
-            // Updated to official NOAA MapServer GeoJSON endpoint
-            const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
-            const data = await resp.json();
-
-            mcdLayer = L.geoJSON(data, {
-                pane: 'spcPane',
-                style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1 },
-                onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
-                    layer.on('click', () => {
-                        const p = feature.properties;
-                        const mcdProps = {
-                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
-                            areaDesc: p.concerning || 'Hazardous Weather',
-                            headline: `Probability of Watch Issuance: ${p.prob_of_watch || 'N/A'}`,
-                            description: p.summary || 'See SPC for technical discussion.',
-                            parameters: {}
-                        };
-                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
-                        showAlertPanel(mcdProps, '#9370DB', layer);
-                    });
-                }
-            }).addTo(map);
-        } catch (e) { console.warn('Could not load MCDs:', e); }
-    }
-
-    document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
-    document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
-    
     async function fetchWarnings() {
         clearWarnings();
         if (!warningsVisible) return;
@@ -1578,30 +1961,25 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            // Polygon-based alerts (warnings with specific drawn geometry)
             const polyFeatures = (data.features || []).filter(f =>
                 f.geometry && WARN_EVENTS.includes(f.properties.event)
             );
 
-            // Zone/county-based alerts (watches)
             const zoneAlerts = (data.features || []).filter(f =>
                 !f.geometry && WARN_EVENTS.includes(f.properties.event) &&
                 Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
             );
 
-            // Get ALL unique zones (removed the 150 limit)
             const uniqueZones = [...new Set(
                 zoneAlerts.flatMap(f => f.properties.affectedZones || [])
             )];
 
-            // Fetch zone geometries in chunks of 50 to avoid stalling the browser or hitting API limits
             const chunkSize = 50;
             for (let i = 0; i < uniqueZones.length; i += chunkSize) {
                 const chunk = uniqueZones.slice(i, i + chunkSize);
                 await Promise.allSettled(chunk.map(url => fetchZoneGeom(url)));
             }
 
-            // Group all county polygons into a SINGLE geometry per alert
             const zoneFeatures = [];
             for (const feature of zoneAlerts) {
                 const polygons = [];
@@ -1614,7 +1992,6 @@
                 }
                 
                 if (polygons.length > 0) {
-                    // Create a MultiPolygon out of all the constituent counties
                     const mergedGeom = { type: 'MultiPolygon', coordinates: polygons };
                     zoneFeatures.push({ ...feature, geometry: mergedGeom });
                 }
@@ -1686,21 +2063,17 @@
     document.getElementById('ap-screenshot').addEventListener('click', async (e) => {
         e.stopPropagation();
         
-        // 1. Shift into screenshot mode layout
         document.body.classList.add('screenshot-mode');
         
-        // 2. Wait 150ms for the CSS transition/animations to settle
         await new Promise(r => setTimeout(r, 150));
         
         try {
-            // 3. Capture the DOM
             const canvas = await html2canvas(document.body, {
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#0d1117'
             });
             
-            // 4. Download file
             const link = document.createElement('a');
             const eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
             link.download = `RadarViewer_${eventName}.png`;
@@ -1710,7 +2083,6 @@
             console.error('Screenshot failed:', err);
             showError('Failed to capture screenshot.');
         } finally {
-            // 5. Revert back to normal desktop view
             document.body.classList.remove('screenshot-mode');
         }
     });
