@@ -391,6 +391,16 @@
  
         .legend-swatch.watch { border-style: dashed; }
 
+        .legend-item {
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.15s;
+        }
+        .legend-item.hidden-alert {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+
         /* ── Panel type badge ─────────────────────────────── */
         .ap-type-badge {
             font-size: calc(9px * var(--scale));
@@ -1132,32 +1142,7 @@
                onEachFeature: (feature, layer) => {
                     layer.on('click', () => {
                         skipNextMapClick = true;
-                        const p = feature.properties;
-                        const label = String(p.LABEL);
-
-                        const riskMap = {
-                            'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk',
-                            'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk',
-                            'MDT': 'Moderate Risk', 'HIGH': 'High Risk',
-                            'SIGN': 'Significant Severe (Hatched)'
-                        };
-                        
-                        const riskLevel = riskMap[label] || `${label}% Probability`;
-                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
-
-                        const dayLabel = day.replace(/^day(\d)$/, 'Day $1');
-                        const spcProps = {
-                            event: `SPC ${dayLabel} ${SPC_THREAT_NAMES[threat] || threat.toUpperCase()} Outlook`,
-                            areaDesc: riskLevel,
-                            effective: parseTime(p.ISSUE),
-                            expires: parseTime(p.EXPIRE),
-                            spcThreat: threat,
-                            spcLabel: label,
-                            parameters: {}
-                        };
-
-                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
-                        showAlertPanel(spcProps, layer.options.color, layer, 'spc');
+                        handleSPCClick(layer);
                     });
                 }
             }).addTo(map);
@@ -1178,23 +1163,7 @@
                 onEachFeature: (feature, layer) => {
                     layer.on('click', () => {
                         skipNextMapClick = true;
-                        const p = feature.properties;
-                        const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
-
-                        const probStr = p.prob_of_watch;
-                        const watchProb = probStr != null && probStr !== ''
-                            ? (String(probStr).endsWith('%') ? probStr : `${probStr}%`)
-                            : null;
-                        const mcdProps = {
-                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
-                            effective: parseNOAATime(p.issue_time),
-                            expires: parseNOAATime(p.expire_time),
-                            concerning: p.concerning || 'Hazardous Weather',
-                            watchProb: watchProb,
-                            parameters: {}
-                        };
-                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
-                        showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+                        handleMCDClick(layer);
                     });
                 }
             }).addTo(map);
@@ -1657,13 +1626,75 @@
     }
  
     let currentMatching = [];
- 
+    let currentMatchingMeta = [];
+
     window.selectAlert = function(index) {
         const l = currentMatching[index];
+        const meta = currentMatchingMeta[index];
         map.closePopup();
-        map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
-        showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
+        if (meta.type === 'alert') {
+            map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
+            showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l, 'alert');
+        } else if (meta.type === 'spc') {
+            handleSPCClick(l);
+        } else if (meta.type === 'mcd') {
+            handleMCDClick(l);
+        }
     };
+
+    function handleSPCClick(layer) {
+        const feature = layer.feature;
+        const p = feature.properties;
+        const label = String(p.LABEL);
+        const day = document.getElementById('spc-day').value;
+        const threat = document.getElementById('spc-threat').value;
+
+        const riskMap = {
+            'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk',
+            'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk',
+            'MDT': 'Moderate Risk', 'HIGH': 'High Risk',
+            'SIGN': 'Significant Severe (Hatched)'
+        };
+        const riskLevel = riskMap[label] || `${label}% Probability`;
+        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
+        const dayLabel = day.replace(/^day(\d)$/, 'Day $1');
+
+        const spcProps = {
+            event: `SPC ${dayLabel} ${SPC_THREAT_NAMES[threat] || threat.toUpperCase()} Outlook`,
+            areaDesc: riskLevel,
+            effective: parseTime(p.ISSUE),
+            expires: parseTime(p.EXPIRE),
+            spcThreat: threat,
+            spcLabel: label,
+            parameters: {}
+        };
+
+        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
+        showAlertPanel(spcProps, layer.options.color || '#888', layer, 'spc');
+    }
+
+    function handleMCDClick(layer) {
+        const feature = layer.feature;
+        const p = feature.properties;
+        const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
+
+        const probStr = p.prob_of_watch;
+        const watchProb = probStr != null && probStr !== ''
+            ? (String(probStr).endsWith('%') ? probStr : `${probStr}%`)
+            : null;
+
+        const mcdProps = {
+            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
+            effective: parseNOAATime(p.issue_time),
+            expires: parseNOAATime(p.expire_time),
+            concerning: p.concerning || 'Hazardous Weather',
+            watchProb: watchProb,
+            parameters: {}
+        };
+
+        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
+        showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+    }
  
     function showAlertPanel(props, warnColor, layer, panelType = 'alert') {
         /* ── Warning layer handling (only for NWS alert clicks) ── */
@@ -1896,7 +1927,7 @@
         { event: 'Snow Squall Warning',         fill: '#00BFFF', border: '#0090CC', watch: false },
         { event: 'Special Weather Statement',   fill: '#A0A000', border: '#787800', watch: false },
         { event: 'Winter Storm Warning',        fill: '#FF69B4', border: '#CC3090', watch: false },
-        { event: 'Blizzard Warning',            fill: '#8B008B', border: '#660066', watch: false },
+        { event: 'Blizzard Warning',            fill: '#FF4500', border: '#CC3700', watch: false },
         { event: 'Tornado Watch',               fill: '#FF6060', border: '#CC0000', watch: true  },
         { event: 'Severe Thunderstorm Watch',   fill: '#FFD700', border: '#CCAA00', watch: true  },
         { event: 'Winter Storm Watch',          fill: '#6495ED', border: '#3060BB', watch: true  },
@@ -1918,11 +1949,14 @@
     });
     const WARN_EVENTS = WARNING_CONFIG.map(w => w.event);
  
+    const hiddenAlertTypes = new Set();
+
     (function buildLegend() {
         const legend = document.getElementById('warnings-legend');
         WARNING_CONFIG.forEach(w => {
             const item   = document.createElement('div');
             item.className = 'legend-item';
+            item.title = 'Click to hide/show';
             const swatch = document.createElement('div');
             swatch.className       = 'legend-swatch' + (w.watch ? ' watch' : '');
             swatch.style.background  = w.fill;
@@ -1931,9 +1965,34 @@
             label.textContent = w.event;
             item.appendChild(swatch);
             item.appendChild(label);
+            item.addEventListener('click', () => {
+                if (hiddenAlertTypes.has(w.event)) {
+                    hiddenAlertTypes.delete(w.event);
+                    item.classList.remove('hidden-alert');
+                } else {
+                    hiddenAlertTypes.add(w.event);
+                    item.classList.add('hidden-alert');
+                }
+                applyAlertVisibility();
+            });
             legend.appendChild(item);
         });
     })();
+
+    function applyAlertVisibility() {
+        if (!warningLayer) return;
+        warningLayer.eachLayer(l => {
+            const event = l.feature.properties.event;
+            const style = WARN_STYLE_MAP[event] || {};
+            if (hiddenAlertTypes.has(event)) {
+                l.setStyle({ opacity: 0, fillOpacity: 0 });
+                if (l._path) l._path.style.pointerEvents = 'none';
+            } else {
+                l.setStyle(style);
+                if (l._path) l._path.style.pointerEvents = '';
+            }
+        });
+    }
  
     let warningLayer    = null;
     let warningsVisible = true;
@@ -2022,6 +2081,7 @@
                     },
                 }
             ).addTo(map);
+            applyAlertVisibility();
         } catch (e) {
             console.warn('Could not load weather warnings:', e.message);
         }
@@ -2036,29 +2096,82 @@
     map.on('click', function(e) {
         if (skipNextMapClick) { skipNextMapClick = false; return; }
         closeAlertPanel();
-        if (!warningLayer) return;
- 
+
         const point = e.latlng;
         currentMatching = [];
-        warningLayer.eachLayer(l => {
-            if (isPointInPoly(point, l.feature.geometry)) {
-                currentMatching.push(l);
-            }
-        });
- 
+        currentMatchingMeta = [];
+
+        // Check NWS warning polygons
+        if (warningLayer) {
+            warningLayer.eachLayer(l => {
+                if (l.feature && isPointInPoly(point, l.feature.geometry) && !hiddenAlertTypes.has(l.feature.properties.event)) {
+                    currentMatching.push(l);
+                    currentMatchingMeta.push({ type: 'alert', layer: l });
+                }
+            });
+        }
+
+        // Check SPC outlook polygons
+        if (spcLayer) {
+            spcLayer.eachLayer(l => {
+                if (l.feature && l.feature.geometry && isPointInPoly(point, l.feature.geometry)) {
+                    currentMatching.push(l);
+                    currentMatchingMeta.push({ type: 'spc', layer: l });
+                }
+            });
+        }
+
+        // Check MCD polygons
+        if (mcdLayer) {
+            mcdLayer.eachLayer(l => {
+                if (l.feature && l.feature.geometry && isPointInPoly(point, l.feature.geometry)) {
+                    currentMatching.push(l);
+                    currentMatchingMeta.push({ type: 'mcd', layer: l });
+                }
+            });
+        }
+
         if (currentMatching.length === 0) return;
- 
+
         if (currentMatching.length === 1) {
             const l = currentMatching[0];
-            map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
-            showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l);
+            const meta = currentMatchingMeta[0];
+            if (meta.type === 'alert') {
+                map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
+                showAlertPanel(l.feature.properties, WARN_CFG_MAP[l.feature.properties.event]?.fill, l, 'alert');
+            } else if (meta.type === 'spc') {
+                handleSPCClick(l);
+            } else if (meta.type === 'mcd') {
+                handleMCDClick(l);
+            }
         } else {
             const items = currentMatching.map((l, i) => {
+                const meta = currentMatchingMeta[i];
                 const p = l.feature.properties;
-                const cfg = WARN_CFG_MAP[p.event];
-                return `<div class="alert-select-item" style="border-left-color:${cfg?.border || '#888'}" onclick="selectAlert(${i}); map.closePopup();">
-                    <span class="alert-select-event" style="color:${cfg?.fill || '#e6edf3'}">${p.event}</span>
-                    <span class="alert-select-area">${p.areaDesc || ''}</span>
+                let borderColor = '#888', textColor = '#e6edf3', label = '', area = '';
+
+                if (meta.type === 'alert') {
+                    const cfg = WARN_CFG_MAP[p.event];
+                    borderColor = cfg?.border || '#888';
+                    textColor = cfg?.fill || '#e6edf3';
+                    label = p.event;
+                    area = p.areaDesc || '';
+                } else if (meta.type === 'spc') {
+                    borderColor = '#ffa500';
+                    textColor = '#ffb347';
+                    const riskMap = { 'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk', 'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk', 'MDT': 'Moderate Risk', 'HIGH': 'High Risk', 'SIGN': 'Significant Severe' };
+                    label = 'SPC Outlook';
+                    area = riskMap[String(p.LABEL)] || `${p.LABEL}% Probability`;
+                } else if (meta.type === 'mcd') {
+                    borderColor = '#9370DB';
+                    textColor = '#c0a0ff';
+                    label = `MCD #${p.discuss_num || ''}`;
+                    area = p.concerning || 'Hazardous Weather';
+                }
+
+                return `<div class="alert-select-item" style="border-left-color:${borderColor}" onclick="selectAlert(${i}); map.closePopup();">
+                    <span class="alert-select-event" style="color:${textColor}">${label}</span>
+                    <span class="alert-select-area">${area}</span>
                 </div>`;
             }).join('');
             const content = `<div class="alert-select-popup"><div class="alert-select-title">Multiple Alerts — Select One</div>${items}</div>`;
