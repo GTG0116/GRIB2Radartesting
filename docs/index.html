@@ -680,6 +680,7 @@
         .ap-action-btn:hover { background: rgba(255,255,255,0.18); }
 
         /* ── Screenshot Layout Overrides ── */
+        /* ── Screenshot Layout Overrides ── */
         .screenshot-mode .panel,
         .screenshot-mode .header,
         .screenshot-mode .leaflet-control-container,
@@ -693,15 +694,21 @@
         .screenshot-mode .alert-panel {
             top: auto !important;
             bottom: 40px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
+            /* Center without transform to prevent html2canvas clipping */
+            left: 0 !important;
+            right: 0 !important;
+            margin: auto !important;
             width: 85% !important;
             max-width: 600px !important;
-            background: rgba(13, 17, 23, 0.95) !important;
+            /* Remove backdrop-filter to prevent the dark solid box bug */
+            backdrop-filter: none !important;
+            background: rgba(13, 17, 23, 0.98) !important;
             border: 2px solid var(--accent) !important;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
+            transform: none !important;
         }
         .screenshot-mode .ap-header {
+            position: static !important; /* Fixes missing header */
             flex-direction: column;
             text-align: center;
             padding-top: 18px;
@@ -729,6 +736,9 @@
             font-size: 11px !important;
         }
         .leaflet-control-attribution a { color: var(--accent) !important; }
+        .radar-image {
+            mix-blend-mode: screen;
+        }
     </style>
 </head>
 <body>
@@ -866,6 +876,43 @@
                     </label>
                 </div>
             </div>
+
+            <div class="section">
+                <div class="section-label">SPC Outlooks</div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <select id="spc-day" style="flex: 1; padding: 4px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
+                        <option value="day1">Day 1</option>
+                        <option value="day2">Day 2</option>
+                        <option value="day3">Day 3</option>
+                    </select>
+                    <select id="spc-threat" style="flex: 1; padding: 4px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
+                        <option value="cat">Categorical</option>
+                        <option value="torn">Tornado</option>
+                        <option value="hail">Hail</option>
+                        <option value="wind">Wind</option>
+                    </select>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">Show SPC Outlook</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="spc-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">Mesoscale Discussions</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Active MCDs</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="mcd-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
             
             <!-- Weather Warnings -->
             <div class="section">
@@ -941,6 +988,132 @@
 </div>
  
 <script>
+    let spcLayer = null;
+    let mcdLayer = null;
+
+    // Listeners for the new UI elements
+    document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
+    document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
+    
+    // Day 3 restriction logic: Day 3 only supports Categorical natively in this format
+    document.getElementById('spc-day').addEventListener('change', (e) => {
+        const threatSelect = document.getElementById('spc-threat');
+        if (e.target.value === 'day3') {
+            threatSelect.value = 'cat';
+            threatSelect.disabled = true;
+        } else {
+            threatSelect.disabled = false;
+        }
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+    });
+
+    document.getElementById('spc-threat').addEventListener('change', () => {
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+    });
+
+    async function fetchSPC() {
+        if (spcLayer) { map.removeLayer(spcLayer); spcLayer = null; }
+        if (!document.getElementById('spc-toggle').checked) return;
+
+        const day = document.getElementById('spc-day').value;
+        const threat = document.getElementById('spc-threat').value;
+        const url = `https://www.spc.noaa.gov/products/outlook/${day}otlk_${threat}.nolyr.geojson`;
+
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Data not available');
+            const data = await resp.json();
+
+            spcLayer = L.geoJSON(data, {
+                pane: 'warningPane', // Keeps it below labels but above radar
+                style: feature => {
+                    const label = String(feature.properties.LABEL);
+                    const colors = {
+                        // Categorical
+                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00', 'SLGT': '#ffff00',
+                        'ENH': '#ffa500',  'MDT': '#ff0000',  'HIGH': '#ff00ff',
+                        // Probabilistic (%)
+                        '2': '#008000', '5': '#8B4513', '10': '#FFFF00',
+                        '15': '#ff0000', '30': '#ff00ff', '45': '#800080',
+                        '60': '#0000FF', 'SIGN': '#000000'
+                    };
+                    return { 
+                        color: colors[label] || '#888', 
+                        weight: label === 'SIGN' ? 3 : 2, 
+                        opacity: 0.9, 
+                        fillOpacity: label === 'SIGN' ? 0.0 : 0.15, 
+                        dashArray: label === 'SIGN' ? '8 4' : null 
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const label = String(p.LABEL);
+                        
+                        const riskMap = {
+                            'TSTM': 'General Thunderstorms', 'MRGL': 'Marginal Risk',
+                            'SLGT': 'Slight Risk', 'ENH': 'Enhanced Risk',
+                            'MDT': 'Moderate Risk', 'HIGH': 'High Risk',
+                            'SIGN': 'Significant Severe (Hatched)'
+                        };
+                        
+                        const riskLevel = riskMap[label] || `${label}% Probability`;
+                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
+
+                        const spcProps = {
+                            event: `SPC ${day.toUpperCase()} Outlook`,
+                            areaDesc: riskLevel,
+                            effective: parseTime(p.ISSUE),
+                            expires: parseTime(p.EXPIRE),
+                            headline: `Threat Type: ${threat.toUpperCase()}`,
+                            description: 'For full technical details and meteorological reasoning, please visit the Storm Prediction Center website.',
+                            parameters: {}
+                        };
+                        
+                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
+                        showAlertPanel(spcProps, layer.options.color, layer);
+                    });
+                }
+            }).addTo(map);
+        } catch (e) { console.warn('Could not load SPC Outlook:', e); showError(`Could not load SPC ${day.toUpperCase()} ${threat.toUpperCase()} outlook.`); }
+    }
+
+    async function fetchMCD() {
+        if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
+        if (!document.getElementById('mcd-toggle').checked) return;
+
+        try {
+            const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
+            const data = await resp.json();
+
+            mcdLayer = L.geoJSON(data, {
+                pane: 'warningPane',
+                style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        
+                        // Handle time formatting from NOAA timestamp
+                        const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
+
+                        const mcdProps = {
+                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
+                            areaDesc: p.areas || 'See Discussion',
+                            effective: parseNOAATime(p.issue_time),
+                            expires: parseNOAATime(p.expire_time),
+                            headline: `Concerning: ${p.concerning || 'Hazardous Weather'}<br>Watch Probability: ${p.prob_of_watch || 'N/A'}`,
+                            description: p.summary || 'See SPC for technical discussion.',
+                            parameters: {}
+                        };
+                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
+                        showAlertPanel(mcdProps, '#9370DB', layer);
+                    });
+                }
+            }).addTo(map);
+        } catch (e) { console.warn('Could not load MCDs:', e); showError('Could not load Mesoscale Discussions.'); }
+    }
     /* ══════════════════════════════════════════════════════════
        Bounds — loaded dynamically so refresh busts the cache
     ══════════════════════════════════════════════════════════ */
@@ -986,7 +1159,7 @@
     };
  
     /* ── Map init ── */
-    const map = L.map('map', { zoomControl: true }).setView([40.0, -78.0], 7);
+    const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
  
     // Mapbox tile layer
     const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';  // Replace with your Mapbox token
@@ -1064,7 +1237,7 @@
         currentOverlay = L.imageOverlay(
             imageUrl,
             [sw, ne],
-            { opacity, interactive: false, pane: 'radarPane' }
+            { opacity, interactive: false, pane: 'radarPane', className: 'radar-image' }
         );
         currentOverlay.on('error', () => {
             showError(`Could not load radar image for ${selectedRadar} — try refreshing.`);
