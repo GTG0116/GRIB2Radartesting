@@ -5,12 +5,22 @@ on:
     - cron: '*/10 * * * *'  # Every 10 minutes
   workflow_dispatch:  # Allows manual trigger
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    concurrency:
+      group: radar-update
+      cancel-in-progress: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
 
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -28,13 +38,16 @@ jobs:
       - name: Run radar update script
         shell: bash -l {0}
         run: python update_radar.py
+        continue-on-error: false
 
       - name: Commit and push changes
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
-          git add docs/assets/*
-          git commit -m 'Update radar images and bounds' || echo "No changes to commit"
+          git add docs/assets/*.png docs/assets/bounds.js
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m 'Update radar images and bounds'
+          git pull --rebase origin ${{ github.ref_name }}
           git push
 
       - name: Deploy to GitHub Pages

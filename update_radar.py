@@ -33,19 +33,34 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
  
 def get_latest_file(radar):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     prefix = f"{now.year}/{now.strftime('%m')}/{now.strftime('%d')}/{radar}/"
- 
-    response = s3.list_objects_v2(Bucket='unidata-nexrad-level2', Prefix=prefix)
-    if 'Contents' not in response:
+
+    # Paginate through all S3 objects for the day
+    all_files = []
+    continuation_token = None
+    while True:
+        kwargs = {'Bucket': 'unidata-nexrad-level2', 'Prefix': prefix}
+        if continuation_token:
+            kwargs['ContinuationToken'] = continuation_token
+        response = s3.list_objects_v2(**kwargs)
+        if 'Contents' not in response:
+            break
+        all_files.extend(response['Contents'])
+        if response.get('IsTruncated'):
+            continuation_token = response['NextContinuationToken']
+        else:
+            break
+
+    if not all_files:
         print(f"No objects found for prefix {prefix}")
         return None
- 
-    files = [obj for obj in response['Contents'] if obj['Key'].endswith(('_V06', '_V07'))]
+
+    files = [obj for obj in all_files if obj['Key'].endswith(('_V06', '_V07', '_V08'))]
     if not files:
         print(f"No valid Level-2 files in {prefix}")
         return None
- 
+
     return max(files, key=lambda x: x['LastModified'])['Key']
  
 def download_file(key):
