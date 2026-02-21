@@ -151,3 +151,4 @@ with open(f"{OUTPUT_DIR}/bounds.js", 'w') as f:
     f.write("window.RADAR_BOUNDS = " + json.dumps(bounds_data) + ";")
  
 print("Done. Bounds written to", f"{OUTPUT_DIR}/bounds.js")
+
