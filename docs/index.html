@@ -827,13 +827,26 @@
             display: none;
             position: absolute;
             bottom: 12px;
-            left: 12px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 800;
             background: rgba(13,17,23,0.95);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 12px 18px;
             font-family: 'Roboto', sans-serif;
+            max-width: 90%;
+        }
+        .screenshot-legend-sections {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .screenshot-legend-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .screenshot-legend-title {
             font-size: 9px;
@@ -841,12 +854,12 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .screenshot-legend-items {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
         .screenshot-legend-item {
             display: flex;
@@ -945,6 +958,13 @@
                         <div class="radio-text">
                             <div class="radio-name">RainViewer</div>
                             <div class="radio-desc">Global Radar w/ Snow</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="None">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">No Radar</div>
+                            <div class="radio-desc">Blank map only</div>
                         </div>
                     </div>
                 </div>
@@ -1357,6 +1377,7 @@
         KBGM: 'Binghamton, NY',
         MRMS: 'US Composite',
         RainViewer: 'Global Radar w/ Snow',
+        None: 'No Radar',
     };
  
     const PRODUCT_NAMES = {
@@ -1428,6 +1449,11 @@
     /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
+
+        if (selectedRadar === 'None') {
+            refreshNowViewing();
+            return;
+        }
 
         let imageUrl, bounds;
 
@@ -2321,7 +2347,7 @@
         /* Build a temporary legend showing visible alert types */
         const legendEl = document.getElementById('screenshot-legend');
         legendEl.innerHTML = '';
-        const sections = [];
+        const sectionParts = [];
 
         /* Warnings legend */
         if (warningsVisible && warningLayer) {
@@ -2337,7 +2363,7 @@
                         const watchCls = w.watch ? ' watch' : '';
                         return `<div class="screenshot-legend-item"><div class="screenshot-legend-swatch${watchCls}" style="background:${w.fill};border-color:${w.border}"></div><span>${w.event}</span></div>`;
                     }).join('');
-                sections.push(`<div class="screenshot-legend-title">Alerts</div><div class="screenshot-legend-items">${items}</div>`);
+                sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">Alerts</div><div class="screenshot-legend-items">${items}</div></div>`);
             }
         }
 
@@ -2354,11 +2380,31 @@
                 const items = levels.filter(lvl => visibleLabels.has(lvl.label)).map(lvl =>
                     `<div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:${lvl.color};border-color:${lvl.color}"></div><span>${lvl.name}</span></div>`
                 ).join('');
-                if (items) sections.push(`<div class="screenshot-legend-title">SPC ${day.replace('day','Day ')} ${SPC_THREAT_NAMES[threat] || ''}</div><div class="screenshot-legend-items">${items}</div>`);
+                if (items) sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">SPC ${day.replace('day','Day ')} ${SPC_THREAT_NAMES[threat] || ''}</div><div class="screenshot-legend-items">${items}</div></div>`);
             }
         }
 
-        legendEl.innerHTML = sections.join('');
+        /* MCD legend */
+        if (mcdLayer) {
+            let mcdCount = 0;
+            mcdLayer.eachLayer(() => mcdCount++);
+            if (mcdCount > 0) {
+                sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">Mesoscale Discussions</div><div class="screenshot-legend-items"><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:rgba(147,112,219,0.3);border-color:#9370DB;border-style:dashed"></div><span>${mcdCount} Active MCD${mcdCount > 1 ? 's' : ''}</span></div></div></div>`);
+            }
+        }
+
+        /* LSR legend */
+        if (lsrLayer) {
+            let lsrCount = 0;
+            lsrLayer.eachLayer(() => lsrCount++);
+            if (lsrCount > 0) {
+                sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">Storm Reports (24h)</div><div class="screenshot-legend-items"><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#ff0000;border-color:#ff0000;border-radius:50%;width:10px;height:10px"></div><span>Tornado</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#00ff00;border-color:#00ff00;border-radius:50%;width:10px;height:10px"></div><span>Hail</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#0000ff;border-color:#0000ff;border-radius:50%;width:10px;height:10px"></div><span>Wind</span></div></div></div>`);
+            }
+        }
+
+        if (sectionParts.length > 0) {
+            legendEl.innerHTML = `<div class="screenshot-legend-sections">${sectionParts.join('')}</div>`;
+        }
 
         document.body.classList.add('screenshot-mode');
         await new Promise(r => setTimeout(r, 200));
@@ -2372,9 +2418,13 @@
 
             const link = document.createElement('a');
             const alertOpen = alertPanel.classList.contains('visible');
-            const eventName = alertOpen
-                ? document.getElementById('ap-event').textContent.replace(/\s+/g, '_')
-                : 'Map';
+            let eventName;
+            if (alertOpen) {
+                eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
+            } else {
+                const radarName = selectedRadar === 'None' ? 'NoRadar' : selectedRadar;
+                eventName = `Map_${radarName}`;
+            }
             link.download = `RadarViewer_${eventName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();

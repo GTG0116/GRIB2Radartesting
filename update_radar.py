@@ -89,13 +89,13 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
     # Colormap / range keyed on output_name (not the internal PyART field name)
     # Colormap / range keyed on output_name (not the internal PyART field name)
     if output_name == 'reflectivity':
-        cmap = 'pyart_NWSRef'
+        cmap = 'NWSRef'
         vmin, vmax = -20, 75
     elif output_name == 'velocity':
-        cmap = 'pyart_NWSVel'
+        cmap = 'NWSVel'
         vmin, vmax = -50, 50
     else:  # correlation_coefficient
-        cmap = 'pyart_RefDiff'
+        cmap = 'RefDiff'
         vmin, vmax = 0.5, 1.05
  
     sweep_idx = find_best_sweep(radar_data, pyart_field)
