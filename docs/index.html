@@ -1,4 +1,3 @@
-<!-- docs/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -680,7 +679,6 @@
         .ap-action-btn:hover { background: rgba(255,255,255,0.18); }
 
         /* ── Screenshot Layout Overrides ── */
-        /* ── Screenshot Layout Overrides ── */
         .screenshot-mode .panel,
         .screenshot-mode .header,
         .screenshot-mode .leaflet-control-container,
@@ -744,7 +742,6 @@
 <body>
 <div class="app">
  
-    <!-- Header -->
     <header class="header">
         <div class="header-logo">&#127783;</div>
         <span class="header-title">Weather Radar Viewer</span>
@@ -756,13 +753,10 @@
         </div>
     </header>
  
-    <!-- Main body -->
     <div class="body" id="app-body">
  
-        <!-- Side panel -->
         <aside class="panel">
  
-            <!-- Now Viewing -->
             <div class="section">
                 <div class="section-label">Now Viewing</div>
                 <div class="now-viewing">
@@ -772,7 +766,6 @@
                 </div>
             </div>
  
-            <!-- Radar site -->
             <div class="section">
                 <div class="section-label">Radar Site</div>
                 <div class="radio-group" id="radar-group">
@@ -821,7 +814,6 @@
                 </div>
             </div>
  
-            <!-- Product -->
             <div class="section">
                 <div class="section-label">Product</div>
                 <div class="radio-group" id="product-group">
@@ -849,7 +841,6 @@
                 </div>
             </div>
  
-            <!-- Opacity -->
             <div class="section">
                 <div class="section-label">Radar Opacity</div>
                 <div class="slider-row">
@@ -860,26 +851,7 @@
             </div>
 
             <div class="section">
-                <div class="section-label">Storm Prediction Center</div>
-                <div class="toggle-row">
-                    <span class="toggle-label">Day 1 Outlook</span>
-                    <label class="toggle">
-                        <input type="checkbox" id="spc-toggle">
-                        <span class="toggle-track"></span>
-                    </label>
-                </div>
-                <div class="toggle-row">
-                    <span class="toggle-label">Mesoscale Discussions</span>
-                    <label class="toggle">
-                        <input type="checkbox" id="mcd-toggle">
-                        <span class="toggle-track"></span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="section">
                 <div class="section-label">SPC Outlooks</div>
-                
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <select id="spc-day" style="flex: 1; padding: 4px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
                         <option value="day1">Day 1</option>
@@ -893,7 +865,6 @@
                         <option value="wind">Wind</option>
                     </select>
                 </div>
-
                 <div class="toggle-row">
                     <span class="toggle-label">Show SPC Outlook</span>
                     <label class="toggle">
@@ -913,8 +884,24 @@
                     </label>
                 </div>
             </div>
+
+            <div class="section">
+                <div class="section-label">Local Storm Reports (24h)</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Reports</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="lsr-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="warnings-legend" style="margin-top: 8px;">
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ff0000;border-radius:50%;width:10px;height:10px;"></div><span>Tornado</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#00ff00;border-radius:50%;width:10px;height:10px;"></div><span>Hail</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#0000ff;border-radius:50%;width:10px;height:10px;"></div><span>Wind</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ffff00;border-radius:50%;width:10px;height:10px;"></div><span>Other</span></div>
+                </div>
+            </div>
             
-            <!-- Weather Warnings -->
             <div class="section">
                 <div class="section-label">Weather Warnings</div>
                 <div class="toggle-row">
@@ -927,21 +914,17 @@
                 <div class="warnings-legend" id="warnings-legend"></div>
             </div>
  
-            <!-- Refresh -->
             <div class="section">
                 <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
             </div>
  
         </aside>
  
-        <!-- Map -->
         <div class="map-wrap">
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
  
-            <!-- Alert detail panel -->
             <div class="alert-panel" id="alert-panel">
-                <!-- Header: event name + inline badges + close -->
                 <div class="ap-header" id="ap-header">
                     <div class="ap-header-left">
                         <div class="ap-event" id="ap-event"></div>
@@ -953,7 +936,6 @@
                     </div>
                 </div>
  
-                <!-- Meta rows -->
                 <div class="ap-body">
                     <div class="ap-row">
                         <span class="ap-label">Area</span>
@@ -973,13 +955,11 @@
                     </div>
                 </div>
  
-                <!-- Towns impacted -->
                 <div class="ap-towns-row empty" id="ap-towns-row">
                     <span class="ap-towns-label">Towns</span>
                     <span class="ap-towns-value" id="ap-towns"></span>
                 </div>
  
-                <!-- Headline / description -->
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
         </div>
@@ -988,14 +968,16 @@
 </div>
  
 <script>
+    /* ── Layer globals ── */
     let spcLayer = null;
     let mcdLayer = null;
+    let lsrLayer = null;
 
-    // Listeners for the new UI elements
+    // Listeners for the SPC/MCD UI elements
     document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
     document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
     
-    // Day 3 restriction logic: Day 3 only supports Categorical natively in this format
+    // Day 3 restriction logic
     document.getElementById('spc-day').addEventListener('change', (e) => {
         const threatSelect = document.getElementById('spc-threat');
         if (e.target.value === 'day3') {
@@ -1025,7 +1007,7 @@
             const data = await resp.json();
 
             spcLayer = L.geoJSON(data, {
-                pane: 'warningPane', // Keeps it below labels but above radar
+                pane: 'spcPane', // Sit below warnings, above radar
                 style: feature => {
                     const label = String(feature.properties.LABEL);
                     const colors = {
@@ -1088,14 +1070,12 @@
             const data = await resp.json();
 
             mcdLayer = L.geoJSON(data, {
-                pane: 'warningPane',
+                pane: 'spcPane',
                 style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' },
                 onEachFeature: (feature, layer) => {
                     layer.on('click', L.DomEvent.stopPropagation);
                     layer.on('click', () => {
                         const p = feature.properties;
-                        
-                        // Handle time formatting from NOAA timestamp
                         const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
 
                         const mcdProps = {
@@ -1114,6 +1094,70 @@
             }).addTo(map);
         } catch (e) { console.warn('Could not load MCDs:', e); showError('Could not load Mesoscale Discussions.'); }
     }
+
+    /* ── Local Storm Reports (LSR) ── */
+    document.getElementById('lsr-toggle').addEventListener('change', fetchLSR);
+
+    function getLSRColor(type) {
+        if (!type) return '#ffff00';
+        const t = type.toUpperCase();
+        if (t.includes('TORNADO')) return '#ff0000';
+        if (t.includes('HAIL')) return '#00ff00';
+        if (t.includes('WIND') || t.includes('DMG')) return '#0000ff';
+        if (t.includes('FLOOD')) return '#00ffaa';
+        if (t.includes('SNOW') || t.includes('ICE') || t.includes('FREEZ')) return '#ff00ff';
+        return '#ffff00'; // Default/Other
+    }
+
+    async function fetchLSR() {
+        if (lsrLayer) { map.removeLayer(lsrLayer); lsrLayer = null; }
+        if (!document.getElementById('lsr-toggle').checked) return;
+
+        try {
+            // Using IEM LSR GeoJSON (defaults to the last 24 hours)
+            const resp = await fetch('https://mesonet.agron.iastate.edu/geojson/lsr.php');
+            if (!resp.ok) throw new Error('Data not available');
+            const data = await resp.json();
+
+            lsrLayer = L.geoJSON(data, {
+                pane: 'warningPane', // Keeps it above radar/spc layers
+                pointToLayer: (feature, latlng) => {
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: getLSRColor(feature.properties.typetext),
+                        color: '#0d1117',
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.85
+                    });
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const lsrProps = {
+                            event: `Local Storm Report`,
+                            areaDesc: `${p.city}, ${p.state}`,
+                            effective: p.valid, // ISO format timestamp
+                            expires: null,
+                            headline: `${p.typetext} — Mag: ${p.magnitude || 'N/A'}`,
+                            description: p.remark || 'No remarks provided.',
+                            parameters: {}
+                        };
+                        map.setView(layer.getLatLng(), Math.max(map.getZoom(), 8));
+                        showAlertPanel(lsrProps, getLSRColor(p.typetext), layer);
+                    });
+                    
+                    // Simple tooltip on hover
+                    layer.bindTooltip(`<b>${feature.properties.typetext}</b><br>${feature.properties.city}, ${feature.properties.state}`, {className: 'warning-tip'});
+                }
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load LSRs:', e);
+            showError('Could not load Local Storm Reports.');
+        }
+    }
+
     /* ══════════════════════════════════════════════════════════
        Bounds — loaded dynamically so refresh busts the cache
     ══════════════════════════════════════════════════════════ */
@@ -1132,7 +1176,7 @@
                 }
                 resolve();
             };
-            s.onerror = resolve;   // still resolve; showError handles missing data
+            s.onerror = resolve;   
             document.head.appendChild(s);
         });
     }
@@ -1161,8 +1205,7 @@
     /* ── Map init ── */
     const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
  
-    // Mapbox tile layer
-    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';  // Replace with your Mapbox token
+    const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';
     L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${accessToken}`, {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
@@ -1174,16 +1217,16 @@
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 210;
     map.getPane('radarPane').style.pointerEvents = 'none';
+
+    map.createPane('spcPane');
+    map.getPane('spcPane').style.zIndex = 215; // Set SPC safely between radar and warnings
+
     map.createPane('warningPane');
     map.getPane('warningPane').style.zIndex = 220;
+
     map.createPane('labelPane');
     map.getPane('labelPane').style.zIndex = 230;
     map.getPane('labelPane').style.pointerEvents = 'none';
-
-    // Mapbox dark-v11 already includes labels in its tiles, so no separate
-    // label overlay is needed. Adding one (e.g. CartoDB dark_only_labels)
-    // duplicates city names / roads on top of Mapbox's own labels and makes
-    // the MRMS full-US view look like two stacked maps.
  
     /* ── Error helper ── */
     let errorTimer;
@@ -1202,7 +1245,7 @@
             PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
     }
  
-        /* ── Overlay update ── */
+    /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
 
@@ -1247,7 +1290,6 @@
         map.fitBounds([sw, ne], { padding: [24, 24] });
         refreshNowViewing();
 
-        // Ensure warning layer stays above radar
         if (warningLayer) warningLayer.bringToFront();
     }
 
@@ -1280,6 +1322,9 @@
         await reloadBounds();
         updateOverlay();
         fetchWarnings();
+        if (document.getElementById('lsr-toggle').checked) fetchLSR();
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+        if (document.getElementById('mcd-toggle').checked) fetchMCD();
     });
  
     /* ── Auto-refresh every 5 minutes ── */
@@ -1287,6 +1332,9 @@
         await reloadBounds();
         updateOverlay();
         fetchWarnings();
+        if (document.getElementById('lsr-toggle').checked) fetchLSR();
+        if (document.getElementById('spc-toggle').checked) fetchSPC();
+        if (document.getElementById('mcd-toggle').checked) fetchMCD();
     }, 5 * 60 * 1000);
  
     /* ══════════════════════════════════════════════════════════
@@ -1297,8 +1345,6 @@
     const apHeader = document.getElementById('ap-header');
  
     document.getElementById('ap-close').addEventListener('click', closeAlertPanel);
-    // Prevent mousedown on close from bubbling to the drag handler (which calls
-    // e.preventDefault() and kills the click event before it can fire).
     document.getElementById('ap-close').addEventListener('mousedown', e => e.stopPropagation());
  
     // Make panel draggable
@@ -1324,7 +1370,6 @@
         document.removeEventListener('mouseup', dragStop);
     }
 
-    // Responsive text scaling when panel is resized
     if (typeof ResizeObserver !== 'undefined') {
         const apResizeObserver = new ResizeObserver(([entry]) => {
             const w = entry.contentRect.width;
@@ -1334,17 +1379,13 @@
         apResizeObserver.observe(alertPanel);
     }
  
-    /* Track the currently highlighted polygon */
     let selectedLayer = null;
     let selectedEvent = null;
  
     function highlightLayer(layer, event) {
-        // Restore previous selection
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
-            if (selectedLayer._path) {
-                selectedLayer._path.classList.remove('warn-selected');
-            }
+            if (selectedLayer._path) selectedLayer._path.classList.remove('warn-selected');
         }
         selectedLayer = layer;
         selectedEvent = event;
@@ -1357,9 +1398,7 @@
     function clearLayerHighlight() {
         if (selectedLayer) {
             selectedLayer.setStyle(WARN_STYLE_MAP[selectedEvent] || {});
-            if (selectedLayer._path) {
-                selectedLayer._path.classList.remove('warn-selected');
-            }
+            if (selectedLayer._path) selectedLayer._path.classList.remove('warn-selected');
             selectedLayer = null;
             selectedEvent = null;
         }
@@ -1367,16 +1406,12 @@
  
     function adjustZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-        if (zoomControl) {
-            zoomControl.style.top = '10px';
-        }
+        if (zoomControl) zoomControl.style.top = '10px';
     }
  
     function resetZoomControlPosition() {
         const zoomControl = document.querySelector('.leaflet-top.leaflet-left');
-        if (zoomControl) {
-            zoomControl.style.top = '10px';
-        }
+        if (zoomControl) zoomControl.style.top = '10px';
     }
  
     function closeAlertPanel() {
@@ -1392,7 +1427,6 @@
         selectedEvent = null;
         resetZoomControlPosition();
 
-        // Wait for the CSS slide-out transition to finish, then clear inline dragging coordinates
         setTimeout(() => {
             alertPanel.style.left = '';
             alertPanel.style.top = '';
@@ -1470,9 +1504,6 @@
     function extractHazards(p) {
         const desc = p.description || '';
 
-        // NWS descriptions use "* WHAT..." or "HAZARD..." sections.
-        // Dot count after keyword varies (3-4 are common), use \.+.
-        // \r?\n\r?\n handles both Unix (\n\n) and Windows (\r\n\r\n) line endings.
         const patterns = [
             /\*?\s*WHAT\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME|LOCATIONS)\.{3,}|\r?\n\r?\n|$)/is,
             /\*?\s*HAZARD\.{3,}(.+?)(?=\*?\s*(?:WHERE|SOURCE|IMPACTS|WHEN|TIME)\.{3,}|\r?\n\r?\n|$)/is,
@@ -1509,7 +1540,6 @@
         }
  
         alertPanel.classList.add('visible');
- 
         setTimeout(adjustZoomControlPosition, 50);
  
         const hdr = document.getElementById('ap-header');
@@ -1544,7 +1574,6 @@
         document.getElementById('ap-desc').textContent = excerptDesc(props);
     }
  
-    /* Point in polygon function */
     function isPointInPoly(pt, geo) {
         if (geo.type === 'Polygon') {
             return isPointInRing(pt, geo.coordinates[0]);
@@ -1627,7 +1656,6 @@
         if (warningLayer) { map.removeLayer(warningLayer); warningLayer = null; }
     }
 
-    // Cache for zone geometries to avoid re-fetching on refresh
     const zoneGeomCache = {};
 
     async function fetchZoneGeom(url) {
@@ -1644,102 +1672,6 @@
         }
     }
 
-// Custom panes to sit under warnings but above radar
-    map.createPane('spcPane');
-    map.getPane('spcPane').style.zIndex = 215;
-
-    let spcLayer = null;
-    let mcdLayer = null;
-
-    async function fetchSPC() {
-        if (spcLayer) { map.removeLayer(spcLayer); spcLayer = null; }
-        if (!document.getElementById('spc-toggle').checked) return;
-
-        try {
-            const resp = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson');
-            const data = await resp.json();
-
-            spcLayer = L.geoJSON(data, {
-                pane: 'spcPane',
-                style: feature => {
-                    const label = feature.properties.LABEL;
-                    const colors = {
-                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00',
-                        'SLGT': '#ffff00', 'ENH': '#ffa500',
-                        'MDT': '#ff0000',  'HIGH': '#ff00ff'
-                    };
-                    return { color: colors[label] || '#888', weight: 2, opacity: 0.9, fillOpacity: 0.15, dashArray: '5 5' };
-                },
-                onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
-                    layer.on('click', () => {
-                        const p = feature.properties;
-                        const riskLevel = p.LABEL;
-                        const riskMap = {
-                            'TSTM': 'General Thunderstorms (0/5)',
-                            'MRGL': 'Marginal Risk (1/5)',
-                            'SLGT': 'Slight Risk (2/5)',
-                            'ENH':  'Enhanced Risk (3/5)',
-                            'MDT':  'Moderate Risk (4/5)',
-                            'HIGH': 'High Risk (5/5)'
-                        };
-                        
-                        // Parse SPC time (YYYYMMDDHHmm) to standard ISO
-                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
-
-                        const spcProps = {
-                            event: 'Day 1 Convective Outlook',
-                            areaDesc: riskMap[riskLevel] || riskLevel,
-                            effective: parseTime(p.ISSUE),
-                            expires: parseTime(p.EXPIRE),
-                            headline: `Maximum Threat Level: ${riskMap[riskLevel] || riskLevel}`,
-                            description: 'For full technical details and meteorological reasoning, please visit the Storm Prediction Center website.',
-                            parameters: {} 
-                        };
-                        
-                        // Zooming perfectly snaps to CONUS bounding box for that specific threat
-                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
-                        showAlertPanel(spcProps, layer.options.color, layer);
-                    });
-                }
-            }).addTo(map);
-        } catch (e) { console.warn('Could not load SPC:', e); }
-    }
-
-    async function fetchMCD() {
-        if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
-        if (!document.getElementById('mcd-toggle').checked) return;
-
-        try {
-            // Updated to official NOAA MapServer GeoJSON endpoint
-            const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
-            const data = await resp.json();
-
-            mcdLayer = L.geoJSON(data, {
-                pane: 'spcPane',
-                style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1 },
-                onEachFeature: (feature, layer) => {
-                    layer.on('click', L.DomEvent.stopPropagation);
-                    layer.on('click', () => {
-                        const p = feature.properties;
-                        const mcdProps = {
-                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
-                            areaDesc: p.concerning || 'Hazardous Weather',
-                            headline: `Probability of Watch Issuance: ${p.prob_of_watch || 'N/A'}`,
-                            description: p.summary || 'See SPC for technical discussion.',
-                            parameters: {}
-                        };
-                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
-                        showAlertPanel(mcdProps, '#9370DB', layer);
-                    });
-                }
-            }).addTo(map);
-        } catch (e) { console.warn('Could not load MCDs:', e); }
-    }
-
-    document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
-    document.getElementById('mcd-toggle').addEventListener('change', fetchMCD);
-    
     async function fetchWarnings() {
         clearWarnings();
         if (!warningsVisible) return;
@@ -1751,30 +1683,25 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            // Polygon-based alerts (warnings with specific drawn geometry)
             const polyFeatures = (data.features || []).filter(f =>
                 f.geometry && WARN_EVENTS.includes(f.properties.event)
             );
 
-            // Zone/county-based alerts (watches)
             const zoneAlerts = (data.features || []).filter(f =>
                 !f.geometry && WARN_EVENTS.includes(f.properties.event) &&
                 Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
             );
 
-            // Get ALL unique zones (removed the 150 limit)
             const uniqueZones = [...new Set(
                 zoneAlerts.flatMap(f => f.properties.affectedZones || [])
             )];
 
-            // Fetch zone geometries in chunks of 50 to avoid stalling the browser or hitting API limits
             const chunkSize = 50;
             for (let i = 0; i < uniqueZones.length; i += chunkSize) {
                 const chunk = uniqueZones.slice(i, i + chunkSize);
                 await Promise.allSettled(chunk.map(url => fetchZoneGeom(url)));
             }
 
-            // Group all county polygons into a SINGLE geometry per alert
             const zoneFeatures = [];
             for (const feature of zoneAlerts) {
                 const polygons = [];
@@ -1787,7 +1714,6 @@
                 }
                 
                 if (polygons.length > 0) {
-                    // Create a MultiPolygon out of all the constituent counties
                     const mergedGeom = { type: 'MultiPolygon', coordinates: polygons };
                     zoneFeatures.push({ ...feature, geometry: mergedGeom });
                 }
@@ -1859,21 +1785,17 @@
     document.getElementById('ap-screenshot').addEventListener('click', async (e) => {
         e.stopPropagation();
         
-        // 1. Shift into screenshot mode layout
         document.body.classList.add('screenshot-mode');
         
-        // 2. Wait 150ms for the CSS transition/animations to settle
         await new Promise(r => setTimeout(r, 150));
         
         try {
-            // 3. Capture the DOM
             const canvas = await html2canvas(document.body, {
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#0d1117'
             });
             
-            // 4. Download file
             const link = document.createElement('a');
             const eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
             link.download = `RadarViewer_${eventName}.png`;
@@ -1883,7 +1805,6 @@
             console.error('Screenshot failed:', err);
             showError('Failed to capture screenshot.');
         } finally {
-            // 5. Revert back to normal desktop view
             document.body.classList.remove('screenshot-mode');
         }
     });
