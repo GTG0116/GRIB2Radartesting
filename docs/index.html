@@ -1129,11 +1129,13 @@
                         dashArray: label === 'SIGN' ? '8 4' : null 
                     };
                 },
-                onEachFeature: (feature, layer) => {
+               onEachFeature: (feature, layer) => {
                     layer.on('click', () => {
                         skipNextMapClick = true;
                         const p = feature.properties;
-                        const p = feature.properties;
+                        const label = String(p.LABEL);
+
+                        const riskMap = {
                         const label = String(p.LABEL);
 
                         const riskMap = {
