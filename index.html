@@ -7,6 +7,7 @@
     <title>Weather Radar Viewer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -654,6 +655,60 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.5);
             pointer-events: none;
         }
+
+        /* ── Action Buttons in Header ── */
+        .ap-header-right {
+            display: flex;
+            align-items: center;
+        }
+        .ap-action-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text);
+            width: calc(26px * var(--scale));
+            height: calc(26px * var(--scale));
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: calc(13px * var(--scale));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: calc(8px * var(--scale));
+            transition: background 0.15s;
+        }
+        .ap-action-btn:hover { background: rgba(255,255,255,0.18); }
+
+        /* ── Screenshot Layout Overrides ── */
+        .screenshot-mode .panel,
+        .screenshot-mode .header,
+        .screenshot-mode .leaflet-control-container,
+        .screenshot-mode .ap-header-right {
+            display: none !important;
+        }
+        .screenshot-mode .map-wrap {
+            position: absolute !important;
+            inset: 0 !important;
+        }
+        .screenshot-mode .alert-panel {
+            top: auto !important;
+            bottom: 40px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 85% !important;
+            max-width: 600px !important;
+            background: rgba(13, 17, 23, 0.95) !important;
+            border: 2px solid var(--accent) !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
+        }
+        .screenshot-mode .ap-header {
+            flex-direction: column;
+            text-align: center;
+            padding-top: 18px;
+            gap: 10px;
+        }
+        .screenshot-mode .ap-event { font-size: 20px !important; }
+        .screenshot-mode .ap-badges-inline { justify-content: center; }
  
         .leaflet-tooltip.warning-tip::before { display: none; }
  
@@ -845,7 +900,10 @@
                         <div class="ap-event" id="ap-event"></div>
                         <div class="ap-badges-inline" id="ap-badges"></div>
                     </div>
-                    <button class="ap-close" id="ap-close" title="Close">&#10005;</button>
+                    <div class="ap-header-right">
+                        <button class="ap-action-btn" id="ap-screenshot" title="Take Screenshot">&#128247;</button>
+                        <button class="ap-action-btn" id="ap-close" title="Close">&#10005;</button>
+                    </div>
                 </div>
  
                 <!-- Meta rows -->
@@ -1185,11 +1243,9 @@
             (p.parameters && p.parameters.NWSheadline ? p.parameters.NWSheadline.join(' ') : ''),
         ].join(' ').toUpperCase();
  
-        const isTornado = (p.event || '').toUpperCase().includes('TORNADO');
- 
         return {
             radarIndicated: src.includes('RADAR INDICATED') || src.includes('RADAR-INDICATED'),
-            observed: isTornado && (
+            observed: (
                 src.includes('OBSERVED') ||
                 src.includes('CONFIRMED TORNADO') ||
                 src.includes('TORNADO CONFIRMED')
@@ -1427,7 +1483,6 @@
         if (!document.getElementById('spc-toggle').checked) return;
 
         try {
-            // Official NOAA SPC Day 1 GeoJSON
             const resp = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson');
             const data = await resp.json();
 
@@ -1440,21 +1495,42 @@
                         'SLGT': '#ffff00', 'ENH': '#ffa500',
                         'MDT': '#ff0000',  'HIGH': '#ff00ff'
                     };
-                    return {
-                        color: colors[label] || '#888',
-                        weight: 2,
-                        opacity: 0.9,
-                        fillOpacity: 0.15,
-                        dashArray: '5 5'
-                    };
+                    return { color: colors[label] || '#888', weight: 2, opacity: 0.9, fillOpacity: 0.15, dashArray: '5 5' };
                 },
                 onEachFeature: (feature, layer) => {
-                    layer.bindTooltip(`<strong>SPC Day 1: ${feature.properties.LABEL}</strong>`, { className: 'warning-tip' });
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const riskLevel = p.LABEL;
+                        const riskMap = {
+                            'TSTM': 'General Thunderstorms (0/5)',
+                            'MRGL': 'Marginal Risk (1/5)',
+                            'SLGT': 'Slight Risk (2/5)',
+                            'ENH':  'Enhanced Risk (3/5)',
+                            'MDT':  'Moderate Risk (4/5)',
+                            'HIGH': 'High Risk (5/5)'
+                        };
+                        
+                        // Parse SPC time (YYYYMMDDHHmm) to standard ISO
+                        const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
+
+                        const spcProps = {
+                            event: 'Day 1 Convective Outlook',
+                            areaDesc: riskMap[riskLevel] || riskLevel,
+                            effective: parseTime(p.ISSUE),
+                            expires: parseTime(p.EXPIRE),
+                            headline: `Maximum Threat Level: ${riskMap[riskLevel] || riskLevel}`,
+                            description: 'For full technical details and meteorological reasoning, please visit the Storm Prediction Center website.',
+                            parameters: {} 
+                        };
+                        
+                        // Zooming perfectly snaps to CONUS bounding box for that specific threat
+                        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
+                        showAlertPanel(spcProps, layer.options.color, layer);
+                    });
                 }
             }).addTo(map);
-        } catch (e) {
-            console.warn('Could not load SPC Outlook:', e);
-        }
+        } catch (e) { console.warn('Could not load SPC:', e); }
     }
 
     async function fetchMCD() {
@@ -1462,25 +1538,30 @@
         if (!document.getElementById('mcd-toggle').checked) return;
 
         try {
-            // Unofficial Iowa Environmental Mesonet GeoJSON archive for live MCDs
-            const resp = await fetch('https://mesonet.agron.iastate.edu/geojson/mcd.geojson');
+            // Updated to official NOAA MapServer GeoJSON endpoint
+            const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
             const data = await resp.json();
 
             mcdLayer = L.geoJSON(data, {
                 pane: 'spcPane',
-                style: {
-                    color: '#9370DB', // Purple
-                    weight: 3,
-                    opacity: 0.8,
-                    fillOpacity: 0.1
-                },
+                style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1 },
                 onEachFeature: (feature, layer) => {
-                    layer.bindTooltip(`<strong>Mesoscale Discussion #${feature.properties.num || ''}</strong>`, { className: 'warning-tip' });
+                    layer.on('click', L.DomEvent.stopPropagation);
+                    layer.on('click', () => {
+                        const p = feature.properties;
+                        const mcdProps = {
+                            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
+                            areaDesc: p.concerning || 'Hazardous Weather',
+                            headline: `Probability of Watch Issuance: ${p.prob_of_watch || 'N/A'}`,
+                            description: p.summary || 'See SPC for technical discussion.',
+                            parameters: {}
+                        };
+                        map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
+                        showAlertPanel(mcdProps, '#9370DB', layer);
+                    });
                 }
             }).addTo(map);
-        } catch (e) {
-            console.warn('Could not load MCDs:', e);
-        }
+        } catch (e) { console.warn('Could not load MCDs:', e); }
     }
 
     document.getElementById('spc-toggle').addEventListener('change', fetchSPC);
@@ -1599,6 +1680,38 @@
                 .setLatLng(point)
                 .setContent(content)
                 .openOn(map);
+        }
+    });
+
+    document.getElementById('ap-screenshot').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        
+        // 1. Shift into screenshot mode layout
+        document.body.classList.add('screenshot-mode');
+        
+        // 2. Wait 150ms for the CSS transition/animations to settle
+        await new Promise(r => setTimeout(r, 150));
+        
+        try {
+            // 3. Capture the DOM
+            const canvas = await html2canvas(document.body, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#0d1117'
+            });
+            
+            // 4. Download file
+            const link = document.createElement('a');
+            const eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
+            link.download = `RadarViewer_${eventName}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error('Screenshot failed:', err);
+            showError('Failed to capture screenshot.');
+        } finally {
+            // 5. Revert back to normal desktop view
+            document.body.classList.remove('screenshot-mode');
         }
     });
  
