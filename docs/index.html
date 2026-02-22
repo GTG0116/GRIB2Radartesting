@@ -756,19 +756,19 @@
         }
         .screenshot-mode .alert-panel.visible {
             top: auto !important;
-            bottom: 40px !important;
-            /* Center without transform to prevent html2canvas clipping */
-            left: 0 !important;
-            right: 0 !important;
-            margin: auto !important;
-            width: 85% !important;
-            max-width: 600px !important;
+            bottom: 24px !important;
+            left: auto !important;
+            right: 24px !important;
+            margin: 0 !important;
+            width: 420px !important;
+            max-width: 45% !important;
             /* Remove backdrop-filter to prevent the dark solid box bug */
             backdrop-filter: none !important;
             background: rgba(13, 17, 23, 0.98) !important;
             border: 2px solid var(--accent) !important;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
             transform: none !important;
+            --scale: 1.15;
         }
         .screenshot-mode .ap-header {
             position: static !important; /* Fixes missing header */
@@ -777,7 +777,7 @@
             padding-top: 18px;
             gap: 10px;
         }
-        .screenshot-mode .ap-event { font-size: 20px !important; }
+        .screenshot-mode .ap-event { font-size: 22px !important; }
         .screenshot-mode .ap-badges-inline { justify-content: center; }
  
         .leaflet-tooltip.warning-tip::before { display: none; }
@@ -884,6 +884,267 @@
         .screenshot-legend-swatch.watch { border-style: dashed; }
         .screenshot-mode .map-screenshot-btn { display: none !important; }
         .screenshot-mode .screenshot-legend { display: block !important; }
+
+        /* ── Location detail panel ───────────────────────── */
+        .location-panel {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 340px;
+            min-width: 240px;
+            max-width: 600px;
+            min-height: 160px;
+            background: rgba(22, 27, 34, 0.97);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            z-index: 700;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            transform: translateX(calc(100% + 24px));
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            overflow: auto;
+            backdrop-filter: blur(12px);
+            font-family: 'Roboto', sans-serif;
+            resize: both;
+            --scale: 1;
+            max-height: calc(100vh - 100px);
+        }
+        .location-panel.visible {
+            transform: translateX(0);
+        }
+        .lp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: calc(11px * var(--scale)) calc(16px * var(--scale)) calc(10px * var(--scale));
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            cursor: move;
+            position: sticky;
+            top: 0;
+            background: rgba(22,27,34,0.97);
+            z-index: 1;
+        }
+        .lp-header-left {
+            display: flex;
+            align-items: center;
+            gap: calc(10px * var(--scale));
+            flex: 1;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+        .lp-title {
+            font-size: calc(15px * var(--scale));
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            color: var(--accent);
+            line-height: 1.2;
+        }
+        .lp-subtitle {
+            font-size: calc(11px * var(--scale));
+            color: var(--text-muted);
+            width: 100%;
+        }
+        .lp-header-right {
+            display: flex;
+            align-items: center;
+        }
+        .lp-action-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text);
+            width: calc(26px * var(--scale));
+            height: calc(26px * var(--scale));
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: calc(13px * var(--scale));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: calc(8px * var(--scale));
+            transition: background 0.15s;
+        }
+        .lp-action-btn:hover { background: rgba(255,255,255,0.18); }
+        .lp-section {
+            padding: calc(10px * var(--scale)) calc(16px * var(--scale));
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .lp-section:last-child { border-bottom: none; }
+        .lp-section-title {
+            font-size: calc(10px * var(--scale));
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: calc(8px * var(--scale));
+        }
+        .lp-current {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: calc(4px * var(--scale)) calc(12px * var(--scale));
+            align-items: baseline;
+        }
+        .lp-current-temp {
+            font-size: calc(32px * var(--scale));
+            font-weight: 700;
+            color: var(--text);
+            grid-row: 1 / 3;
+            line-height: 1;
+        }
+        .lp-current-desc {
+            font-size: calc(13px * var(--scale));
+            color: var(--text);
+            font-weight: 500;
+        }
+        .lp-current-detail {
+            font-size: calc(11px * var(--scale));
+            color: var(--text-muted);
+        }
+        .lp-current-stats {
+            display: flex;
+            gap: calc(14px * var(--scale));
+            margin-top: calc(8px * var(--scale));
+            flex-wrap: wrap;
+        }
+        .lp-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .lp-stat-label {
+            font-size: calc(9px * var(--scale));
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .lp-stat-val {
+            font-size: calc(12px * var(--scale));
+            color: var(--text);
+            font-weight: 500;
+        }
+        .lp-forecast-grid {
+            display: flex;
+            flex-direction: column;
+            gap: calc(4px * var(--scale));
+        }
+        .lp-forecast-day {
+            display: flex;
+            align-items: center;
+            gap: calc(8px * var(--scale));
+            padding: calc(5px * var(--scale)) 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .lp-forecast-day:last-child { border-bottom: none; }
+        .lp-fc-name {
+            font-size: calc(11px * var(--scale));
+            font-weight: 600;
+            color: var(--text);
+            width: calc(80px * var(--scale));
+            flex-shrink: 0;
+        }
+        .lp-fc-temp {
+            font-size: calc(12px * var(--scale));
+            font-weight: 700;
+            width: calc(42px * var(--scale));
+            flex-shrink: 0;
+        }
+        .lp-fc-temp.high { color: #ff8c6b; }
+        .lp-fc-temp.low  { color: #6bc5ff; }
+        .lp-fc-desc {
+            font-size: calc(10.5px * var(--scale));
+            color: var(--text-muted);
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .lp-alerts-list {
+            display: flex;
+            flex-direction: column;
+            gap: calc(5px * var(--scale));
+        }
+        .lp-alert-item {
+            display: flex;
+            align-items: center;
+            gap: calc(8px * var(--scale));
+            padding: calc(6px * var(--scale)) calc(8px * var(--scale));
+            border-radius: calc(6px * var(--scale));
+            background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .lp-alert-item:hover { background: rgba(255,255,255,0.08); }
+        .lp-alert-swatch {
+            width: calc(4px * var(--scale));
+            height: calc(28px * var(--scale));
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .lp-alert-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .lp-alert-event {
+            font-size: calc(12px * var(--scale));
+            font-weight: 600;
+            color: var(--text);
+        }
+        .lp-alert-area {
+            font-size: calc(10px * var(--scale));
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .lp-no-alerts {
+            font-size: calc(11px * var(--scale));
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        .lp-loading {
+            font-size: calc(11px * var(--scale));
+            color: var(--text-muted);
+            text-align: center;
+            padding: calc(12px * var(--scale)) 0;
+        }
+        .lp-error {
+            font-size: calc(11px * var(--scale));
+            color: var(--red-text);
+            padding: calc(4px * var(--scale)) 0;
+        }
+
+        /* Location panel screenshot mode */
+        .screenshot-mode .location-panel:not(.visible) {
+            display: none !important;
+        }
+        .screenshot-mode .location-panel.visible {
+            top: auto !important;
+            bottom: 24px !important;
+            left: auto !important;
+            right: 24px !important;
+            margin: 0 !important;
+            width: 420px !important;
+            max-width: 45% !important;
+            backdrop-filter: none !important;
+            background: rgba(13, 17, 23, 0.98) !important;
+            border: 2px solid var(--accent) !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
+            transform: none !important;
+            --scale: 1.15;
+            max-height: 60vh !important;
+        }
+        .screenshot-mode .lp-header {
+            position: static !important;
+        }
+        .screenshot-mode .lp-header-right {
+            display: none !important;
+        }
+
+        /* Pin marker style */
+        .location-pin-icon {
+            background: none;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -1168,8 +1429,34 @@
 
                 <div class="ap-desc" id="ap-desc"></div>
             </div>
+
+            <!-- Location detail panel (double-click) -->
+            <div class="location-panel" id="location-panel">
+                <div class="lp-header" id="lp-header">
+                    <div class="lp-header-left">
+                        <div class="lp-title" id="lp-title">Loading...</div>
+                        <div class="lp-subtitle" id="lp-subtitle"></div>
+                    </div>
+                    <div class="lp-header-right">
+                        <button class="lp-action-btn" id="lp-screenshot" title="Take Screenshot">&#128247;</button>
+                        <button class="lp-action-btn" id="lp-close" title="Close">&#10005;</button>
+                    </div>
+                </div>
+                <div class="lp-section" id="lp-current-section">
+                    <div class="lp-section-title">Current Conditions</div>
+                    <div id="lp-current-content"><div class="lp-loading">Fetching conditions...</div></div>
+                </div>
+                <div class="lp-section" id="lp-alerts-section">
+                    <div class="lp-section-title">Active Alerts</div>
+                    <div id="lp-alerts-content"><div class="lp-loading">Checking alerts...</div></div>
+                </div>
+                <div class="lp-section" id="lp-forecast-section">
+                    <div class="lp-section-title">7-Day Forecast</div>
+                    <div id="lp-forecast-content"><div class="lp-loading">Loading forecast...</div></div>
+                </div>
+            </div>
         </div>
- 
+
     </div>
 </div>
  
@@ -2022,6 +2309,9 @@
     }
  
     function showAlertPanel(props, warnColor, layer, panelType = 'alert') {
+        /* Close location panel if open */
+        if (locationPanelOpen) closeLocationPanel();
+
         /* ── Warning layer handling (only for NWS alert clicks) ── */
         if (panelType === 'alert' && warningLayer) {
             warningLayer.eachLayer(l => {
@@ -2429,6 +2719,7 @@
     map.on('click', function(e) {
         if (skipNextMapClick) { skipNextMapClick = false; return; }
         closeAlertPanel();
+        if (locationPanelOpen) closeLocationPanel();
 
         const point = e.latlng;
         currentMatching = [];
@@ -2601,9 +2892,12 @@
 
             const link = document.createElement('a');
             const alertOpen = alertPanel.classList.contains('visible');
+            const locOpen = locationPanel.classList.contains('visible');
             let eventName;
             if (alertOpen) {
                 eventName = document.getElementById('ap-event').textContent.replace(/\s+/g, '_');
+            } else if (locOpen) {
+                eventName = 'Location_' + document.getElementById('lp-title').textContent.replace(/[,\s]+/g, '_');
             } else {
                 const radarName = selectedRadar === 'None' ? 'NoRadar' : selectedRadar;
                 eventName = `Map_${radarName}`;
@@ -2628,7 +2922,305 @@
     document.getElementById('map-screenshot-btn').addEventListener('click', async () => {
         await takeScreenshot();
     });
- 
+
+    /* ══════════════════════════════════════════════════════════
+       Location Panel — double-click to get weather for a point
+    ══════════════════════════════════════════════════════════ */
+    const locationPanel = document.getElementById('location-panel');
+    let locationPinMarker = null;
+    let locationPanelOpen = false;
+
+    // Make location panel draggable
+    const lpHeader = document.getElementById('lp-header');
+    let lpDragStartX, lpDragStartY, lpInitialLeft, lpInitialTop;
+    lpHeader.addEventListener('mousedown', e => {
+        if (e.target.closest('.lp-action-btn')) return;
+        e.preventDefault();
+        lpDragStartX = e.clientX;
+        lpDragStartY = e.clientY;
+        lpInitialLeft = locationPanel.offsetLeft;
+        lpInitialTop = locationPanel.offsetTop;
+        document.addEventListener('mousemove', lpDragMove);
+        document.addEventListener('mouseup', lpDragStop);
+    });
+    function lpDragMove(e) {
+        locationPanel.style.right = '';
+        locationPanel.style.left = lpInitialLeft + e.clientX - lpDragStartX + 'px';
+        locationPanel.style.top = lpInitialTop + e.clientY - lpDragStartY + 'px';
+    }
+    function lpDragStop() {
+        document.removeEventListener('mousemove', lpDragMove);
+        document.removeEventListener('mouseup', lpDragStop);
+    }
+
+    // Resize observer for location panel scaling
+    if (typeof ResizeObserver !== 'undefined') {
+        const lpResizeObserver = new ResizeObserver(([entry]) => {
+            const w = entry.contentRect.width;
+            const scale = Math.max(0.72, Math.min(1.6, w / 340));
+            locationPanel.style.setProperty('--scale', scale.toFixed(3));
+        });
+        lpResizeObserver.observe(locationPanel);
+    }
+
+    document.getElementById('lp-close').addEventListener('click', closeLocationPanel);
+    document.getElementById('lp-close').addEventListener('mousedown', e => e.stopPropagation());
+
+    document.getElementById('lp-screenshot').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await takeScreenshot();
+    });
+
+    function closeLocationPanel() {
+        locationPanel.classList.remove('visible');
+        locationPanelOpen = false;
+        if (locationPinMarker) {
+            map.removeLayer(locationPinMarker);
+            locationPinMarker = null;
+        }
+        setTimeout(() => {
+            locationPanel.style.left = '';
+            locationPanel.style.top  = '';
+        }, 300);
+    }
+
+    // SVG pin icon for the location marker
+    function createPinIcon() {
+        return L.divIcon({
+            className: 'location-pin-icon',
+            html: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="pin-shadow" x="-20%" y="-10%" width="140%" height="130%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.5"/>
+                </filter></defs>
+                <path d="M15 0C6.72 0 0 6.72 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.72 23.28 0 15 0z"
+                      fill="#4f8ef7" stroke="#fff" stroke-width="2" filter="url(#pin-shadow)"/>
+                <circle cx="15" cy="14" r="6" fill="#fff"/>
+            </svg>`,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+        });
+    }
+
+    // Double-click handler on the map
+    map.doubleClickZoom.disable();
+    map.on('dblclick', async function(e) {
+        const latlng = e.latlng;
+
+        // Close alert panel if open
+        closeAlertPanel();
+
+        // Remove previous pin
+        if (locationPinMarker) {
+            map.removeLayer(locationPinMarker);
+        }
+
+        // Place pin
+        locationPinMarker = L.marker(latlng, { icon: createPinIcon(), pane: 'warningPane' }).addTo(map);
+
+        // Reset and show panel
+        document.getElementById('lp-title').textContent = 'Loading...';
+        document.getElementById('lp-subtitle').textContent = `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+        document.getElementById('lp-current-content').innerHTML = '<div class="lp-loading">Fetching conditions...</div>';
+        document.getElementById('lp-forecast-content').innerHTML = '<div class="lp-loading">Loading forecast...</div>';
+        document.getElementById('lp-alerts-content').innerHTML = '<div class="lp-loading">Checking alerts...</div>';
+        locationPanel.classList.add('visible');
+        locationPanelOpen = true;
+
+        // Fetch all data in parallel
+        const lat = latlng.lat.toFixed(4);
+        const lon = latlng.lng.toFixed(4);
+
+        try {
+            // Step 1: Get grid point metadata
+            const pointResp = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+                headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+            });
+            if (!pointResp.ok) {
+                throw new Error('Location not supported by NWS (US only)');
+            }
+            const pointData = await pointResp.json();
+            const props = pointData.properties;
+
+            // Update header with location name
+            const cityState = props.relativeLocation?.properties;
+            const locName = cityState
+                ? `${cityState.city}, ${cityState.state}`
+                : `${lat}, ${lon}`;
+            document.getElementById('lp-title').textContent = locName;
+            document.getElementById('lp-subtitle').textContent = `${props.gridId} Grid · ${lat}, ${lon}`;
+
+            // Fetch forecast, current conditions, and alerts in parallel
+            const [forecastResult, obsResult, alertsResult] = await Promise.allSettled([
+                fetch(props.forecast, {
+                    headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+                }).then(r => r.ok ? r.json() : Promise.reject('Forecast unavailable')),
+
+                fetch(props.observationStations, {
+                    headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+                }).then(r => r.ok ? r.json() : Promise.reject('Stations unavailable'))
+                  .then(stations => {
+                      const stationId = stations.features?.[0]?.properties?.stationIdentifier;
+                      if (!stationId) return Promise.reject('No station found');
+                      return fetch(`https://api.weather.gov/stations/${stationId}/observations/latest`, {
+                          headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+                      }).then(r => r.ok ? r.json() : Promise.reject('Observation unavailable'));
+                  }),
+
+                fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`, {
+                    headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+                }).then(r => r.ok ? r.json() : Promise.reject('Alerts unavailable'))
+            ]);
+
+            // Render current conditions
+            renderCurrentConditions(obsResult, forecastResult);
+
+            // Render 7-day forecast
+            renderForecast(forecastResult);
+
+            // Render alerts
+            renderLocationAlerts(alertsResult);
+
+        } catch (err) {
+            document.getElementById('lp-title').textContent = 'Location Error';
+            document.getElementById('lp-current-content').innerHTML = `<div class="lp-error">${err.message || 'Could not fetch weather data. NWS API only covers the United States.'}</div>`;
+            document.getElementById('lp-forecast-content').innerHTML = '';
+            document.getElementById('lp-alerts-content').innerHTML = '';
+        }
+    });
+
+    function celsiusToFahrenheit(c) {
+        if (c == null) return null;
+        return Math.round(c * 9 / 5 + 32);
+    }
+
+    function renderCurrentConditions(obsResult, forecastResult) {
+        const el = document.getElementById('lp-current-content');
+
+        if (obsResult.status === 'fulfilled') {
+            const obs = obsResult.value.properties;
+            const tempC = obs.temperature?.value;
+            const tempF = celsiusToFahrenheit(tempC);
+            const desc = obs.textDescription || 'N/A';
+            const windSpeedKmh = obs.windSpeed?.value;
+            const windMph = windSpeedKmh != null ? Math.round(windSpeedKmh * 0.621371) : null;
+            const windDir = obs.windDirection?.value;
+            const humidity = obs.relativeHumidity?.value;
+            const dewC = obs.dewpoint?.value;
+            const dewF = celsiusToFahrenheit(dewC);
+            const visM = obs.visibility?.value;
+            const visMi = visM != null ? (visM / 1609.34).toFixed(1) : null;
+            const pressurePa = obs.barometricPressure?.value;
+            const pressureIn = pressurePa != null ? (pressurePa / 3386.39).toFixed(2) : null;
+
+            // Get "feels like" from forecast first period if available
+            let feelsLike = '';
+            if (forecastResult.status === 'fulfilled') {
+                const firstPeriod = forecastResult.value.properties?.periods?.[0];
+                if (firstPeriod) {
+                    feelsLike = firstPeriod.shortForecast;
+                }
+            }
+
+            el.innerHTML = `
+                <div class="lp-current">
+                    <div class="lp-current-temp">${tempF != null ? tempF + '°F' : 'N/A'}</div>
+                    <div class="lp-current-desc">${desc}</div>
+                    <div class="lp-current-detail">${feelsLike}</div>
+                </div>
+                <div class="lp-current-stats">
+                    ${windMph != null ? `<div class="lp-stat"><span class="lp-stat-label">Wind</span><span class="lp-stat-val">${windDir != null ? windDirToCardinal(windDir) + ' ' : ''}${windMph} mph</span></div>` : ''}
+                    ${humidity != null ? `<div class="lp-stat"><span class="lp-stat-label">Humidity</span><span class="lp-stat-val">${Math.round(humidity)}%</span></div>` : ''}
+                    ${dewF != null ? `<div class="lp-stat"><span class="lp-stat-label">Dewpoint</span><span class="lp-stat-val">${dewF}°F</span></div>` : ''}
+                    ${visMi != null ? `<div class="lp-stat"><span class="lp-stat-label">Visibility</span><span class="lp-stat-val">${visMi} mi</span></div>` : ''}
+                    ${pressureIn != null ? `<div class="lp-stat"><span class="lp-stat-label">Pressure</span><span class="lp-stat-val">${pressureIn} inHg</span></div>` : ''}
+                </div>
+            `;
+        } else {
+            el.innerHTML = '<div class="lp-error">Current conditions unavailable</div>';
+        }
+    }
+
+    function windDirToCardinal(deg) {
+        if (deg == null) return '';
+        const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+        return dirs[Math.round(deg / 22.5) % 16];
+    }
+
+    function renderForecast(forecastResult) {
+        const el = document.getElementById('lp-forecast-content');
+
+        if (forecastResult.status === 'fulfilled') {
+            const periods = forecastResult.value.properties?.periods || [];
+            if (periods.length === 0) {
+                el.innerHTML = '<div class="lp-error">No forecast data available</div>';
+                return;
+            }
+
+            // Show up to 14 periods (7 days × day/night)
+            const rows = periods.slice(0, 14).map(p => {
+                const isNight = p.isDaytime === false;
+                const tempClass = isNight ? 'low' : 'high';
+                return `<div class="lp-forecast-day">
+                    <span class="lp-fc-name">${p.name}</span>
+                    <span class="lp-fc-temp ${tempClass}">${p.temperature}°${p.temperatureUnit}</span>
+                    <span class="lp-fc-desc" title="${p.shortForecast}">${p.shortForecast}</span>
+                </div>`;
+            }).join('');
+
+            el.innerHTML = `<div class="lp-forecast-grid">${rows}</div>`;
+        } else {
+            el.innerHTML = '<div class="lp-error">Forecast unavailable</div>';
+        }
+    }
+
+    function renderLocationAlerts(alertsResult) {
+        const el = document.getElementById('lp-alerts-content');
+
+        if (alertsResult.status === 'fulfilled') {
+            const features = alertsResult.value.features || [];
+            const now = new Date();
+            const activeAlerts = features.filter(f => {
+                const exp = f.properties.expires || f.properties.ends;
+                return !exp || new Date(exp) > now;
+            });
+
+            if (activeAlerts.length === 0) {
+                el.innerHTML = '<div class="lp-no-alerts">No active alerts for this location</div>';
+                return;
+            }
+
+            const items = activeAlerts.map(f => {
+                const p = f.properties;
+                const cfg = WARN_CFG_MAP[p.event];
+                const color = cfg?.fill || '#888';
+                return `<div class="lp-alert-item" onclick="locationAlertClick('${p.event}', '${(p.areaDesc || '').replace(/'/g, "\\'")}')">
+                    <div class="lp-alert-swatch" style="background:${color}"></div>
+                    <div class="lp-alert-info">
+                        <div class="lp-alert-event" style="color:${color}">${p.event}</div>
+                        <div class="lp-alert-area">${p.areaDesc || ''}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            el.innerHTML = `<div class="lp-alerts-list">${items}</div>`;
+        } else {
+            el.innerHTML = '<div class="lp-error">Could not fetch alerts</div>';
+        }
+    }
+
+    // Click on an alert in the location panel to open the full alert panel
+    window.locationAlertClick = function(eventName, areaDesc) {
+        if (!warningLayer) return;
+        warningLayer.eachLayer(l => {
+            const p = l.feature.properties;
+            if (p.event === eventName && (p.areaDesc || '').includes(areaDesc.slice(0, 20))) {
+                closeLocationPanel();
+                map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 10 });
+                showAlertPanel(p, WARN_CFG_MAP[p.event]?.fill, l, 'alert');
+            }
+        });
+    };
+
     /* ── Initial render ── */
     reloadBounds().then(() => {
         updateOverlay();

@@ -117,7 +117,7 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
         lon_lines=[],
         gatefilter=gatefilter,
         raster=True,
-        embelish=False,
+        embellish=False,
     )
 
     # Remove all axes decorations so the PNG is pure radar data on transparency
