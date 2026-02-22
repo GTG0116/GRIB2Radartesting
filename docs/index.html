@@ -415,7 +415,8 @@
         }
         .ap-type-badge.spc { background: rgba(255,140,0,0.18);   color: #ffb347; border-color: rgba(255,140,0,0.4); }
         .ap-type-badge.mcd { background: rgba(147,112,219,0.22); color: #c0a0ff; border-color: rgba(147,112,219,0.5); }
-        .ap-type-badge.lsr { background: rgba(255,255,80,0.12);  color: #dddd55; border-color: rgba(255,255,80,0.3); }
+        .ap-type-badge.lsr   { background: rgba(255,255,80,0.12);  color: #dddd55; border-color: rgba(255,255,80,0.3); }
+        .ap-type-badge.mping { background: rgba(0,191,255,0.15);   color: #00bfff; border-color: rgba(0,191,255,0.4); }
 
         /* ── SPC Risk levels chips ─────────────────────────── */
         .ap-risk-section {
@@ -750,7 +751,10 @@
             position: absolute !important;
             inset: 0 !important;
         }
-        .screenshot-mode .alert-panel {
+        .screenshot-mode .alert-panel:not(.visible) {
+            display: none !important;
+        }
+        .screenshot-mode .alert-panel.visible {
             top: auto !important;
             bottom: 40px !important;
             /* Center without transform to prevent html2canvas clipping */
@@ -797,6 +801,7 @@
         .leaflet-control-attribution a { color: var(--accent) !important; }
         .radar-image {
             mix-blend-mode: screen;
+            image-rendering: auto;
         }
 
         /* ── Floating screenshot button ── */
@@ -918,20 +923,6 @@
                             <div class="radio-desc">State College, PA</div>
                         </div>
                     </div>
-                    <div class="radio-opt" data-value="KDOX">
-                        <div class="radio-pip"></div>
-                        <div class="radio-text">
-                            <div class="radio-name">KDOX</div>
-                            <div class="radio-desc">Dover, DE</div>
-                        </div>
-                    </div>
-                    <div class="radio-opt" data-value="KIND">
-                        <div class="radio-pip"></div>
-                        <div class="radio-text">
-                            <div class="radio-name">KIND</div>
-                            <div class="radio-desc">Indianapolis, IN</div>
-                        </div>
-                    </div>
                     <div class="radio-opt" data-value="KDIX">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
@@ -939,11 +930,32 @@
                             <div class="radio-desc">Philadelphia, NJ</div>
                         </div>
                     </div>
+                    <div class="radio-opt" data-value="KDOX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KDOX</div>
+                            <div class="radio-desc">Dover, DE</div>
+                        </div>
+                    </div>
                     <div class="radio-opt" data-value="KBGM">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
                             <div class="radio-name">KBGM</div>
                             <div class="radio-desc">Binghamton, NY</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KOKX">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KOKX</div>
+                            <div class="radio-desc">New York City, NY</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="KPBZ">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">KPBZ</div>
+                            <div class="radio-desc">Pittsburgh, PA</div>
                         </div>
                     </div>
                     <div class="radio-opt" data-value="MRMS">
@@ -1057,7 +1069,33 @@
                     <div class="legend-item"><div class="legend-swatch" style="background:#ffff00;border-radius:50%;width:10px;height:10px;"></div><span>Other</span></div>
                 </div>
             </div>
-            
+
+            <div class="section">
+                <div class="section-label">mPING Reports</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Reports</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="mping-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <input type="text" id="mping-token" placeholder="API Token (from mping.ou.edu)"
+                        style="width:100%;padding:5px 8px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:11px;">
+                    <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">
+                        Apply at <a href="https://mping.ou.edu/static/mping/access.html" target="_blank" style="color:var(--accent);">mping.ou.edu</a>
+                    </div>
+                </div>
+                <div class="warnings-legend" style="margin-top: 4px;">
+                    <div class="legend-item"><div class="legend-swatch" style="background:#00bfff;border-radius:50%;width:10px;height:10px;border-color:#00bfff;"></div><span>Rain</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ff69b4;border-radius:50%;width:10px;height:10px;border-color:#ff69b4;"></div><span>Snow</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ba55d3;border-radius:50%;width:10px;height:10px;border-color:#ba55d3;"></div><span>Ice/Sleet</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#00ff88;border-radius:50%;width:10px;height:10px;border-color:#00ff88;"></div><span>Hail</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ff4500;border-radius:50%;width:10px;height:10px;border-color:#ff4500;"></div><span>Wind</span></div>
+                    <div class="legend-item"><div class="legend-swatch" style="background:#ffff00;border-radius:50%;width:10px;height:10px;border-color:#ffff00;"></div><span>Other</span></div>
+                </div>
+            </div>
+
             <div class="section">
                 <div class="section-label">Weather Warnings</div>
                 <div class="toggle-row">
@@ -1340,6 +1378,131 @@
         }
     }
 
+    /* ── mPING Reports ── */
+    let mpingLayer = null;
+
+    document.getElementById('mping-toggle').addEventListener('change', fetchMPING);
+
+    // Persist token in localStorage
+    const mpingTokenInput = document.getElementById('mping-token');
+    mpingTokenInput.value = localStorage.getItem('mping_token') || '';
+    mpingTokenInput.addEventListener('change', () => {
+        localStorage.setItem('mping_token', mpingTokenInput.value.trim());
+    });
+
+    function getMPINGColor(category, description) {
+        if (!category && !description) return '#ffff00';
+        const cat = (category || '').toUpperCase();
+        const desc = (description || '').toUpperCase();
+        if (cat.includes('HAIL')) return '#00ff88';
+        if (desc.includes('SNOW') || cat.includes('SNOW')) return '#ff69b4';
+        if (desc.includes('ICE') || desc.includes('SLEET') || desc.includes('FREEZING') || cat.includes('ICE')) return '#ba55d3';
+        if (desc.includes('RAIN') || desc.includes('DRIZZLE') || cat.includes('RAIN')) return '#00bfff';
+        if (cat.includes('WIND') || desc.includes('WIND')) return '#ff4500';
+        if (cat.includes('FLOOD')) return '#00aaff';
+        if (cat.includes('TORNADO')) return '#ff0000';
+        return '#ffff00';
+    }
+
+    function getMPINGCategoryLabel(category, description) {
+        if (description) return description;
+        if (category) return category;
+        return 'Unknown';
+    }
+
+    async function fetchMPING() {
+        if (mpingLayer) { map.removeLayer(mpingLayer); mpingLayer = null; }
+        if (!document.getElementById('mping-toggle').checked) return;
+
+        const token = (mpingTokenInput.value || localStorage.getItem('mping_token') || '').trim();
+        if (!token) {
+            showError('mPING requires an API token. Apply at mping.ou.edu');
+            document.getElementById('mping-toggle').checked = false;
+            return;
+        }
+
+        try {
+            // Fetch reports from last 4 hours
+            const since = new Date(Date.now() - 4 * 60 * 60 * 1000);
+            const sinceStr = since.toISOString().replace('T', ' ').slice(0, 19);
+            const url = `https://mping.ou.edu/mping/api/v2/reports?obtime_gte=${encodeURIComponent(sinceStr)}`;
+
+            const resp = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Token ${token}`
+                }
+            });
+
+            if (resp.status === 401 || resp.status === 403) {
+                showError('mPING token invalid or expired. Check your API token.');
+                document.getElementById('mping-toggle').checked = false;
+                return;
+            }
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+            const data = await resp.json();
+            const results = data.results || [];
+            if (!results.length) {
+                showError('No mPING reports in the last 4 hours.');
+                return;
+            }
+
+            // Convert to GeoJSON FeatureCollection
+            const features = results.filter(r => r.geom).map(r => ({
+                type: 'Feature',
+                geometry: r.geom,
+                properties: {
+                    obtime: r.obtime,
+                    category: r.category,
+                    description: r.description,
+                    description_id: r.description_id
+                }
+            }));
+
+            const geojson = { type: 'FeatureCollection', features };
+
+            mpingLayer = L.geoJSON(geojson, {
+                pane: 'warningPane',
+                pointToLayer: (feature, latlng) => {
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: getMPINGColor(feature.properties.category, feature.properties.description),
+                        color: '#0d1117',
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.85
+                    });
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', () => {
+                        skipNextMapClick = true;
+                        const p = feature.properties;
+                        const mpingProps = {
+                            event: 'mPING Report',
+                            areaDesc: getMPINGCategoryLabel(p.category, p.description),
+                            effective: p.obtime,
+                            expires: null,
+                            lsrType: `${p.category}${p.description ? ' \u00b7 ' + p.description : ''}`,
+                            description: `Category: ${p.category || 'N/A'}\nType: ${p.description || 'N/A'}\nTime: ${fmtTime(p.obtime)}`,
+                            parameters: {}
+                        };
+                        map.setView(layer.getLatLng(), Math.max(map.getZoom(), 8));
+                        showAlertPanel(mpingProps, getMPINGColor(p.category, p.description), layer, 'lsr');
+                    });
+                    const p = feature.properties;
+                    layer.bindTooltip(
+                        `<b>mPING: ${p.description || p.category || 'Report'}</b><br>${fmtTime(p.obtime)}`,
+                        { className: 'warning-tip' }
+                    );
+                }
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load mPING:', e);
+            showError('Could not load mPING reports.');
+        }
+    }
+
     /* ══════════════════════════════════════════════════════════
        Bounds — loaded dynamically so refresh busts the cache
     ══════════════════════════════════════════════════════════ */
@@ -1371,10 +1534,11 @@
  
     const RADAR_NAMES = {
         KCCX: 'State College, PA',
-        KDOX: 'Dover, DE',
-        KIND: 'Indianapolis, IN',
         KDIX: 'Philadelphia, NJ',
+        KDOX: 'Dover, DE',
         KBGM: 'Binghamton, NY',
+        KOKX: 'New York City, NY',
+        KPBZ: 'Pittsburgh, PA',
         MRMS: 'US Composite',
         RainViewer: 'Global Radar w/ Snow',
         None: 'No Radar',
@@ -1565,6 +1729,7 @@
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
         if (document.getElementById('spc-toggle').checked) fetchSPC();
         if (document.getElementById('mcd-toggle').checked) fetchMCD();
+        if (document.getElementById('mping-toggle').checked) fetchMPING();
     });
 
     /* ── Auto-refresh every 5 minutes ── */
@@ -1576,6 +1741,7 @@
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
         if (document.getElementById('spc-toggle').checked) fetchSPC();
         if (document.getElementById('mcd-toggle').checked) fetchMCD();
+        if (document.getElementById('mping-toggle').checked) fetchMPING();
     }, 5 * 60 * 1000);
  
     /* ══════════════════════════════════════════════════════════
@@ -2187,13 +2353,21 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
+            const now = new Date();
+            const isNotExpired = f => {
+                const exp = f.properties.expires || f.properties.ends;
+                if (!exp) return true;
+                return new Date(exp) > now;
+            };
+
             const polyFeatures = (data.features || []).filter(f =>
-                f.geometry && WARN_EVENTS.includes(f.properties.event)
+                f.geometry && WARN_EVENTS.includes(f.properties.event) && isNotExpired(f)
             );
 
             const zoneAlerts = (data.features || []).filter(f =>
                 !f.geometry && WARN_EVENTS.includes(f.properties.event) &&
-                Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0
+                Array.isArray(f.properties.affectedZones) && f.properties.affectedZones.length > 0 &&
+                isNotExpired(f)
             );
 
             const uniqueZones = [...new Set(
@@ -2399,6 +2573,15 @@
             lsrLayer.eachLayer(() => lsrCount++);
             if (lsrCount > 0) {
                 sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">Storm Reports (24h)</div><div class="screenshot-legend-items"><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#ff0000;border-color:#ff0000;border-radius:50%;width:10px;height:10px"></div><span>Tornado</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#00ff00;border-color:#00ff00;border-radius:50%;width:10px;height:10px"></div><span>Hail</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#0000ff;border-color:#0000ff;border-radius:50%;width:10px;height:10px"></div><span>Wind</span></div></div></div>`);
+            }
+        }
+
+        /* mPING legend */
+        if (mpingLayer) {
+            let mpingCount = 0;
+            mpingLayer.eachLayer(() => mpingCount++);
+            if (mpingCount > 0) {
+                sectionParts.push(`<div class="screenshot-legend-section"><div class="screenshot-legend-title">mPING Reports</div><div class="screenshot-legend-items"><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#00bfff;border-color:#00bfff;border-radius:50%;width:10px;height:10px"></div><span>Rain</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#ff69b4;border-color:#ff69b4;border-radius:50%;width:10px;height:10px"></div><span>Snow</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#ba55d3;border-color:#ba55d3;border-radius:50%;width:10px;height:10px"></div><span>Ice/Sleet</span></div><div class="screenshot-legend-item"><div class="screenshot-legend-swatch" style="background:#00ff88;border-color:#00ff88;border-radius:50%;width:10px;height:10px"></div><span>Hail</span></div></div></div>`);
             }
         }
 
