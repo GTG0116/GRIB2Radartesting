@@ -800,8 +800,8 @@
         }
         .leaflet-control-attribution a { color: var(--accent) !important; }
         .radar-image {
-            mix-blend-mode: screen;
-            image-rendering: auto;
+            image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         /* ── Floating screenshot button ── */
@@ -883,6 +883,10 @@
         }
         .screenshot-legend-swatch.watch { border-style: dashed; }
         .screenshot-mode .map-screenshot-btn { display: none !important; }
+        .screenshot-mode .draw-toolbar { display: none !important; }
+        .screenshot-mode .draw-toggle-btn { display: none !important; }
+        .screenshot-mode .draw-canvas-overlay { display: none !important; }
+        .screenshot-mode .draw-text-input-overlay { display: none !important; }
         .screenshot-mode .screenshot-legend { display: block !important; }
 
         /* ── Location detail panel ───────────────────────── */
@@ -1145,6 +1149,153 @@
             background: none;
             border: none;
         }
+
+        /* ── Drawing Toolbar ────────────────────────────── */
+        .draw-toolbar {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            font-family: 'Roboto', sans-serif;
+            backdrop-filter: blur(8px);
+        }
+        .draw-toolbar.hidden { display: none; }
+
+        .draw-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid transparent;
+            color: var(--text);
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.12s, border-color 0.12s;
+        }
+        .draw-btn:hover { background: rgba(255,255,255,0.12); }
+        .draw-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+        .draw-btn[title]::after { content: none; }
+
+        .draw-sep {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        .draw-color-pick {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            overflow: hidden;
+        }
+        .draw-color-pick::-webkit-color-swatch-wrapper { padding: 0; }
+        .draw-color-pick::-webkit-color-swatch { border: none; border-radius: 4px; }
+        .draw-color-pick::-moz-color-swatch { border: none; border-radius: 4px; }
+
+        .draw-select {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .draw-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-right: 2px;
+            white-space: nowrap;
+        }
+
+        .draw-number-input {
+            width: 42px;
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* Drawing canvas overlay */
+        .draw-canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 450;
+            pointer-events: none;
+        }
+        .draw-canvas-overlay.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        /* Text input overlay for text tool */
+        .draw-text-input-overlay {
+            position: absolute;
+            z-index: 900;
+            display: none;
+        }
+        .draw-text-input-overlay input {
+            background: rgba(22,27,34,0.9);
+            border: 1px solid var(--accent);
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            min-width: 120px;
+        }
+
+        /* Toggle button for drawing toolbar */
+        .draw-toggle-btn {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: background 0.15s;
+        }
+        .draw-toggle-btn:hover { background: var(--surface-2); }
+        .draw-toggle-btn.hidden { display: none; }
     </style>
 </head>
 <body>
@@ -1380,6 +1531,46 @@
             <div class="error-banner" id="error-banner"></div>
             <button class="map-screenshot-btn" id="map-screenshot-btn" title="Take Screenshot">&#128247;</button>
             <div class="screenshot-legend" id="screenshot-legend"></div>
+
+            <!-- Drawing toggle button -->
+            <button class="draw-toggle-btn" id="draw-toggle-btn">&#9998; Draw</button>
+
+            <!-- Drawing toolbar -->
+            <div class="draw-toolbar hidden" id="draw-toolbar">
+                <button class="draw-btn" id="draw-tool-freehand" title="Freehand Draw">&#9998;</button>
+                <button class="draw-btn" id="draw-tool-polygon" title="Draw Polygon">&#11039;</button>
+                <button class="draw-btn" id="draw-tool-text" title="Add Text">T</button>
+                <div class="draw-sep"></div>
+                <span class="draw-label">Color</span>
+                <input type="color" class="draw-color-pick" id="draw-color" value="#ff0000">
+                <div class="draw-sep"></div>
+                <span class="draw-label">Width</span>
+                <input type="number" class="draw-number-input" id="draw-line-width" value="3" min="1" max="20">
+                <div class="draw-sep" id="draw-text-options-sep" style="display:none;"></div>
+                <span class="draw-label" id="draw-font-label" style="display:none;">Font</span>
+                <select class="draw-select" id="draw-font" style="display:none;">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Impact">Impact</option>
+                </select>
+                <span class="draw-label" id="draw-fontsize-label" style="display:none;">Size</span>
+                <input type="number" class="draw-number-input" id="draw-font-size" value="16" min="8" max="72" style="display:none;">
+                <div class="draw-sep"></div>
+                <button class="draw-btn" id="draw-undo" title="Undo">&#8617;</button>
+                <button class="draw-btn" id="draw-clear" title="Clear All">&#128465;</button>
+                <button class="draw-btn" id="draw-close" title="Close Toolbar">&#10005;</button>
+            </div>
+
+            <!-- Drawing canvas -->
+            <canvas class="draw-canvas-overlay" id="draw-canvas"></canvas>
+
+            <!-- Text input overlay -->
+            <div class="draw-text-input-overlay" id="draw-text-input-overlay">
+                <input type="text" id="draw-text-value" placeholder="Type text...">
+            </div>
  
             <div class="alert-panel" id="alert-panel">
                 <div class="ap-header" id="ap-header">
@@ -1858,27 +2049,65 @@
     const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
  
     const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';
-    L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${accessToken}`, {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        maxZoom: 18,
-        tileSize: 512,
-        zoomOffset: -1,
+    /* Base map — no labels variant so label layer on top is not duplicated */
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
+        maxZoom: 19,
+        subdomains: 'abcd',
     }).addTo(map);
 
     // Custom panes for layer ordering
+    // Order (bottom to top): radar → borders → SPC → drawings → warnings → labels(town names)
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 210;
     map.getPane('radarPane').style.pointerEvents = 'none';
 
+    map.createPane('borderPane');
+    map.getPane('borderPane').style.zIndex = 212;
+    map.getPane('borderPane').style.pointerEvents = 'none';
+
     map.createPane('spcPane');
-    map.getPane('spcPane').style.zIndex = 215; // Set SPC safely between radar and warnings
+    map.getPane('spcPane').style.zIndex = 215;
+
+    map.createPane('drawingPane');
+    map.getPane('drawingPane').style.zIndex = 218;
+    map.getPane('drawingPane').style.pointerEvents = 'none';
 
     map.createPane('warningPane');
     map.getPane('warningPane').style.zIndex = 220;
 
     map.createPane('labelPane');
-    map.getPane('labelPane').style.zIndex = 230;
+    map.getPane('labelPane').style.zIndex = 250;
     map.getPane('labelPane').style.pointerEvents = 'none';
+
+    /* ── Borders Layer (above radar, below warnings) ── */
+    /* Fetch US state boundaries and render on borderPane */
+    (async function loadBorders() {
+        try {
+            const resp = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
+            if (!resp.ok) return;
+            const data = await resp.json();
+            L.geoJSON(data, {
+                pane: 'borderPane',
+                style: {
+                    color: '#ffffff',
+                    weight: 1.2,
+                    opacity: 0.35,
+                    fillOpacity: 0,
+                },
+                interactive: false,
+            }).addTo(map);
+        } catch (e) {
+            console.warn('Could not load state borders:', e);
+        }
+    })();
+
+    /* ── Town Name Labels Layer (on top of everything) ── */
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+        pane: 'labelPane',
+        maxZoom: 19,
+        subdomains: 'abcd',
+    }).addTo(map);
  
     /* ── Error helper ── */
     let errorTimer;
@@ -3220,6 +3449,417 @@
             }
         });
     };
+
+    /* ══════════════════════════════════════════════════════════
+       Drawing System — Freehand, Polygon, and Text tools
+    ══════════════════════════════════════════════════════════ */
+    const drawCanvas = document.getElementById('draw-canvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    const drawToolbar = document.getElementById('draw-toolbar');
+    const drawToggleBtn = document.getElementById('draw-toggle-btn');
+    const drawTextOverlay = document.getElementById('draw-text-input-overlay');
+    const drawTextInput = document.getElementById('draw-text-value');
+
+    let drawMode = null; // null | 'freehand' | 'polygon' | 'text'
+    let drawToolbarVisible = false;
+    let drawActions = []; // history of drawn items for undo
+    let isDrawing = false;
+    let currentPath = [];
+    let polygonPoints = []; // lat/lng points for polygon being drawn
+    let polygonPreviewMousePos = null; // current mouse position for polygon preview line
+
+    // Drawing items stored in map coordinates (lat/lng)
+    // Each item: { type: 'freehand'|'polygon'|'text', color, width, points (latlngs), text, font, fontSize, latlng }
+    let drawItems = [];
+    let drawLayerGroup = L.layerGroup().addTo(map);
+
+    function resizeDrawCanvas() {
+        const mapEl = document.getElementById('map');
+        drawCanvas.width = mapEl.clientWidth;
+        drawCanvas.height = mapEl.clientHeight;
+    }
+    resizeDrawCanvas();
+    window.addEventListener('resize', resizeDrawCanvas);
+    map.on('resize', resizeDrawCanvas);
+
+    // Toggle toolbar
+    drawToggleBtn.addEventListener('click', () => {
+        drawToolbarVisible = true;
+        drawToolbar.classList.remove('hidden');
+        drawToggleBtn.classList.add('hidden');
+    });
+
+    document.getElementById('draw-close').addEventListener('click', () => {
+        drawToolbarVisible = false;
+        drawToolbar.classList.add('hidden');
+        drawToggleBtn.classList.remove('hidden');
+        setDrawMode(null);
+    });
+
+    function setDrawMode(mode) {
+        drawMode = mode;
+        // Update button states
+        document.getElementById('draw-tool-freehand').classList.toggle('active', mode === 'freehand');
+        document.getElementById('draw-tool-polygon').classList.toggle('active', mode === 'polygon');
+        document.getElementById('draw-tool-text').classList.toggle('active', mode === 'text');
+
+        // Show/hide text-specific options
+        const textOptsVisible = mode === 'text';
+        document.getElementById('draw-text-options-sep').style.display = textOptsVisible ? '' : 'none';
+        document.getElementById('draw-font-label').style.display = textOptsVisible ? '' : 'none';
+        document.getElementById('draw-font').style.display = textOptsVisible ? '' : 'none';
+        document.getElementById('draw-fontsize-label').style.display = textOptsVisible ? '' : 'none';
+        document.getElementById('draw-font-size').style.display = textOptsVisible ? '' : 'none';
+
+        // Toggle canvas interaction
+        const canvas = document.getElementById('draw-canvas');
+        if (mode) {
+            canvas.classList.add('active');
+            map.dragging.disable();
+            map.scrollWheelZoom.disable();
+            map.doubleClickZoom.disable();
+        } else {
+            canvas.classList.remove('active');
+            map.dragging.enable();
+            map.scrollWheelZoom.enable();
+            // Note: doubleClickZoom stays disabled (as per original code)
+            // Finish any active polygon
+            if (polygonPoints.length > 0) {
+                finishPolygon();
+            }
+            hideTextInput();
+        }
+        // Clear the preview canvas
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        polygonPreviewMousePos = null;
+    }
+
+    document.getElementById('draw-tool-freehand').addEventListener('click', () => {
+        setDrawMode(drawMode === 'freehand' ? null : 'freehand');
+    });
+    document.getElementById('draw-tool-polygon').addEventListener('click', () => {
+        setDrawMode(drawMode === 'polygon' ? null : 'polygon');
+    });
+    document.getElementById('draw-tool-text').addEventListener('click', () => {
+        setDrawMode(drawMode === 'text' ? null : 'text');
+    });
+
+    // Undo
+    document.getElementById('draw-undo').addEventListener('click', () => {
+        if (drawItems.length === 0) return;
+        drawItems.pop();
+        redrawAllItems();
+    });
+
+    // Clear all
+    document.getElementById('draw-clear').addEventListener('click', () => {
+        drawItems = [];
+        redrawAllItems();
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        polygonPoints = [];
+    });
+
+    function getDrawColor() { return document.getElementById('draw-color').value; }
+    function getDrawWidth() { return parseInt(document.getElementById('draw-line-width').value) || 3; }
+    function getDrawFont() { return document.getElementById('draw-font').value; }
+    function getDrawFontSize() { return parseInt(document.getElementById('draw-font-size').value) || 16; }
+
+    // Convert pixel position on canvas to latlng
+    function canvasPointToLatLng(x, y) {
+        const mapEl = document.getElementById('map');
+        const rect = mapEl.getBoundingClientRect();
+        const containerPoint = L.point(x, y);
+        return map.containerPointToLatLng(containerPoint);
+    }
+
+    // Convert latlng to pixel position on map container
+    function latLngToContainerPoint(latlng) {
+        return map.latLngToContainerPoint(L.latLng(latlng.lat, latlng.lng));
+    }
+
+    // Redraw all permanent items on the Leaflet layer group
+    function redrawAllItems() {
+        drawLayerGroup.clearLayers();
+        drawItems.forEach(item => {
+            if (item.type === 'freehand') {
+                const latlngs = item.points.map(p => [p.lat, p.lng]);
+                if (latlngs.length < 2) return;
+                const polyline = L.polyline(latlngs, {
+                    color: item.color,
+                    weight: item.width,
+                    opacity: 0.9,
+                    smoothFactor: 1,
+                    pane: 'drawingPane',
+                });
+                drawLayerGroup.addLayer(polyline);
+            } else if (item.type === 'polygon') {
+                const latlngs = item.points.map(p => [p.lat, p.lng]);
+                if (latlngs.length < 3) return;
+                const polygon = L.polygon(latlngs, {
+                    color: item.color,
+                    weight: item.width,
+                    opacity: 0.9,
+                    fillColor: item.color,
+                    fillOpacity: 0.15,
+                    pane: 'drawingPane',
+                });
+                drawLayerGroup.addLayer(polygon);
+            } else if (item.type === 'text') {
+                const marker = L.marker([item.latlng.lat, item.latlng.lng], {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div style="color:${item.color};font-size:${item.fontSize}px;font-family:'${item.font}',sans-serif;font-weight:bold;text-shadow:0 0 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9);white-space:nowrap;pointer-events:none;">${item.text}</div>`,
+                        iconSize: null,
+                        iconAnchor: [0, item.fontSize / 2],
+                    }),
+                    pane: 'drawingPane',
+                    interactive: false,
+                });
+                drawLayerGroup.addLayer(marker);
+            }
+        });
+    }
+
+    // Redraw on map move/zoom so items stay in correct geo position
+    map.on('moveend zoomend', () => {
+        // The Leaflet layers handle repositioning automatically
+        // But we need to clear the preview canvas
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        if (drawMode === 'polygon' && polygonPoints.length > 0) {
+            drawPolygonPreview();
+        }
+    });
+
+    /* ── Freehand Drawing ── */
+    drawCanvas.addEventListener('mousedown', (e) => {
+        if (drawMode === 'freehand') {
+            isDrawing = true;
+            const rect = drawCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            currentPath = [{ x, y, latlng: canvasPointToLatLng(x, y) }];
+            drawCtx.beginPath();
+            drawCtx.strokeStyle = getDrawColor();
+            drawCtx.lineWidth = getDrawWidth();
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+            drawCtx.moveTo(x, y);
+        }
+    });
+
+    drawCanvas.addEventListener('mousemove', (e) => {
+        const rect = drawCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (drawMode === 'freehand' && isDrawing) {
+            currentPath.push({ x, y, latlng: canvasPointToLatLng(x, y) });
+            drawCtx.lineTo(x, y);
+            drawCtx.stroke();
+        }
+
+        if (drawMode === 'polygon' && polygonPoints.length > 0) {
+            polygonPreviewMousePos = { x, y };
+            drawPolygonPreview();
+        }
+    });
+
+    drawCanvas.addEventListener('mouseup', (e) => {
+        if (drawMode === 'freehand' && isDrawing) {
+            isDrawing = false;
+            if (currentPath.length > 1) {
+                drawItems.push({
+                    type: 'freehand',
+                    color: getDrawColor(),
+                    width: getDrawWidth(),
+                    points: currentPath.map(p => p.latlng),
+                });
+                redrawAllItems();
+            }
+            // Clear preview canvas
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+            currentPath = [];
+        }
+    });
+
+    drawCanvas.addEventListener('mouseleave', (e) => {
+        if (drawMode === 'freehand' && isDrawing) {
+            isDrawing = false;
+            if (currentPath.length > 1) {
+                drawItems.push({
+                    type: 'freehand',
+                    color: getDrawColor(),
+                    width: getDrawWidth(),
+                    points: currentPath.map(p => p.latlng),
+                });
+                redrawAllItems();
+            }
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+            currentPath = [];
+        }
+    });
+
+    /* ── Polygon Drawing ── */
+    drawCanvas.addEventListener('click', (e) => {
+        if (drawMode === 'polygon') {
+            const rect = drawCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const latlng = canvasPointToLatLng(x, y);
+            polygonPoints.push(latlng);
+            drawPolygonPreview();
+        }
+        if (drawMode === 'text') {
+            const rect = drawCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            showTextInput(x, y, canvasPointToLatLng(x, y));
+        }
+    });
+
+    drawCanvas.addEventListener('dblclick', (e) => {
+        if (drawMode === 'polygon' && polygonPoints.length >= 3) {
+            e.preventDefault();
+            e.stopPropagation();
+            finishPolygon();
+        }
+    });
+
+    // Right-click to finish polygon
+    drawCanvas.addEventListener('contextmenu', (e) => {
+        if (drawMode === 'polygon' && polygonPoints.length >= 3) {
+            e.preventDefault();
+            finishPolygon();
+        }
+    });
+
+    function finishPolygon() {
+        if (polygonPoints.length >= 3) {
+            drawItems.push({
+                type: 'polygon',
+                color: getDrawColor(),
+                width: getDrawWidth(),
+                points: [...polygonPoints],
+            });
+            redrawAllItems();
+        }
+        polygonPoints = [];
+        polygonPreviewMousePos = null;
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    }
+
+    function drawPolygonPreview() {
+        resizeDrawCanvas();
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        if (polygonPoints.length === 0) return;
+
+        const color = getDrawColor();
+        const width = getDrawWidth();
+
+        drawCtx.beginPath();
+        drawCtx.strokeStyle = color;
+        drawCtx.lineWidth = width;
+        drawCtx.setLineDash([8, 6]);
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        // Draw existing points
+        for (let i = 0; i < polygonPoints.length; i++) {
+            const pt = latLngToContainerPoint(polygonPoints[i]);
+            if (i === 0) drawCtx.moveTo(pt.x, pt.y);
+            else drawCtx.lineTo(pt.x, pt.y);
+        }
+
+        // Draw line to mouse position
+        if (polygonPreviewMousePos) {
+            drawCtx.lineTo(polygonPreviewMousePos.x, polygonPreviewMousePos.y);
+        }
+
+        // Close back to first point with dotted line
+        if (polygonPoints.length >= 2 && polygonPreviewMousePos) {
+            const first = latLngToContainerPoint(polygonPoints[0]);
+            drawCtx.lineTo(first.x, first.y);
+        }
+
+        drawCtx.stroke();
+        drawCtx.setLineDash([]);
+
+        // Draw vertex dots
+        drawCtx.fillStyle = color;
+        polygonPoints.forEach(p => {
+            const pt = latLngToContainerPoint(p);
+            drawCtx.beginPath();
+            drawCtx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            drawCtx.fill();
+        });
+
+        // Fill preview
+        if (polygonPoints.length >= 3) {
+            drawCtx.beginPath();
+            drawCtx.fillStyle = color + '26'; // ~15% alpha
+            polygonPoints.forEach((p, i) => {
+                const pt = latLngToContainerPoint(p);
+                if (i === 0) drawCtx.moveTo(pt.x, pt.y);
+                else drawCtx.lineTo(pt.x, pt.y);
+            });
+            drawCtx.closePath();
+            drawCtx.fill();
+        }
+    }
+
+    /* ── Text Tool ── */
+    function showTextInput(x, y, latlng) {
+        drawTextOverlay.style.display = 'block';
+        drawTextOverlay.style.left = x + 'px';
+        drawTextOverlay.style.top = y + 'px';
+        drawTextInput.value = '';
+        drawTextInput.style.color = getDrawColor();
+        drawTextInput.style.fontSize = getDrawFontSize() + 'px';
+        drawTextInput.style.fontFamily = getDrawFont();
+        drawTextInput.focus();
+        drawTextInput._latlng = latlng;
+    }
+
+    function hideTextInput() {
+        drawTextOverlay.style.display = 'none';
+    }
+
+    drawTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const text = drawTextInput.value.trim();
+            if (text && drawTextInput._latlng) {
+                drawItems.push({
+                    type: 'text',
+                    color: getDrawColor(),
+                    font: getDrawFont(),
+                    fontSize: getDrawFontSize(),
+                    text: text,
+                    latlng: drawTextInput._latlng,
+                });
+                redrawAllItems();
+            }
+            hideTextInput();
+        }
+        if (e.key === 'Escape') {
+            hideTextInput();
+        }
+    });
+
+    drawTextInput.addEventListener('blur', () => {
+        const text = drawTextInput.value.trim();
+        if (text && drawTextInput._latlng) {
+            drawItems.push({
+                type: 'text',
+                color: getDrawColor(),
+                font: getDrawFont(),
+                fontSize: getDrawFontSize(),
+                text: text,
+                latlng: drawTextInput._latlng,
+            });
+            redrawAllItems();
+        }
+        hideTextInput();
+    });
 
     /* ── Initial render ── */
     reloadBounds().then(() => {
