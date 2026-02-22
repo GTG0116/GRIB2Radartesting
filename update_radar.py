@@ -15,7 +15,7 @@ import warnings
 warnings.filterwarnings("ignore")
  
 # Configurable radars
-RADARS = ['KCCX', 'KDOX', 'KIND', 'KDIX', 'KBGM']
+RADARS = ['KCCX', 'KDIX', 'KDOX', 'KBGM', 'KOKX', 'KPBZ']
  
 # Products: output_name -> PyART field name
 # Note: correlation coefficient is 'cross_correlation_ratio' in PyART's NEXRAD reader
@@ -81,13 +81,12 @@ def find_best_sweep(radar_data, field):
  
 def generate_png(radar_data, pyart_field, output_name, radar_code):
     display = pyart.graph.RadarMapDisplay(radar_data)
- 
-    fig = plt.figure(figsize=(12, 12))
+
+    fig = plt.figure(figsize=(16, 16))
     projection = ccrs.PlateCarree()
     ax = plt.axes(projection=projection)
- 
-    # Colormap / range keyed on output_name (not the internal PyART field name)
-    # Colormap / range keyed on output_name (not the internal PyART field name)
+
+    # Colormap / range keyed on output_name
     if output_name == 'reflectivity':
         cmap = 'NWSRef'
         vmin, vmax = -20, 75
@@ -97,10 +96,15 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
     else:  # correlation_coefficient
         cmap = 'RefDiff'
         vmin, vmax = 0.5, 1.05
- 
+
     sweep_idx = find_best_sweep(radar_data, pyart_field)
- 
-    # Plot — empty lat/lon lists suppress coordinate gridlines on the image
+
+    # Apply gate filter to remove noise and produce cleaner imagery
+    gatefilter = pyart.filters.GateFilter(radar_data)
+    gatefilter.exclude_transition()
+    gatefilter.exclude_masked(pyart_field)
+
+    # Plot with rasterized output for smooth pixel rendering
     display.plot_ppi_map(
         pyart_field, sweep_idx,
         vmin=vmin,
@@ -111,24 +115,27 @@ def generate_png(radar_data, pyart_field, output_name, radar_code):
         colorbar_flag=False,
         lat_lines=[],
         lon_lines=[],
+        gatefilter=gatefilter,
+        raster=True,
+        embelish=False,
     )
- 
+
     # Remove all axes decorations so the PNG is pure radar data on transparency
     ax.set_xticks([])
     ax.set_yticks([])
     ax.axis('off')
     fig.patch.set_alpha(0.0)
     ax.patch.set_alpha(0.0)
- 
+
     # Capture geographic extent before saving
     lon_min, lon_max = ax.get_xlim()
     lat_min, lat_max = ax.get_ylim()
- 
+
     png_path = f"{OUTPUT_DIR}/{radar_code}_{output_name}.png"
     plt.savefig(png_path, bbox_inches='tight', pad_inches=0,
-                transparent=True, dpi=600)
+                transparent=True, dpi=800)
     plt.close()
- 
+
     return png_path, (lat_min, lon_min, lat_max, lon_max)
  
 # ── Main ───────────────────────────────────────────────────────────────────────
