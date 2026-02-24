@@ -756,19 +756,20 @@
         }
         .screenshot-mode .alert-panel.visible {
             top: auto !important;
-            bottom: 24px !important;
+            bottom: 18px !important;
             left: auto !important;
-            right: 24px !important;
+            right: 18px !important;
             margin: 0 !important;
-            width: 420px !important;
-            max-width: 45% !important;
+            width: 520px !important;
+            max-width: 50% !important;
+            max-height: 70vh !important;
             /* Remove backdrop-filter to prevent the dark solid box bug */
             backdrop-filter: none !important;
             background: rgba(13, 17, 23, 0.98) !important;
             border: 2px solid var(--accent) !important;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
             transform: none !important;
-            --scale: 1.15;
+            --scale: 1.35;
         }
         .screenshot-mode .ap-header {
             position: static !important; /* Fixes missing header */
@@ -777,7 +778,7 @@
             padding-top: 18px;
             gap: 10px;
         }
-        .screenshot-mode .ap-event { font-size: 22px !important; }
+        .screenshot-mode .ap-event { font-size: 24px !important; }
         .screenshot-mode .ap-badges-inline { justify-content: center; }
  
         .leaflet-tooltip.warning-tip::before { display: none; }
@@ -1123,19 +1124,19 @@
         }
         .screenshot-mode .location-panel.visible {
             top: auto !important;
-            bottom: 24px !important;
+            bottom: 18px !important;
             left: auto !important;
-            right: 24px !important;
+            right: 18px !important;
             margin: 0 !important;
-            width: 420px !important;
-            max-width: 45% !important;
+            width: 520px !important;
+            max-width: 50% !important;
             backdrop-filter: none !important;
             background: rgba(13, 17, 23, 0.98) !important;
             border: 2px solid var(--accent) !important;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9) !important;
             transform: none !important;
-            --scale: 1.15;
-            max-height: 60vh !important;
+            --scale: 1.35;
+            max-height: 70vh !important;
         }
         .screenshot-mode .lp-header {
             position: static !important;
@@ -1150,152 +1151,181 @@
             border: none;
         }
 
-        /* ── Drawing Toolbar ────────────────────────────── */
-        .draw-toolbar {
+        /* ── Radar playback bar ─────────────────────────── */
+        .playback-bar {
             position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 800;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(22, 27, 34, 0.95);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 6px 10px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-            font-family: 'Roboto', sans-serif;
-            backdrop-filter: blur(8px);
-        }
-        .draw-toolbar.hidden { display: none; }
-
-        .draw-btn {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid transparent;
-            color: var(--text);
-            width: 34px;
-            height: 34px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.12s, border-color 0.12s;
-        }
-        .draw-btn:hover { background: rgba(255,255,255,0.12); }
-        .draw-btn.active {
-            background: var(--accent-dim);
-            border-color: var(--accent-border);
-            color: var(--accent);
-        }
-        .draw-btn[title]::after { content: none; }
-
-        .draw-sep {
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-            margin: 0 4px;
-        }
-
-        .draw-color-pick {
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 0;
-            background: none;
-            overflow: hidden;
-        }
-        .draw-color-pick::-webkit-color-swatch-wrapper { padding: 0; }
-        .draw-color-pick::-webkit-color-swatch { border: none; border-radius: 4px; }
-        .draw-color-pick::-moz-color-swatch { border: none; border-radius: 4px; }
-
-        .draw-select {
-            background: var(--surface-2);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 2px 4px;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .draw-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-right: 2px;
-            white-space: nowrap;
-        }
-
-        .draw-number-input {
-            width: 42px;
-            background: var(--surface-2);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 2px 4px;
-            font-size: 11px;
-            text-align: center;
-        }
-
-        /* Drawing canvas overlay */
-        .draw-canvas-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 450;
-            pointer-events: none;
-        }
-        .draw-canvas-overlay.active {
-            pointer-events: auto;
-            cursor: crosshair;
-        }
-
-        /* Text input overlay for text tool */
-        .draw-text-input-overlay {
-            position: absolute;
-            z-index: 900;
-            display: none;
-        }
-        .draw-text-input-overlay input {
-            background: rgba(22,27,34,0.9);
-            border: 1px solid var(--accent);
-            color: var(--text);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-            min-width: 120px;
-        }
-
-        /* Toggle button for drawing toolbar */
-        .draw-toggle-btn {
-            position: absolute;
-            top: 12px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 500;
-            background: var(--surface);
+            background: rgba(13,17,23,0.92);
             border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Roboto', sans-serif;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+        }
+        .playback-bar.active { display: flex; }
+        .pb-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
             color: var(--text);
-            border-radius: 8px;
-            padding: 6px 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            transition: background 0.15s;
+            justify-content: center;
+            transition: background 0.12s;
+            flex-shrink: 0;
         }
-        .draw-toggle-btn:hover { background: var(--surface-2); }
-        .draw-toggle-btn.hidden { display: none; }
+        .pb-btn:hover { background: rgba(255,255,255,0.16); }
+        .pb-btn.playing { background: var(--accent); color: #fff; }
+        .pb-slider {
+            width: 140px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .pb-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            min-width: 120px;
+            text-align: center;
+        }
+        .pb-frame-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .pb-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.15s, transform 0.15s;
+            cursor: pointer;
+        }
+        .pb-dot.active {
+            background: var(--accent);
+            transform: scale(1.3);
+        }
+        .pb-speed {
+            font-size: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.06);
+            user-select: none;
+        }
+        .pb-speed:hover { background: rgba(255,255,255,0.12); }
+        .screenshot-mode .playback-bar { display: none !important; }
+
+        /* ── Text edit overlay ───────────────────────────── */
+        .text-edit-overlay {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            background: var(--surface);
+            border: 1px solid var(--accent-border);
+            border-radius: 8px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+            padding: 10px 12px;
+            font-family: 'Roboto', sans-serif;
+            min-width: 240px;
+        }
+        .text-edit-overlay.open { display: block; }
+        .te-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+        }
+        .te-row:last-child { margin-bottom: 0; }
+        .te-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            width: 50px;
+            flex-shrink: 0;
+        }
+        .te-input {
+            flex: 1;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 12px;
+            padding: 4px 6px;
+            outline: none;
+        }
+        .te-input:focus { border-color: var(--accent); }
+        .te-color-input {
+            width: 32px;
+            height: 24px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+        .te-small-input {
+            width: 52px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 12px;
+            padding: 4px 6px;
+            outline: none;
+            text-align: center;
+        }
+        .te-small-input:focus { border-color: var(--accent); }
+        .te-font-select {
+            flex: 1;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 11px;
+            padding: 4px 6px;
+        }
+        .te-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .te-close:hover { color: var(--text); }
+
+        /* Editable text highlight */
+        .panel-text-editable {
+            cursor: text;
+            transition: outline 0.12s;
+            outline: 1px dashed transparent;
+            border-radius: 2px;
+        }
+        .panel-text-editable:hover {
+            outline: 1px dashed rgba(79, 142, 247, 0.5);
+        }
+        .panel-text-editing {
+            outline: 1px solid var(--accent) !important;
+            background: rgba(79, 142, 247, 0.08);
+        }
     </style>
 </head>
 <body>
@@ -1530,6 +1560,16 @@
             <div id="map"></div>
             <div class="error-banner" id="error-banner"></div>
             <button class="map-screenshot-btn" id="map-screenshot-btn" title="Take Screenshot">&#128247;</button>
+
+            <!-- Radar playback controls -->
+            <div class="playback-bar" id="playback-bar">
+                <button class="pb-btn" id="pb-prev" title="Previous frame">&#9664;</button>
+                <button class="pb-btn" id="pb-play" title="Play / Pause">&#9654;</button>
+                <button class="pb-btn" id="pb-next" title="Next frame">&#9654;</button>
+                <div class="pb-frame-dots" id="pb-dots"></div>
+                <span class="pb-label" id="pb-label">Frame 1/1</span>
+                <span class="pb-speed" id="pb-speed" title="Click to change speed">1.0s</span>
+            </div>
             <div class="screenshot-legend" id="screenshot-legend"></div>
 
             <!-- Drawing toggle button -->
@@ -1650,7 +1690,39 @@
 
     </div>
 </div>
- 
+
+<!-- Text edit overlay -->
+<div class="text-edit-overlay" id="text-edit-overlay">
+    <button class="te-close" id="te-close">&times;</button>
+    <div class="te-row">
+        <span class="te-label">Text</span>
+        <input class="te-input" id="te-text" type="text" spellcheck="false">
+    </div>
+    <div class="te-row">
+        <span class="te-label">Font</span>
+        <select class="te-font-select" id="te-font">
+            <option value="Roboto, sans-serif">Roboto</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+            <option value="Impact, sans-serif">Impact</option>
+        </select>
+    </div>
+    <div class="te-row">
+        <span class="te-label">Color</span>
+        <input class="te-color-input" id="te-color" type="color" value="#e6edf3">
+    </div>
+    <div class="te-row">
+        <span class="te-label">Size</span>
+        <input class="te-small-input" id="te-size" type="number" min="6" max="72" value="14">
+        <span style="font-size:10px;color:var(--text-muted)">px</span>
+        <span class="te-label" style="width:auto;margin-left:8px">Rotate</span>
+        <input class="te-small-input" id="te-rotate" type="number" min="-180" max="180" value="0">
+        <span style="font-size:10px;color:var(--text-muted)">&deg;</span>
+    </div>
+</div>
+
 <script>
     /* ── Layer globals ── */
     let spcLayer = null;
@@ -1772,6 +1844,59 @@
         } catch (e) { console.warn('Could not load SPC Outlook:', e); showError(`Could not load SPC ${day.toUpperCase()} ${threat.toUpperCase()} outlook.`); }
     }
 
+    /* ── MCD detail cache (fetched from NWS Products API) ── */
+    const mcdDetailCache = {};
+
+    async function fetchMCDProductDetails(mcdNum) {
+        if (mcdDetailCache[mcdNum]) return mcdDetailCache[mcdNum];
+        try {
+            const listResp = await fetch('https://api.weather.gov/products?type=MCD&limit=50', {
+                headers: { 'Accept': 'application/ld+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+            });
+            if (!listResp.ok) return null;
+            const listData = await listResp.json();
+            const products = listData['@graph'] || [];
+            const paddedNum = String(mcdNum).padStart(4, '0');
+            const match = products.find(p => {
+                const id = p['@id'] || p.id || '';
+                return id.includes(paddedNum) || (p.productName || '').includes(paddedNum);
+            });
+            if (!match) return null;
+            const prodUrl = match['@id'] || match.id;
+            const prodResp = await fetch(prodUrl, {
+                headers: { 'Accept': 'application/ld+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+            });
+            if (!prodResp.ok) return null;
+            const prod = await prodResp.json();
+            const text = prod.productText || '';
+
+            const details = {};
+            const concernMatch = text.match(/Concerning[.\s]*([^\n]+)/i);
+            if (concernMatch) details.concerning = concernMatch[1].replace(/^\.{3,}\s*/, '').trim();
+            const probMatch = text.match(/(?:Probability of Watch Issuance|Watch Issuance Probability)[.\s]*(\d+)\s*percent/i);
+            if (probMatch) details.watchProb = probMatch[1] + '%';
+            const validMatch = text.match(/VALID\s+(\d{6}Z)\s*-\s*(\d{6}Z)/i);
+            if (validMatch) {
+                const now = new Date();
+                const parseShort = (s) => {
+                    const d = parseInt(s.slice(0, 2)), h = parseInt(s.slice(2, 4)), m = parseInt(s.slice(4, 6));
+                    const dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), d, h, m));
+                    if (dt < now - 86400000 * 2) dt.setUTCMonth(dt.getUTCMonth() + 1);
+                    return dt.toISOString();
+                };
+                details.issued = parseShort(validMatch[1]);
+                details.expires = parseShort(validMatch[2]);
+            }
+            if (prod.issuanceTime) details.issued = details.issued || prod.issuanceTime;
+
+            mcdDetailCache[mcdNum] = details;
+            return details;
+        } catch (e) {
+            console.warn('Could not fetch MCD product details:', e);
+            return null;
+        }
+    }
+
     async function fetchMCD() {
         if (mcdLayer) { map.removeLayer(mcdLayer); mcdLayer = null; }
         if (!document.getElementById('mcd-toggle').checked) return;
@@ -1780,10 +1905,28 @@
             const resp = await fetch('https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson');
             const data = await resp.json();
 
+            // Filter out "NoArea" placeholder features
+            if (data.features) {
+                data.features = data.features.filter(f => {
+                    const name = (f.properties.name || '').trim();
+                    return name && name !== 'NoArea';
+                });
+            }
+
+            if (!data.features || data.features.length === 0) {
+                // No active MCDs
+                return;
+            }
+
             mcdLayer = L.geoJSON(data, {
                 pane: 'spcPane',
                 style: { color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' },
                 onEachFeature: (feature, layer) => {
+                    const mcdNum = (feature.properties.name || '').replace(/\D/g, '');
+                    layer.bindTooltip(
+                        `<strong>MCD #${mcdNum || '?'}</strong>`,
+                        { sticky: true, className: 'warning-tip' }
+                    );
                     layer.on('click', () => {
                         skipNextMapClick = true;
                         handleMCDClick(layer);
@@ -1982,10 +2125,11 @@
     }
 
     /* ══════════════════════════════════════════════════════════
-       Bounds — loaded dynamically so refresh busts the cache
+       Bounds & Frames — loaded dynamically so refresh busts the cache
     ══════════════════════════════════════════════════════════ */
     let RADAR_BOUNDS = {};
- 
+    let RADAR_FRAMES = {};
+
     function reloadBounds() {
         return new Promise(resolve => {
             const old = document.querySelector('script[data-bounds]');
@@ -1999,7 +2143,25 @@
                 }
                 resolve();
             };
-            s.onerror = resolve;   
+            s.onerror = resolve;
+            document.head.appendChild(s);
+        });
+    }
+
+    function reloadFrames() {
+        return new Promise(resolve => {
+            const old = document.querySelector('script[data-frames]');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.dataset.frames = '1';
+            s.src = `assets/frames.js?t=${Date.now()}`;
+            s.onload = () => {
+                if (typeof window.RADAR_FRAMES !== 'undefined') {
+                    RADAR_FRAMES = window.RADAR_FRAMES;
+                }
+                resolve();
+            };
+            s.onerror = resolve;
             document.head.appendChild(s);
         });
     }
@@ -2225,8 +2387,8 @@
         });
     }
  
-    initRadioGroup('radar-group',   val => { selectedRadar   = val; updateOverlay(); });
-    initRadioGroup('product-group', val => { selectedProduct = val; updateOverlay(); });
+    initRadioGroup('radar-group',   val => { selectedRadar   = val; stopPlayback(); updateOverlay(); updatePlaybackBar(); });
+    initRadioGroup('product-group', val => { selectedProduct = val; stopPlayback(); updateOverlay(); updatePlaybackBar(); });
  
     /* ── Opacity slider ── */
     const opacityInput = document.getElementById('opacity');
@@ -2238,9 +2400,9 @@
  
     /* ── Refresh button ── */
     document.getElementById('refresh-btn').addEventListener('click', async () => {
-        await reloadBounds();
-        await fetchRainViewerFrames();
+        await Promise.all([reloadBounds(), reloadFrames(), fetchRainViewerFrames()]);
         updateOverlay();
+        updatePlaybackBar();
         fetchWarnings();
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
         if (document.getElementById('spc-toggle').checked) fetchSPC();
@@ -2250,9 +2412,9 @@
 
     /* ── Auto-refresh every 5 minutes ── */
     setInterval(async () => {
-        await reloadBounds();
-        await fetchRainViewerFrames();
+        await Promise.all([reloadBounds(), reloadFrames(), fetchRainViewerFrames()]);
         updateOverlay();
+        updatePlaybackBar();
         fetchWarnings();
         if (document.getElementById('lsr-toggle').checked) fetchLSR();
         if (document.getElementById('spc-toggle').checked) fetchSPC();
@@ -2514,27 +2676,44 @@
         showAlertPanel(spcProps, layer.options.color || '#888', layer, 'spc');
     }
 
-    function handleMCDClick(layer) {
+    async function handleMCDClick(layer) {
         const feature = layer.feature;
         const p = feature.properties;
-        const parseNOAATime = (ms) => ms ? new Date(ms).toISOString() : null;
 
-        const probStr = p.prob_of_watch;
-        const watchProb = probStr != null && probStr !== ''
-            ? (String(probStr).endsWith('%') ? probStr : `${probStr}%`)
-            : null;
+        // Extract MCD number from the 'name' field (NOAA MapServer uses 'name', not 'discuss_num')
+        const mcdNum = (p.name || '').replace(/\D/g, '') || '?';
+        // Use idp_filedate as the fallback timestamp
+        const fileDate = p.idp_filedate ? new Date(p.idp_filedate).toISOString() : null;
 
+        // Show panel immediately with available data
         const mcdProps = {
-            event: `Mesoscale Discussion #${p.discuss_num || ''}`,
-            effective: parseNOAATime(p.issue_time),
-            expires: parseNOAATime(p.expire_time),
-            concerning: p.concerning || 'Hazardous Weather',
-            watchProb: watchProb,
+            event: `Mesoscale Discussion #${mcdNum}`,
+            effective: fileDate,
+            expires: null,
+            concerning: 'Loading details...',
+            watchProb: null,
             parameters: {}
         };
 
         map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6 });
         showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+
+        // Fetch full MCD details from NWS Products API asynchronously
+        if (mcdNum !== '?') {
+            const details = await fetchMCDProductDetails(mcdNum);
+            if (details) {
+                mcdProps.effective = details.issued || fileDate;
+                mcdProps.expires = details.expires || null;
+                mcdProps.concerning = details.concerning || 'Hazardous Weather';
+                mcdProps.watchProb = details.watchProb || null;
+                // Re-render the panel with fetched data
+                showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+            } else {
+                // Fallback: update with what we know
+                mcdProps.concerning = 'Details unavailable';
+                showAlertPanel(mcdProps, '#9370DB', layer, 'mcd');
+            }
+        }
     }
  
     function showAlertPanel(props, warnColor, layer, panelType = 'alert') {
@@ -3019,8 +3198,9 @@
                 } else if (meta.type === 'mcd') {
                     borderColor = '#9370DB';
                     textColor = '#c0a0ff';
-                    label = `MCD #${p.discuss_num || ''}`;
-                    area = p.concerning || 'Hazardous Weather';
+                    const mcdN = (p.name || '').replace(/\D/g, '');
+                    label = `MCD #${mcdN || '?'}`;
+                    area = 'Mesoscale Discussion';
                 }
 
                 return `<div class="alert-select-item" style="border-left-color:${borderColor}" onclick="selectAlert(${i}); map.closePopup();">
@@ -3110,13 +3290,21 @@
         }
 
         document.body.classList.add('screenshot-mode');
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 250));
 
         try {
             const canvas = await html2canvas(document.body, {
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: '#0d1117'
+                backgroundColor: '#0d1117',
+                width: window.innerWidth,
+                height: window.innerHeight,
+                windowWidth: window.innerWidth,
+                windowHeight: window.innerHeight,
+                scrollX: 0,
+                scrollY: 0,
+                x: 0,
+                y: 0,
             });
 
             const link = document.createElement('a');
@@ -3451,419 +3639,287 @@
     };
 
     /* ══════════════════════════════════════════════════════════
-       Drawing System — Freehand, Polygon, and Text tools
+       Radar Playback Controls
     ══════════════════════════════════════════════════════════ */
-    const drawCanvas = document.getElementById('draw-canvas');
-    const drawCtx = drawCanvas.getContext('2d');
-    const drawToolbar = document.getElementById('draw-toolbar');
-    const drawToggleBtn = document.getElementById('draw-toggle-btn');
-    const drawTextOverlay = document.getElementById('draw-text-input-overlay');
-    const drawTextInput = document.getElementById('draw-text-value');
+    const playbackBar  = document.getElementById('playback-bar');
+    const pbDotsEl     = document.getElementById('pb-dots');
+    const pbLabelEl    = document.getElementById('pb-label');
+    const pbPlayBtn    = document.getElementById('pb-play');
+    const pbSpeedEl    = document.getElementById('pb-speed');
+    let pbFrames       = [];   // Array of {file, time} for current radar+product
+    let pbIndex        = 0;    // Current frame index (0 = latest)
+    let pbPlaying      = false;
+    let pbInterval     = null;
+    let pbSpeedMs      = 1000; // Playback interval in ms
+    const PB_SPEEDS    = [500, 750, 1000, 1500, 2000];
+    let pbSpeedIdx     = 2;    // Index into PB_SPEEDS (default 1000ms)
 
-    let drawMode = null; // null | 'freehand' | 'polygon' | 'text'
-    let drawToolbarVisible = false;
-    let drawActions = []; // history of drawn items for undo
-    let isDrawing = false;
-    let currentPath = [];
-    let polygonPoints = []; // lat/lng points for polygon being drawn
-    let polygonPreviewMousePos = null; // current mouse position for polygon preview line
-
-    // Drawing items stored in map coordinates (lat/lng)
-    // Each item: { type: 'freehand'|'polygon'|'text', color, width, points (latlngs), text, font, fontSize, latlng }
-    let drawItems = [];
-    let drawLayerGroup = L.layerGroup().addTo(map);
-
-    function resizeDrawCanvas() {
-        const mapEl = document.getElementById('map');
-        drawCanvas.width = mapEl.clientWidth;
-        drawCanvas.height = mapEl.clientHeight;
-    }
-    resizeDrawCanvas();
-    window.addEventListener('resize', resizeDrawCanvas);
-    map.on('resize', resizeDrawCanvas);
-
-    // Toggle toolbar
-    drawToggleBtn.addEventListener('click', () => {
-        drawToolbarVisible = true;
-        drawToolbar.classList.remove('hidden');
-        drawToggleBtn.classList.add('hidden');
-    });
-
-    document.getElementById('draw-close').addEventListener('click', () => {
-        drawToolbarVisible = false;
-        drawToolbar.classList.add('hidden');
-        drawToggleBtn.classList.remove('hidden');
-        setDrawMode(null);
-    });
-
-    function setDrawMode(mode) {
-        drawMode = mode;
-        // Update button states
-        document.getElementById('draw-tool-freehand').classList.toggle('active', mode === 'freehand');
-        document.getElementById('draw-tool-polygon').classList.toggle('active', mode === 'polygon');
-        document.getElementById('draw-tool-text').classList.toggle('active', mode === 'text');
-
-        // Show/hide text-specific options
-        const textOptsVisible = mode === 'text';
-        document.getElementById('draw-text-options-sep').style.display = textOptsVisible ? '' : 'none';
-        document.getElementById('draw-font-label').style.display = textOptsVisible ? '' : 'none';
-        document.getElementById('draw-font').style.display = textOptsVisible ? '' : 'none';
-        document.getElementById('draw-fontsize-label').style.display = textOptsVisible ? '' : 'none';
-        document.getElementById('draw-font-size').style.display = textOptsVisible ? '' : 'none';
-
-        // Toggle canvas interaction
-        const canvas = document.getElementById('draw-canvas');
-        if (mode) {
-            canvas.classList.add('active');
-            map.dragging.disable();
-            map.scrollWheelZoom.disable();
-            map.doubleClickZoom.disable();
-        } else {
-            canvas.classList.remove('active');
-            map.dragging.enable();
-            map.scrollWheelZoom.enable();
-            // Note: doubleClickZoom stays disabled (as per original code)
-            // Finish any active polygon
-            if (polygonPoints.length > 0) {
-                finishPolygon();
-            }
-            hideTextInput();
+    function getFramesForCurrent() {
+        if (!RADAR_FRAMES || selectedRadar === 'None' || selectedRadar === 'MRMS' || selectedRadar === 'RainViewer') {
+            return [];
         }
-        // Clear the preview canvas
-        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        polygonPreviewMousePos = null;
+        const key = `${selectedRadar}_${selectedProduct}`;
+        const entry = RADAR_FRAMES[key];
+        if (!entry || !Array.isArray(entry) || entry.length <= 1) return [];
+        return entry;
     }
 
-    document.getElementById('draw-tool-freehand').addEventListener('click', () => {
-        setDrawMode(drawMode === 'freehand' ? null : 'freehand');
-    });
-    document.getElementById('draw-tool-polygon').addEventListener('click', () => {
-        setDrawMode(drawMode === 'polygon' ? null : 'polygon');
-    });
-    document.getElementById('draw-tool-text').addEventListener('click', () => {
-        setDrawMode(drawMode === 'text' ? null : 'text');
-    });
+    function updatePlaybackBar() {
+        pbFrames = getFramesForCurrent();
+        stopPlayback();
 
-    // Undo
-    document.getElementById('draw-undo').addEventListener('click', () => {
-        if (drawItems.length === 0) return;
-        drawItems.pop();
-        redrawAllItems();
-    });
+        if (pbFrames.length <= 1) {
+            playbackBar.classList.remove('active');
+            return;
+        }
 
-    // Clear all
-    document.getElementById('draw-clear').addEventListener('click', () => {
-        drawItems = [];
-        redrawAllItems();
-        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        polygonPoints = [];
-    });
-
-    function getDrawColor() { return document.getElementById('draw-color').value; }
-    function getDrawWidth() { return parseInt(document.getElementById('draw-line-width').value) || 3; }
-    function getDrawFont() { return document.getElementById('draw-font').value; }
-    function getDrawFontSize() { return parseInt(document.getElementById('draw-font-size').value) || 16; }
-
-    // Convert pixel position on canvas to latlng
-    function canvasPointToLatLng(x, y) {
-        const mapEl = document.getElementById('map');
-        const rect = mapEl.getBoundingClientRect();
-        const containerPoint = L.point(x, y);
-        return map.containerPointToLatLng(containerPoint);
+        playbackBar.classList.add('active');
+        pbIndex = 0;
+        renderPlaybackState();
     }
 
-    // Convert latlng to pixel position on map container
-    function latLngToContainerPoint(latlng) {
-        return map.latLngToContainerPoint(L.latLng(latlng.lat, latlng.lng));
+    function renderPlaybackState() {
+        // Update dots
+        pbDotsEl.innerHTML = pbFrames.map((_, i) =>
+            `<div class="pb-dot${i === pbIndex ? ' active' : ''}" data-idx="${i}"></div>`
+        ).join('');
+
+        // Attach click handlers to dots
+        pbDotsEl.querySelectorAll('.pb-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                pbIndex = parseInt(dot.dataset.idx);
+                showFrame(pbIndex);
+                renderPlaybackState();
+            });
+        });
+
+        // Update label
+        const frame = pbFrames[pbIndex];
+        let timeStr = '';
+        if (frame && frame.time) {
+            try {
+                timeStr = new Date(frame.time).toLocaleTimeString('en-US', {
+                    hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+                });
+            } catch (_) {
+                timeStr = frame.time;
+            }
+        }
+        pbLabelEl.textContent = `${pbIndex + 1}/${pbFrames.length}` + (timeStr ? ` · ${timeStr}` : '');
+
+        // Update play button
+        pbPlayBtn.innerHTML = pbPlaying ? '&#10074;&#10074;' : '&#9654;';
+        pbPlayBtn.classList.toggle('playing', pbPlaying);
+
+        // Update speed label
+        pbSpeedEl.textContent = (pbSpeedMs / 1000).toFixed(1) + 's';
     }
 
-    // Redraw all permanent items on the Leaflet layer group
-    function redrawAllItems() {
-        drawLayerGroup.clearLayers();
-        drawItems.forEach(item => {
-            if (item.type === 'freehand') {
-                const latlngs = item.points.map(p => [p.lat, p.lng]);
-                if (latlngs.length < 2) return;
-                const polyline = L.polyline(latlngs, {
-                    color: item.color,
-                    weight: item.width,
-                    opacity: 0.9,
-                    smoothFactor: 1,
-                    pane: 'drawingPane',
-                });
-                drawLayerGroup.addLayer(polyline);
-            } else if (item.type === 'polygon') {
-                const latlngs = item.points.map(p => [p.lat, p.lng]);
-                if (latlngs.length < 3) return;
-                const polygon = L.polygon(latlngs, {
-                    color: item.color,
-                    weight: item.width,
-                    opacity: 0.9,
-                    fillColor: item.color,
-                    fillOpacity: 0.15,
-                    pane: 'drawingPane',
-                });
-                drawLayerGroup.addLayer(polygon);
-            } else if (item.type === 'text') {
-                const marker = L.marker([item.latlng.lat, item.latlng.lng], {
-                    icon: L.divIcon({
-                        className: '',
-                        html: `<div style="color:${item.color};font-size:${item.fontSize}px;font-family:'${item.font}',sans-serif;font-weight:bold;text-shadow:0 0 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9);white-space:nowrap;pointer-events:none;">${item.text}</div>`,
-                        iconSize: null,
-                        iconAnchor: [0, item.fontSize / 2],
-                    }),
-                    pane: 'drawingPane',
-                    interactive: false,
-                });
-                drawLayerGroup.addLayer(marker);
+    function showFrame(idx) {
+        if (!pbFrames[idx]) return;
+        const frame = pbFrames[idx];
+        const key = `${selectedRadar}_${selectedProduct}`;
+        const bounds = RADAR_BOUNDS[key];
+        if (!bounds) return;
+
+        if (currentOverlay) {
+            map.removeLayer(currentOverlay);
+            currentOverlay = null;
+        }
+
+        const sw = [bounds[0], bounds[1]];
+        const ne = [bounds[2], bounds[3]];
+        const imageUrl = `assets/${frame.file}?t=${Date.now()}`;
+
+        currentOverlay = L.imageOverlay(
+            imageUrl,
+            [sw, ne],
+            { opacity, interactive: false, pane: 'radarPane', className: 'radar-image' }
+        );
+        currentOverlay.addTo(map);
+        if (warningLayer) warningLayer.bringToFront();
+    }
+
+    function startPlayback() {
+        if (pbFrames.length <= 1) return;
+        pbPlaying = true;
+        renderPlaybackState();
+        pbInterval = setInterval(() => {
+            pbIndex = (pbIndex + 1) % pbFrames.length;
+            showFrame(pbIndex);
+            renderPlaybackState();
+        }, pbSpeedMs);
+    }
+
+    function stopPlayback() {
+        pbPlaying = false;
+        if (pbInterval) {
+            clearInterval(pbInterval);
+            pbInterval = null;
+        }
+        if (playbackBar.classList.contains('active')) renderPlaybackState();
+    }
+
+    pbPlayBtn.addEventListener('click', () => {
+        if (pbPlaying) stopPlayback();
+        else startPlayback();
+    });
+
+    document.getElementById('pb-prev').addEventListener('click', () => {
+        stopPlayback();
+        pbIndex = (pbIndex - 1 + pbFrames.length) % pbFrames.length;
+        showFrame(pbIndex);
+        renderPlaybackState();
+    });
+
+    document.getElementById('pb-next').addEventListener('click', () => {
+        stopPlayback();
+        pbIndex = (pbIndex + 1) % pbFrames.length;
+        showFrame(pbIndex);
+        renderPlaybackState();
+    });
+
+    pbSpeedEl.addEventListener('click', () => {
+        pbSpeedIdx = (pbSpeedIdx + 1) % PB_SPEEDS.length;
+        pbSpeedMs = PB_SPEEDS[pbSpeedIdx];
+        renderPlaybackState();
+        if (pbPlaying) {
+            clearInterval(pbInterval);
+            pbInterval = setInterval(() => {
+                pbIndex = (pbIndex + 1) % pbFrames.length;
+                showFrame(pbIndex);
+                renderPlaybackState();
+            }, pbSpeedMs);
+        }
+    });
+
+    /* ══════════════════════════════════════════════════════════
+       Click-to-edit text in panels
+    ══════════════════════════════════════════════════════════ */
+    const teOverlay  = document.getElementById('text-edit-overlay');
+    const teText     = document.getElementById('te-text');
+    const teFont     = document.getElementById('te-font');
+    const teColor    = document.getElementById('te-color');
+    const teSize     = document.getElementById('te-size');
+    const teRotate   = document.getElementById('te-rotate');
+    let   teTarget   = null;  // The DOM element being edited
+
+    // Selectors for editable text elements inside panels
+    const EDITABLE_SELECTORS = [
+        '.ap-event', '.ap-badge', '.ap-value', '.ap-label',
+        '.ap-towns-value', '.ap-desc', '.ap-risk-chip', '.ap-type-badge',
+        '.lp-title', '.lp-subtitle', '.lp-section-title',
+        '.lp-current-temp', '.lp-current-desc', '.lp-current-detail',
+        '.lp-stat-label', '.lp-stat-val',
+        '.lp-fc-name', '.lp-fc-temp', '.lp-fc-desc',
+        '.lp-alert-event', '.lp-alert-area', '.lp-no-alerts',
+    ].join(',');
+
+    function makeEditable(container) {
+        container.querySelectorAll(EDITABLE_SELECTORS).forEach(el => {
+            if (!el.classList.contains('panel-text-editable')) {
+                el.classList.add('panel-text-editable');
+                el.addEventListener('click', onTextClick);
             }
         });
     }
 
-    // Redraw on map move/zoom so items stay in correct geo position
-    map.on('moveend zoomend', () => {
-        // The Leaflet layers handle repositioning automatically
-        // But we need to clear the preview canvas
-        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        if (drawMode === 'polygon' && polygonPoints.length > 0) {
-            drawPolygonPreview();
-        }
-    });
+    function onTextClick(e) {
+        e.stopPropagation();
+        const el = e.currentTarget;
 
-    /* ── Freehand Drawing ── */
-    drawCanvas.addEventListener('mousedown', (e) => {
-        if (drawMode === 'freehand') {
-            isDrawing = true;
-            const rect = drawCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            currentPath = [{ x, y, latlng: canvasPointToLatLng(x, y) }];
-            drawCtx.beginPath();
-            drawCtx.strokeStyle = getDrawColor();
-            drawCtx.lineWidth = getDrawWidth();
-            drawCtx.lineCap = 'round';
-            drawCtx.lineJoin = 'round';
-            drawCtx.moveTo(x, y);
-        }
-    });
-
-    drawCanvas.addEventListener('mousemove', (e) => {
-        const rect = drawCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        if (drawMode === 'freehand' && isDrawing) {
-            currentPath.push({ x, y, latlng: canvasPointToLatLng(x, y) });
-            drawCtx.lineTo(x, y);
-            drawCtx.stroke();
+        // Close previous edit
+        if (teTarget && teTarget !== el) {
+            teTarget.classList.remove('panel-text-editing');
         }
 
-        if (drawMode === 'polygon' && polygonPoints.length > 0) {
-            polygonPreviewMousePos = { x, y };
-            drawPolygonPreview();
-        }
-    });
+        teTarget = el;
+        el.classList.add('panel-text-editing');
 
-    drawCanvas.addEventListener('mouseup', (e) => {
-        if (drawMode === 'freehand' && isDrawing) {
-            isDrawing = false;
-            if (currentPath.length > 1) {
-                drawItems.push({
-                    type: 'freehand',
-                    color: getDrawColor(),
-                    width: getDrawWidth(),
-                    points: currentPath.map(p => p.latlng),
-                });
-                redrawAllItems();
-            }
-            // Clear preview canvas
-            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-            currentPath = [];
-        }
-    });
+        // Populate fields
+        teText.value   = el.textContent;
+        teColor.value  = rgbToHex(getComputedStyle(el).color);
+        teSize.value   = parseInt(getComputedStyle(el).fontSize) || 14;
+        teRotate.value = getCurrentRotation(el);
+        teFont.value   = matchFont(getComputedStyle(el).fontFamily);
 
-    drawCanvas.addEventListener('mouseleave', (e) => {
-        if (drawMode === 'freehand' && isDrawing) {
-            isDrawing = false;
-            if (currentPath.length > 1) {
-                drawItems.push({
-                    type: 'freehand',
-                    color: getDrawColor(),
-                    width: getDrawWidth(),
-                    points: currentPath.map(p => p.latlng),
-                });
-                redrawAllItems();
-            }
-            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-            currentPath = [];
-        }
-    });
-
-    /* ── Polygon Drawing ── */
-    drawCanvas.addEventListener('click', (e) => {
-        if (drawMode === 'polygon') {
-            const rect = drawCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const latlng = canvasPointToLatLng(x, y);
-            polygonPoints.push(latlng);
-            drawPolygonPreview();
-        }
-        if (drawMode === 'text') {
-            const rect = drawCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            showTextInput(x, y, canvasPointToLatLng(x, y));
-        }
-    });
-
-    drawCanvas.addEventListener('dblclick', (e) => {
-        if (drawMode === 'polygon' && polygonPoints.length >= 3) {
-            e.preventDefault();
-            e.stopPropagation();
-            finishPolygon();
-        }
-    });
-
-    // Right-click to finish polygon
-    drawCanvas.addEventListener('contextmenu', (e) => {
-        if (drawMode === 'polygon' && polygonPoints.length >= 3) {
-            e.preventDefault();
-            finishPolygon();
-        }
-    });
-
-    function finishPolygon() {
-        if (polygonPoints.length >= 3) {
-            drawItems.push({
-                type: 'polygon',
-                color: getDrawColor(),
-                width: getDrawWidth(),
-                points: [...polygonPoints],
-            });
-            redrawAllItems();
-        }
-        polygonPoints = [];
-        polygonPreviewMousePos = null;
-        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        // Position overlay near the element
+        const rect = el.getBoundingClientRect();
+        let left = rect.left;
+        let top  = rect.bottom + 6;
+        if (top + 180 > window.innerHeight) top = rect.top - 180;
+        if (left + 260 > window.innerWidth)  left = window.innerWidth - 270;
+        teOverlay.style.left = Math.max(4, left) + 'px';
+        teOverlay.style.top  = Math.max(4, top)  + 'px';
+        teOverlay.classList.add('open');
     }
 
-    function drawPolygonPreview() {
-        resizeDrawCanvas();
-        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        if (polygonPoints.length === 0) return;
-
-        const color = getDrawColor();
-        const width = getDrawWidth();
-
-        drawCtx.beginPath();
-        drawCtx.strokeStyle = color;
-        drawCtx.lineWidth = width;
-        drawCtx.setLineDash([8, 6]);
-        drawCtx.lineCap = 'round';
-        drawCtx.lineJoin = 'round';
-
-        // Draw existing points
-        for (let i = 0; i < polygonPoints.length; i++) {
-            const pt = latLngToContainerPoint(polygonPoints[i]);
-            if (i === 0) drawCtx.moveTo(pt.x, pt.y);
-            else drawCtx.lineTo(pt.x, pt.y);
-        }
-
-        // Draw line to mouse position
-        if (polygonPreviewMousePos) {
-            drawCtx.lineTo(polygonPreviewMousePos.x, polygonPreviewMousePos.y);
-        }
-
-        // Close back to first point with dotted line
-        if (polygonPoints.length >= 2 && polygonPreviewMousePos) {
-            const first = latLngToContainerPoint(polygonPoints[0]);
-            drawCtx.lineTo(first.x, first.y);
-        }
-
-        drawCtx.stroke();
-        drawCtx.setLineDash([]);
-
-        // Draw vertex dots
-        drawCtx.fillStyle = color;
-        polygonPoints.forEach(p => {
-            const pt = latLngToContainerPoint(p);
-            drawCtx.beginPath();
-            drawCtx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
-            drawCtx.fill();
-        });
-
-        // Fill preview
-        if (polygonPoints.length >= 3) {
-            drawCtx.beginPath();
-            drawCtx.fillStyle = color + '26'; // ~15% alpha
-            polygonPoints.forEach((p, i) => {
-                const pt = latLngToContainerPoint(p);
-                if (i === 0) drawCtx.moveTo(pt.x, pt.y);
-                else drawCtx.lineTo(pt.x, pt.y);
-            });
-            drawCtx.closePath();
-            drawCtx.fill();
-        }
+    function rgbToHex(rgb) {
+        const m = rgb.match(/\d+/g);
+        if (!m || m.length < 3) return '#e6edf3';
+        return '#' + m.slice(0, 3).map(c => parseInt(c).toString(16).padStart(2, '0')).join('');
     }
 
-    /* ── Text Tool ── */
-    function showTextInput(x, y, latlng) {
-        drawTextOverlay.style.display = 'block';
-        drawTextOverlay.style.left = x + 'px';
-        drawTextOverlay.style.top = y + 'px';
-        drawTextInput.value = '';
-        drawTextInput.style.color = getDrawColor();
-        drawTextInput.style.fontSize = getDrawFontSize() + 'px';
-        drawTextInput.style.fontFamily = getDrawFont();
-        drawTextInput.focus();
-        drawTextInput._latlng = latlng;
+    function getCurrentRotation(el) {
+        const st = el.style.transform || '';
+        const m = st.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/);
+        return m ? parseFloat(m[1]) : 0;
     }
 
-    function hideTextInput() {
-        drawTextOverlay.style.display = 'none';
-    }
-
-    drawTextInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            const text = drawTextInput.value.trim();
-            if (text && drawTextInput._latlng) {
-                drawItems.push({
-                    type: 'text',
-                    color: getDrawColor(),
-                    font: getDrawFont(),
-                    fontSize: getDrawFontSize(),
-                    text: text,
-                    latlng: drawTextInput._latlng,
-                });
-                redrawAllItems();
-            }
-            hideTextInput();
+    function matchFont(ff) {
+        const lower = ff.toLowerCase();
+        const options = Array.from(teFont.options).map(o => o.value);
+        for (const opt of options) {
+            if (lower.includes(opt.split(',')[0].replace(/'/g, '').toLowerCase())) return opt;
         }
-        if (e.key === 'Escape') {
-            hideTextInput();
+        return options[0];
+    }
+
+    // Live update handlers
+    teText.addEventListener('input',  () => { if (teTarget) teTarget.textContent = teText.value; });
+    teFont.addEventListener('change', () => { if (teTarget) teTarget.style.fontFamily = teFont.value; });
+    teColor.addEventListener('input', () => { if (teTarget) teTarget.style.color = teColor.value; });
+    teSize.addEventListener('input',  () => { if (teTarget) teTarget.style.fontSize = teSize.value + 'px'; });
+    teRotate.addEventListener('input', () => {
+        if (!teTarget) return;
+        const deg = parseFloat(teRotate.value) || 0;
+        teTarget.style.transform = deg !== 0 ? `rotate(${deg}deg)` : '';
+        teTarget.style.display = deg !== 0 ? 'inline-block' : '';
+    });
+
+    document.getElementById('te-close').addEventListener('click', closeTextEdit);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTextEdit(); });
+
+    function closeTextEdit() {
+        teOverlay.classList.remove('open');
+        if (teTarget) teTarget.classList.remove('panel-text-editing');
+        teTarget = null;
+    }
+
+    // Close overlay when clicking outside
+    document.addEventListener('mousedown', e => {
+        if (teOverlay.classList.contains('open') && !teOverlay.contains(e.target) &&
+            (!teTarget || !teTarget.contains(e.target))) {
+            closeTextEdit();
         }
     });
 
-    drawTextInput.addEventListener('blur', () => {
-        const text = drawTextInput.value.trim();
-        if (text && drawTextInput._latlng) {
-            drawItems.push({
-                type: 'text',
-                color: getDrawColor(),
-                font: getDrawFont(),
-                fontSize: getDrawFontSize(),
-                text: text,
-                latlng: drawTextInput._latlng,
-            });
-            redrawAllItems();
-        }
-        hideTextInput();
+    // Observe alert panel and location panel for new content, make it editable
+    const panelObserver = new MutationObserver(() => {
+        makeEditable(alertPanel);
+        makeEditable(locationPanel);
     });
+    panelObserver.observe(alertPanel, { childList: true, subtree: true });
+    panelObserver.observe(locationPanel, { childList: true, subtree: true });
+
+    // Initial scan
+    makeEditable(alertPanel);
+    makeEditable(locationPanel);
 
     /* ── Initial render ── */
-    reloadBounds().then(() => {
+    Promise.all([reloadBounds(), reloadFrames()]).then(() => {
         updateOverlay();
+        updatePlaybackBar();
         fetchWarnings();
     });
 </script>
