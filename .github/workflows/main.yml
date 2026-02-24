@@ -44,7 +44,7 @@ jobs:
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
-          git add docs/assets/*.png docs/assets/bounds.js
+          git add docs/assets/*.png docs/assets/bounds.js docs/assets/frames.js docs/assets/manifest.json
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m 'Update radar images and bounds'
           git pull --rebase origin ${{ github.ref_name }}
