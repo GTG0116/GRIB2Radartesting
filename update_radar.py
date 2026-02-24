@@ -100,7 +100,7 @@ def find_best_sweep(radar_data, field):
 def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     display = pyart.graph.RadarMapDisplay(radar_data)
 
-    fig = plt.figure(figsize=(16, 16))
+    fig = plt.figure(figsize=(16, 16), dpi=150)
     projection = ccrs.PlateCarree()
     ax = plt.axes(projection=projection)
 
@@ -137,6 +137,13 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
         raster=True,
         embellish=False,
     )
+
+    # Ensure rasterized elements render with smooth interpolation
+    for artist in ax.get_children():
+        if hasattr(artist, 'set_rasterized'):
+            artist.set_rasterized(True)
+        if hasattr(artist, 'set_interpolation'):
+            artist.set_interpolation('bilinear')
 
     # Remove all axes decorations so the PNG is pure radar data on transparency
     ax.set_xticks([])
