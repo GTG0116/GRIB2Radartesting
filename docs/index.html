@@ -801,7 +801,7 @@
         }
         .leaflet-control-attribution a { color: var(--accent) !important; }
         .radar-image {
-            image-rendering: pixelated;
+            image-rendering: auto;
             image-rendering: -webkit-optimize-contrast;
         }
 
@@ -1326,6 +1326,173 @@
             outline: 1px solid var(--accent) !important;
             background: rgba(79, 142, 247, 0.08);
         }
+
+        /* ── Drawing Tools ──────────────────────────────── */
+        .hidden { display: none !important; }
+
+        .draw-toggle-btn {
+            position: absolute;
+            bottom: 108px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            padding: 7px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .draw-toggle-btn:hover { background: var(--surface-2); }
+        .draw-toggle-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+
+        .draw-toolbar {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13,17,23,0.96);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            flex-wrap: wrap;
+            max-width: 90vw;
+        }
+
+        .draw-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .draw-btn:hover { background: rgba(255,255,255,0.14); }
+        .draw-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+
+        .draw-sep {
+            width: 1px;
+            height: 22px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .draw-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .draw-color-pick {
+            width: 32px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .draw-number-input {
+            width: 46px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 12px;
+            outline: none;
+            text-align: center;
+        }
+        .draw-number-input:focus { border-color: var(--accent); }
+
+        .draw-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 11px;
+            outline: none;
+            cursor: pointer;
+        }
+        .draw-select:focus { border-color: var(--accent); }
+
+        .draw-canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 490;
+            pointer-events: none;
+        }
+
+        .draw-text-input-overlay {
+            position: fixed;
+            z-index: 600;
+            background: var(--surface);
+            border: 1px solid var(--accent-border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+        .draw-text-input-overlay input {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+            outline: none;
+            min-width: 180px;
+        }
+        .draw-text-input-overlay input:focus { border-color: var(--accent); }
+
+        /* ── Model Data overlay section ─────────────────── */
+        .model-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px 10px;
+            margin-top: 8px;
+        }
+        .model-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: var(--text);
+        }
+        .model-legend-swatch {
+            width: 13px;
+            height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -1539,6 +1706,43 @@
             </div>
 
             <div class="section">
+                <div class="section-label">Model Data Overlay</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Model Layer</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="model-toggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div id="model-controls" style="display:none;">
+                    <div class="radio-group" id="model-group" style="margin-bottom:8px;">
+                        <div class="radio-opt active" data-value="HRRR">
+                            <div class="radio-pip"></div>
+                            <div class="radio-text">
+                                <div class="radio-name">HRRR</div>
+                                <div class="radio-desc">High-Res Rapid Refresh (3km)</div>
+                            </div>
+                        </div>
+                        <div class="radio-opt" data-value="NAM3k">
+                            <div class="radio-pip"></div>
+                            <div class="radio-text">
+                                <div class="radio-name">NAM 3km</div>
+                                <div class="radio-desc">N. American Mesoscale (3km)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-bottom:6px;">Product: Precip Type</div>
+                    <div class="model-legend">
+                        <div class="model-legend-item"><div class="model-legend-swatch" style="background:#1E90FF;border:1px solid #1E90FF;"></div><span>Rain</span></div>
+                        <div class="model-legend-item"><div class="model-legend-swatch" style="background:#DDEEFF;border:1px solid #AACCEE;"></div><span>Snow</span></div>
+                        <div class="model-legend-item"><div class="model-legend-swatch" style="background:#FF69B4;border:1px solid #CC3388;"></div><span>Frz Rain</span></div>
+                        <div class="model-legend-item"><div class="model-legend-swatch" style="background:#C0C0C0;border:1px solid #888888;"></div><span>Ice Pell.</span></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:6px;" id="model-time-label">No model data loaded</div>
+                </div>
+            </div>
+
+            <div class="section">
                 <div class="section-label">Weather Warnings</div>
                 <div class="toggle-row">
                     <span class="toggle-label">Show on map</span>
@@ -1549,7 +1753,7 @@
                 </div>
                 <div class="warnings-legend" id="warnings-legend"></div>
             </div>
- 
+
             <div class="section">
                 <button class="refresh-btn" id="refresh-btn">&#8635;&nbsp; Refresh Data</button>
             </div>
@@ -3917,10 +4121,346 @@
     makeEditable(locationPanel);
 
     /* ── Initial render ── */
+    /* Wait 1 second for basemap tiles to load before placing radar overlay */
     Promise.all([reloadBounds(), reloadFrames()]).then(() => {
-        updateOverlay();
-        updatePlaybackBar();
-        fetchWarnings();
+        setTimeout(() => {
+            updateOverlay();
+            updatePlaybackBar();
+            fetchWarnings();
+        }, 1000);
+    });
+
+    /* ══════════════════════════════════════════════════════════
+       Drawing Tools
+    ══════════════════════════════════════════════════════════ */
+    (function initDrawing() {
+        const drawToggleBtn = document.getElementById('draw-toggle-btn');
+        const drawToolbar   = document.getElementById('draw-toolbar');
+        const drawCanvas    = document.getElementById('draw-canvas');
+        const drawCtx       = drawCanvas.getContext('2d');
+        const drawTextInputOverlay = document.getElementById('draw-text-input-overlay');
+        const drawTextValue = document.getElementById('draw-text-value');
+
+        let drawActive   = false;
+        let currentTool  = 'freehand';
+        let drawColor    = '#ff0000';
+        let drawLineWidth = 3;
+        let drawFont     = 'Arial';
+        let drawFontSize = 16;
+        let isDrawing    = false;
+        let lastPos      = null;
+        let polyPoints   = [];
+        let textPosition = null;
+
+        const undoStack  = [];
+        const MAX_UNDO   = 30;
+
+        function getMapRect() {
+            return document.getElementById('map').getBoundingClientRect();
+        }
+
+        function initCanvas() {
+            const rect = getMapRect();
+            drawCanvas.width  = rect.width;
+            drawCanvas.height = rect.height;
+            drawCanvas.style.width  = rect.width + 'px';
+            drawCanvas.style.height = rect.height + 'px';
+        }
+
+        function resizeCanvas() {
+            const imageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+            initCanvas();
+            drawCtx.putImageData(imageData, 0, 0);
+        }
+
+        function saveUndo() {
+            undoStack.push(drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
+            if (undoStack.length > MAX_UNDO) undoStack.shift();
+        }
+
+        function getPos(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            if (e.touches && e.touches.length) {
+                return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+            }
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
+
+        /* Tool buttons */
+        ['freehand', 'polygon', 'text'].forEach(tool => {
+            const btn = document.getElementById(`draw-tool-${tool}`);
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                currentTool = tool;
+                ['freehand', 'polygon', 'text'].forEach(t => {
+                    document.getElementById(`draw-tool-${t}`)?.classList.remove('active');
+                });
+                btn.classList.add('active');
+                const isText = (tool === 'text');
+                document.getElementById('draw-text-options-sep').style.display = isText ? '' : 'none';
+                document.getElementById('draw-font-label').style.display       = isText ? '' : 'none';
+                document.getElementById('draw-font').style.display             = isText ? '' : 'none';
+                document.getElementById('draw-fontsize-label').style.display   = isText ? '' : 'none';
+                document.getElementById('draw-font-size').style.display        = isText ? '' : 'none';
+                if (tool !== 'polygon') polyPoints = [];
+            });
+        });
+
+        document.getElementById('draw-color').addEventListener('input',     e => { drawColor     = e.target.value; });
+        document.getElementById('draw-line-width').addEventListener('input', e => { drawLineWidth = parseInt(e.target.value) || 3; });
+        document.getElementById('draw-font').addEventListener('change',      e => { drawFont      = e.target.value; });
+        document.getElementById('draw-font-size').addEventListener('input',  e => { drawFontSize  = parseInt(e.target.value) || 16; });
+
+        document.getElementById('draw-undo').addEventListener('click', () => {
+            if (undoStack.length > 0) drawCtx.putImageData(undoStack.pop(), 0, 0);
+        });
+
+        document.getElementById('draw-clear').addEventListener('click', () => {
+            saveUndo();
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        });
+
+        document.getElementById('draw-close').addEventListener('click', deactivateDraw);
+
+        drawToggleBtn.addEventListener('click', () => {
+            if (drawActive) deactivateDraw();
+            else activateDraw();
+        });
+
+        function activateDraw() {
+            drawActive = true;
+            drawToggleBtn.classList.add('active');
+            drawToolbar.classList.remove('hidden');
+            initCanvas();
+            drawCanvas.style.pointerEvents = 'auto';
+            map.dragging.disable();
+            map.scrollWheelZoom.disable();
+            /* set freehand as default active tool */
+            document.getElementById('draw-tool-freehand')?.classList.add('active');
+            currentTool = 'freehand';
+        }
+
+        function deactivateDraw() {
+            drawActive = false;
+            drawToggleBtn.classList.remove('active');
+            drawToolbar.classList.add('hidden');
+            drawCanvas.style.pointerEvents = 'none';
+            polyPoints = [];
+            drawTextInputOverlay.style.display = 'none';
+            map.dragging.enable();
+            map.scrollWheelZoom.enable();
+        }
+
+        /* Freehand */
+        function onMouseDown(e) {
+            if (!drawActive) return;
+            if (currentTool === 'freehand') {
+                e.preventDefault();
+                saveUndo();
+                isDrawing = true;
+                lastPos   = getPos(e);
+                drawCtx.beginPath();
+                drawCtx.moveTo(lastPos.x, lastPos.y);
+            } else if (currentTool === 'text') {
+                e.preventDefault();
+                const pos = getPos(e);
+                textPosition = pos;
+                const rect = getMapRect();
+                drawTextInputOverlay.style.left    = (rect.left + pos.x) + 'px';
+                drawTextInputOverlay.style.top     = (rect.top  + pos.y - 40) + 'px';
+                drawTextInputOverlay.style.display = 'block';
+                drawTextValue.value = '';
+                drawTextValue.focus();
+            }
+        }
+
+        function onMouseMove(e) {
+            if (!drawActive || !isDrawing || currentTool !== 'freehand') return;
+            e.preventDefault();
+            const pos = getPos(e);
+            drawCtx.strokeStyle = drawColor;
+            drawCtx.lineWidth   = drawLineWidth;
+            drawCtx.lineCap     = 'round';
+            drawCtx.lineJoin    = 'round';
+            drawCtx.lineTo(pos.x, pos.y);
+            drawCtx.stroke();
+            lastPos = pos;
+        }
+
+        function onMouseUp(e) {
+            if (!drawActive) return;
+            if (currentTool === 'freehand') {
+                isDrawing = false;
+                drawCtx.beginPath();
+                lastPos = null;
+            }
+        }
+
+        function onCanvasClick(e) {
+            if (!drawActive || currentTool !== 'polygon') return;
+            e.preventDefault();
+            const pos = getPos(e);
+            if (polyPoints.length === 0) saveUndo();
+            polyPoints.push(pos);
+            redrawPolygonPreview();
+        }
+
+        function onCanvasDblClick(e) {
+            if (!drawActive || currentTool !== 'polygon') return;
+            e.preventDefault();
+            if (polyPoints.length < 2) { polyPoints = []; return; }
+            drawCtx.beginPath();
+            drawCtx.moveTo(polyPoints[0].x, polyPoints[0].y);
+            for (let i = 1; i < polyPoints.length; i++) drawCtx.lineTo(polyPoints[i].x, polyPoints[i].y);
+            drawCtx.closePath();
+            drawCtx.strokeStyle = drawColor;
+            drawCtx.lineWidth   = drawLineWidth;
+            drawCtx.lineCap     = 'round';
+            drawCtx.lineJoin    = 'round';
+            drawCtx.stroke();
+            polyPoints = [];
+        }
+
+        function redrawPolygonPreview() {
+            if (polyPoints.length < 2) return;
+            drawCtx.beginPath();
+            drawCtx.moveTo(polyPoints[0].x, polyPoints[0].y);
+            for (let i = 1; i < polyPoints.length; i++) drawCtx.lineTo(polyPoints[i].x, polyPoints[i].y);
+            drawCtx.strokeStyle = drawColor;
+            drawCtx.lineWidth   = drawLineWidth;
+            drawCtx.lineCap     = 'round';
+            drawCtx.lineJoin    = 'round';
+            drawCtx.stroke();
+        }
+
+        drawTextValue.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                const text = drawTextValue.value.trim();
+                if (text && textPosition) {
+                    saveUndo();
+                    drawCtx.font      = `${drawFontSize}px ${drawFont}`;
+                    drawCtx.fillStyle = drawColor;
+                    drawCtx.fillText(text, textPosition.x, textPosition.y);
+                }
+                drawTextInputOverlay.style.display = 'none';
+                textPosition = null;
+            } else if (e.key === 'Escape') {
+                drawTextInputOverlay.style.display = 'none';
+                textPosition = null;
+            }
+        });
+
+        drawCanvas.addEventListener('mousedown',  onMouseDown);
+        drawCanvas.addEventListener('mousemove',  onMouseMove);
+        drawCanvas.addEventListener('mouseup',    onMouseUp);
+        drawCanvas.addEventListener('click',      onCanvasClick);
+        drawCanvas.addEventListener('dblclick',   onCanvasDblClick);
+        drawCanvas.addEventListener('touchstart', e => onMouseDown(e),  { passive: false });
+        drawCanvas.addEventListener('touchmove',  e => onMouseMove(e),  { passive: false });
+        drawCanvas.addEventListener('touchend',   e => onMouseUp(e));
+
+        window.addEventListener('resize', () => { if (drawActive) resizeCanvas(); });
+        initCanvas();
+    })();
+
+    /* ══════════════════════════════════════════════════════════
+       Model Data Overlay (HRRR / NAM3k Precip Type)
+    ══════════════════════════════════════════════════════════ */
+    let MODEL_BOUNDS = null;
+    let MODEL_FRAMES = null;
+    let modelOverlay = null;
+    let selectedModel = 'HRRR';
+    let modelVisible  = false;
+
+    function reloadModelBounds() {
+        return new Promise(resolve => {
+            const old = document.querySelector('script[data-model-bounds]');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.dataset.modelBounds = '1';
+            s.src = `assets/model_bounds.js?t=${Date.now()}`;
+            s.onload = () => {
+                if (typeof window.MODEL_BOUNDS !== 'undefined') MODEL_BOUNDS = window.MODEL_BOUNDS;
+                resolve();
+            };
+            s.onerror = resolve;
+            document.head.appendChild(s);
+        });
+    }
+
+    function reloadModelFrames() {
+        return new Promise(resolve => {
+            const old = document.querySelector('script[data-model-frames]');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.dataset.modelFrames = '1';
+            s.src = `assets/model_frames.js?t=${Date.now()}`;
+            s.onload = () => {
+                if (typeof window.MODEL_FRAMES !== 'undefined') MODEL_FRAMES = window.MODEL_FRAMES;
+                resolve();
+            };
+            s.onerror = resolve;
+            document.head.appendChild(s);
+        });
+    }
+
+    function updateModelOverlay() {
+        if (modelOverlay) { map.removeLayer(modelOverlay); modelOverlay = null; }
+        if (!modelVisible) return;
+
+        if (!MODEL_BOUNDS) {
+            showError('Model data not yet available — run the model workflow first.');
+            return;
+        }
+
+        const key    = `${selectedModel}_precip_type`;
+        const bounds = MODEL_BOUNDS[key];
+        if (!bounds) {
+            showError(`No model data for ${selectedModel}. Check if the model workflow has run.`);
+            document.getElementById('model-time-label').textContent = 'No data available';
+            return;
+        }
+
+        const sw = [bounds[0], bounds[1]];
+        const ne = [bounds[2], bounds[3]];
+        const url = `assets/${key}.png?t=${Date.now()}`;
+
+        modelOverlay = L.imageOverlay(url, [sw, ne], {
+            opacity: 0.75,
+            interactive: false,
+            pane: 'radarPane',
+            className: 'radar-image',
+        }).addTo(map);
+
+        /* Update time label */
+        if (MODEL_FRAMES && MODEL_FRAMES[key] && MODEL_FRAMES[key].length) {
+            const t = MODEL_FRAMES[key][0].time;
+            document.getElementById('model-time-label').textContent =
+                t ? 'Valid: ' + fmtTime(t) : 'Time unknown';
+        }
+    }
+
+    /* Toggle model controls visibility */
+    document.getElementById('model-toggle').addEventListener('change', function() {
+        modelVisible = this.checked;
+        document.getElementById('model-controls').style.display = modelVisible ? '' : 'none';
+        if (modelVisible) {
+            Promise.all([reloadModelBounds(), reloadModelFrames()]).then(updateModelOverlay);
+        } else {
+            updateModelOverlay();
+        }
+    });
+
+    /* Model selection radio group */
+    initRadioGroup('model-group', val => {
+        selectedModel = val;
+        if (modelVisible) updateModelOverlay();
+    });
+
+    /* Expose for auto-refresh */
+    const _origRefresh = document.getElementById('refresh-btn').onclick;
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        if (modelVisible) Promise.all([reloadModelBounds(), reloadModelFrames()]).then(updateModelOverlay);
     });
 </script>
 </body>

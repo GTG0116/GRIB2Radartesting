@@ -100,7 +100,8 @@ def find_best_sweep(radar_data, field):
 def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     display = pyart.graph.RadarMapDisplay(radar_data)
 
-    fig = plt.figure(figsize=(16, 16), dpi=150)
+    # Use 300 DPI for sharp super-resolution output matching NEXRAD gate spacing
+    fig = plt.figure(figsize=(16, 16), dpi=300)
     projection = ccrs.PlateCarree()
     ax = plt.axes(projection=projection)
 
@@ -122,7 +123,7 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     gatefilter.exclude_transition()
     gatefilter.exclude_masked(pyart_field)
 
-    # Plot with rasterized output for smooth pixel rendering
+    # Plot with rasterized output at figure DPI for smooth super-resolution rendering
     display.plot_ppi_map(
         pyart_field, sweep_idx,
         vmin=vmin,
@@ -138,13 +139,6 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
         embellish=False,
     )
 
-    # Ensure rasterized elements render with smooth interpolation
-    for artist in ax.get_children():
-        if hasattr(artist, 'set_rasterized'):
-            artist.set_rasterized(True)
-        if hasattr(artist, 'set_interpolation'):
-            artist.set_interpolation('bilinear')
-
     # Remove all axes decorations so the PNG is pure radar data on transparency
     ax.set_xticks([])
     ax.set_yticks([])
@@ -156,8 +150,9 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     lon_min, lon_max = ax.get_xlim()
     lat_min, lat_max = ax.get_ylim()
 
+    # Save at same DPI as figure so rasterized elements are sharp
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0,
-                transparent=True, dpi=800)
+                transparent=True, dpi=300)
     plt.close()
 
     return (lat_min, lon_min, lat_max, lon_max)
