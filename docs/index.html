@@ -1450,6 +1450,54 @@
                     </div>
                 </div>
             </div>
+
+            <div class="section">
+                <div class="section-label">MRMS Products</div>
+                <div class="radio-group" id="mrms-product-group">
+                    <div class="radio-opt" data-value="rotation_instant">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Instant Rotation</div>
+                            <div class="radio-desc">0-2km AGL azimuthal shear</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="rotation_1hr">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">1hr Rotation</div>
+                            <div class="radio-desc">60-min rotation tracks AGL</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="rotation_24hr">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">24hr Rotation</div>
+                            <div class="radio-desc">24-hr rotation tracks AGL</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="mesh">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">MESH</div>
+                            <div class="radio-desc">Max estimated hail size</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="posh">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Prob. Severe Hail</div>
+                            <div class="radio-desc">Probability of severe hail</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="qpe_24hr">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">24hr QPE</div>
+                            <div class="radio-desc">24-hr quantitative precip est.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
  
             <div class="section">
                 <div class="section-label">Radar Opacity</div>
@@ -2188,7 +2236,30 @@
         reflectivity:             'Reflectivity',
         velocity:                 'Velocity',
         correlation_coefficient:  'Corr. Coeff.',
+        rotation_instant:         'Instant Rotation AGL',
+        rotation_1hr:             '1hr Rotation AGL',
+        rotation_24hr:            '24hr Rotation AGL',
+        mesh:                     'Max Est. Hail Size',
+        posh:                     'Prob. Severe Hail',
+        qpe_24hr:                 '24hr QPE',
     };
+
+    // MRMS-only products (use MRMS_ prefix for data keys)
+    const MRMS_PRODUCT_KEYS = new Set([
+        'rotation_instant', 'rotation_1hr', 'rotation_24hr',
+        'mesh', 'posh', 'qpe_24hr',
+    ]);
+
+    function isMrmsProduct(product) {
+        return MRMS_PRODUCT_KEYS.has(product);
+    }
+
+    function getDataKey() {
+        if (isMrmsProduct(selectedProduct)) {
+            return `MRMS_${selectedProduct}`;
+        }
+        return `${selectedRadar}_${selectedProduct}`;
+    }
 
     /* ── RainViewer API state ── */
     let rainviewerApiData = null;
@@ -2283,25 +2354,46 @@
  
     /* ── Now-viewing card ── */
     function refreshNowViewing() {
-        document.getElementById('nv-name').textContent   = selectedRadar;
-        document.getElementById('nv-detail').textContent =
-            PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
+        if (isMrmsProduct(selectedProduct)) {
+            document.getElementById('nv-name').textContent = 'MRMS';
+            document.getElementById('nv-detail').textContent =
+                PRODUCT_NAMES[selectedProduct] + ' \u00b7 MRMS National';
+        } else {
+            document.getElementById('nv-name').textContent = selectedRadar;
+            document.getElementById('nv-detail').textContent =
+                PRODUCT_NAMES[selectedProduct] + ' \u00b7 ' + RADAR_NAMES[selectedRadar];
+        }
     }
  
     /* ── Overlay update ── */
     function updateOverlay() {
         if (currentOverlay) { map.removeLayer(currentOverlay); currentOverlay = null; }
 
-        if (selectedRadar === 'None') {
+        if (selectedRadar === 'None' && !isMrmsProduct(selectedProduct)) {
             refreshNowViewing();
             return;
         }
 
         let imageUrl, bounds;
 
-        if (selectedRadar === 'MRMS') {
+        // MRMS-derived products always use MRMS data regardless of radar selection
+        if (isMrmsProduct(selectedProduct)) {
+            if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
+                showError('Radar data not yet available — check back in a few minutes.');
+                refreshNowViewing();
+                return;
+            }
+            const key = getDataKey();  // e.g. "MRMS_mesh"
+            bounds = RADAR_BOUNDS[key];
+            if (!bounds) {
+                showError(`No MRMS data available for ${PRODUCT_NAMES[selectedProduct]}.`);
+                refreshNowViewing();
+                return;
+            }
+            imageUrl = `assets/MRMS_${selectedProduct}.png?t=${Date.now()}`;
+        } else if (selectedRadar === 'MRMS') {
             if (selectedProduct !== 'reflectivity') {
-                showError('MRMS supports Reflectivity only.');
+                showError('MRMS radar supports Reflectivity only. Use MRMS Products for other data.');
                 refreshNowViewing();
                 return;
             }
@@ -2340,6 +2432,9 @@
             refreshNowViewing();
             if (warningLayer) warningLayer.bringToFront();
             return;
+        } else if (selectedRadar === 'None') {
+            refreshNowViewing();
+            return;
         } else {
             if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
                 showError('Radar data not yet available — check back in a few minutes.');
@@ -2364,7 +2459,7 @@
             { opacity, interactive: false, pane: 'radarPane', className: 'radar-image' }
         );
         currentOverlay.on('error', () => {
-            showError(`Could not load radar image for ${selectedRadar} — try refreshing.`);
+            showError(`Could not load radar image for ${PRODUCT_NAMES[selectedProduct]} — try refreshing.`);
         });
         currentOverlay.addTo(map);
 
@@ -2388,7 +2483,18 @@
     }
  
     initRadioGroup('radar-group',   val => { selectedRadar   = val; stopPlayback(); updateOverlay(); updatePlaybackBar(); });
-    initRadioGroup('product-group', val => { selectedProduct = val; stopPlayback(); updateOverlay(); updatePlaybackBar(); });
+    initRadioGroup('product-group', val => {
+        selectedProduct = val;
+        // Deselect any active MRMS product (mutually exclusive groups)
+        document.getElementById('mrms-product-group').querySelectorAll('.radio-opt').forEach(o => o.classList.remove('active'));
+        stopPlayback(); updateOverlay(); updatePlaybackBar();
+    });
+    initRadioGroup('mrms-product-group', val => {
+        selectedProduct = val;
+        // Deselect any active standard product (mutually exclusive groups)
+        document.getElementById('product-group').querySelectorAll('.radio-opt').forEach(o => o.classList.remove('active'));
+        stopPlayback(); updateOverlay(); updatePlaybackBar();
+    });
  
     /* ── Opacity slider ── */
     const opacityInput = document.getElementById('opacity');
@@ -3655,7 +3761,15 @@
     let pbSpeedIdx     = 2;    // Index into PB_SPEEDS (default 1000ms)
 
     function getFramesForCurrent() {
-        if (!RADAR_FRAMES || selectedRadar === 'None' || selectedRadar === 'MRMS' || selectedRadar === 'RainViewer') {
+        if (!RADAR_FRAMES) return [];
+        // MRMS products have their own frames regardless of radar selection
+        if (isMrmsProduct(selectedProduct)) {
+            const key = getDataKey();
+            const entry = RADAR_FRAMES[key];
+            if (!entry || !Array.isArray(entry) || entry.length <= 1) return [];
+            return entry;
+        }
+        if (selectedRadar === 'None' || selectedRadar === 'MRMS' || selectedRadar === 'RainViewer') {
             return [];
         }
         const key = `${selectedRadar}_${selectedProduct}`;
@@ -3718,7 +3832,7 @@
     function showFrame(idx) {
         if (!pbFrames[idx]) return;
         const frame = pbFrames[idx];
-        const key = `${selectedRadar}_${selectedProduct}`;
+        const key = getDataKey();
         const bounds = RADAR_BOUNDS[key];
         if (!bounds) return;
 
