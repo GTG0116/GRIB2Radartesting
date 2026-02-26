@@ -3,14 +3,20 @@ import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 import datetime
+import gzip
 import json
 import os
+import re
 import shutil
+import urllib.request
 import pyart
+import pygrib
 import matplotlib
 matplotlib.use('Agg')   # headless backend — must come before pyplot import
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
@@ -18,16 +24,74 @@ warnings.filterwarnings("ignore")
 # Configurable radars
 RADARS = ['KCCX', 'KDIX', 'KDOX', 'KBGM', 'KOKX', 'KPBZ']
 
-# Products: output_name -> PyART field name
-# Note: correlation coefficient is 'cross_correlation_ratio' in PyART's NEXRAD reader
+# NEXRAD Products: output_name -> PyART field name
 PRODUCTS = {
     'reflectivity':            'reflectivity',
     'velocity':                'velocity',
     'correlation_coefficient': 'cross_correlation_ratio',
 }
 
+# MRMS Products: output_name -> { mrms_product_dir, cmap, vmin, vmax, label }
+MRMS_PRODUCTS = {
+    'rotation_instant': {
+        'mrms_dir': 'AzShear_0-2kmAGL',
+        'cmap': 'rotation_cmap',
+        'vmin': -0.01,
+        'vmax': 0.01,
+        'label': 'Instant Rotation AGL',
+        'units': 's⁻¹',
+    },
+    'rotation_1hr': {
+        'mrms_dir': 'RotationTrack60min_0-2kmAGL',
+        'cmap': 'rotation_track_cmap',
+        'vmin': 0,
+        'vmax': 0.01,
+        'label': '1hr Rotation AGL',
+        'units': 's⁻¹',
+    },
+    'rotation_24hr': {
+        'mrms_dir': 'RotationTrack1440min_0-2kmAGL',
+        'cmap': 'rotation_track_cmap',
+        'vmin': 0,
+        'vmax': 0.01,
+        'label': '24hr Rotation AGL',
+        'units': 's⁻¹',
+    },
+    'mesh': {
+        'mrms_dir': 'MESH',
+        'cmap': 'mesh_cmap',
+        'vmin': 0,
+        'vmax': 100,
+        'label': 'Max Est. Hail Size',
+        'units': 'mm',
+    },
+    'posh': {
+        'mrms_dir': 'POSH',
+        'cmap': 'posh_cmap',
+        'vmin': 0,
+        'vmax': 100,
+        'label': 'Prob. Severe Hail',
+        'units': '%',
+    },
+    'qpe_24hr': {
+        'mrms_dir': 'MultiSensor_QPE_24H_Pass2',
+        'cmap': 'qpe_cmap',
+        'vmin': 0,
+        'vmax': 150,
+        'label': '24hr QPE',
+        'units': 'mm',
+    },
+}
+
+# MRMS base URL
+MRMS_BASE_URL = 'https://mrms.ncep.noaa.gov/data/2D'
+
+# Regional crop for MRMS (covers northeastern US where our radars are)
+MRMS_LAT_MIN, MRMS_LAT_MAX = 35.0, 45.0
+MRMS_LON_MIN, MRMS_LON_MAX = -83.0, -69.0
+
 # Number of historical frames to keep (plus the current one)
-MAX_HISTORY = 5
+MAX_HISTORY = 10
 
 # Output directory
 OUTPUT_DIR = 'docs/assets'
@@ -38,6 +102,46 @@ MANIFEST_FILE = os.path.join(OUTPUT_DIR, 'manifest.json')
 
 # S3 client (anonymous access)
 s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+
+# ── Custom colormaps for MRMS products ────────────────────────────────────────
+
+def _register_mrms_cmaps():
+    """Register custom colormaps for MRMS products."""
+    # Rotation (diverging): blue (cyclonic-) → transparent → red (cyclonic+)
+    rotation_colors = [
+        (0.0, (0.0, 0.2, 0.8, 0.9)),
+        (0.3, (0.3, 0.5, 1.0, 0.6)),
+        (0.45, (0.7, 0.7, 0.7, 0.05)),
+        (0.55, (0.7, 0.7, 0.7, 0.05)),
+        (0.7, (1.0, 0.5, 0.3, 0.6)),
+        (1.0, (0.8, 0.0, 0.0, 0.9)),
+    ]
+    rotation_cmap = mcolors.LinearSegmentedColormap.from_list('rotation_cmap',
+        [(pos, rgba[:3]) for pos, rgba in rotation_colors], N=256)
+    plt.colormaps.register(cmap=rotation_cmap, name='rotation_cmap')
+
+    # Rotation track (sequential): transparent → yellow → orange → red → magenta
+    rt_colors = ['#00000000', '#FFFF00', '#FF8C00', '#FF0000', '#FF00FF']
+    rt_cmap = mcolors.LinearSegmentedColormap.from_list('rotation_track_cmap',
+        ['#333333', '#FFFF00', '#FF8C00', '#FF0000', '#FF00FF'], N=256)
+    plt.colormaps.register(cmap=rt_cmap, name='rotation_track_cmap')
+
+    # MESH (sequential): green → yellow → orange → red → purple
+    mesh_cmap = mcolors.LinearSegmentedColormap.from_list('mesh_cmap',
+        ['#333333', '#00CC00', '#FFFF00', '#FF8C00', '#FF0000', '#CC00CC'], N=256)
+    plt.colormaps.register(cmap=mesh_cmap, name='mesh_cmap')
+
+    # POSH (sequential): blue → cyan → green → yellow → red
+    posh_cmap = mcolors.LinearSegmentedColormap.from_list('posh_cmap',
+        ['#333333', '#0044FF', '#00CCCC', '#00CC00', '#FFFF00', '#FF0000'], N=256)
+    plt.colormaps.register(cmap=posh_cmap, name='posh_cmap')
+
+    # QPE (sequential): light blue → blue → green → yellow → orange → red → magenta
+    qpe_cmap = mcolors.LinearSegmentedColormap.from_list('qpe_cmap',
+        ['#333333', '#88BBFF', '#0044FF', '#00CC00', '#FFFF00', '#FF8C00', '#FF0000', '#CC00CC'], N=256)
+    plt.colormaps.register(cmap=qpe_cmap, name='qpe_cmap')
+
+_register_mrms_cmaps()
 
 def load_manifest():
     if os.path.exists(MANIFEST_FILE):
@@ -196,6 +300,130 @@ def extract_scan_time(s3_key):
         pass
     return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
+def cleanup_old_frames():
+    """Delete any frame PNGs with index >= MAX_HISTORY (older than the 10th newest)."""
+    for fname in os.listdir(OUTPUT_DIR):
+        if not fname.endswith('.png'):
+            continue
+        # Match patterns like KCCX_reflectivity_12.png or MRMS_mesh_15.png
+        m = re.match(r'^(.+)_(\d+)\.png$', fname)
+        if m:
+            idx = int(m.group(2))
+            if idx >= MAX_HISTORY:
+                path = os.path.join(OUTPUT_DIR, fname)
+                print(f"  Cleanup: removing old frame {fname} (index {idx} >= {MAX_HISTORY})")
+                os.remove(path)
+
+# ── MRMS functions ────────────────────────────────────────────────────────────
+
+def get_latest_mrms_file(mrms_dir):
+    """Fetch the latest GRIB2 file URL from an MRMS product directory."""
+    url = f"{MRMS_BASE_URL}/{mrms_dir}/"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            html = resp.read().decode('utf-8')
+    except Exception as e:
+        print(f"  MRMS: Could not list {mrms_dir}: {e}")
+        return None
+
+    # Parse Apache directory listing for .grib2.gz files
+    pattern = r'href="(MRMS_[^"]+\.grib2\.gz)"'
+    files = re.findall(pattern, html)
+    if not files:
+        print(f"  MRMS: No grib2.gz files found in {mrms_dir}")
+        return None
+
+    # The latest file is typically the last one (sorted by name which includes timestamp)
+    latest = sorted(files)[-1]
+    return f"{MRMS_BASE_URL}/{mrms_dir}/{latest}"
+
+def extract_mrms_time(filename):
+    """Extract timestamp from MRMS filename.
+    Format: MRMS_ProductName_00.00_YYYYMMDD-HHMMSS.grib2.gz
+    """
+    try:
+        m = re.search(r'(\d{8})-(\d{6})', filename)
+        if m:
+            d, t = m.group(1), m.group(2)
+            return f"{d[:4]}-{d[4:6]}-{d[6:8]}T{t[:2]}:{t[2:4]}:{t[4:6]}Z"
+    except Exception:
+        pass
+    return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+def download_mrms_grib2(file_url):
+    """Download and decompress a MRMS GRIB2 file."""
+    local_gz = '/tmp/mrms_temp.grib2.gz'
+    local_grib = '/tmp/mrms_temp.grib2'
+    try:
+        req = urllib.request.Request(file_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            with open(local_gz, 'wb') as f:
+                f.write(resp.read())
+        with gzip.open(local_gz, 'rb') as gz:
+            with open(local_grib, 'wb') as f:
+                f.write(gz.read())
+        return local_grib
+    except Exception as e:
+        print(f"  MRMS: Download failed for {file_url}: {e}")
+        # Clean up partial files
+        for p in [local_gz, local_grib]:
+            if os.path.exists(p):
+                os.remove(p)
+        return None
+    finally:
+        if os.path.exists(local_gz):
+            os.remove(local_gz)
+
+def generate_mrms_png(grib_path, output_name, mrms_cfg, output_path):
+    """Read MRMS GRIB2 data and render a regional PNG."""
+    grbs = pygrib.open(grib_path)
+    grb = grbs[1]  # First (and usually only) message
+
+    data, lats, lons = grb.data(
+        lat1=MRMS_LAT_MIN, lat2=MRMS_LAT_MAX,
+        lon1=MRMS_LON_MIN, lon2=MRMS_LON_MAX,
+    )
+    grbs.close()
+
+    # Mask invalid/missing values (MRMS uses large negative values for missing)
+    data = np.ma.masked_where((data < -900) | (data > 1e10), data)
+
+    # For rotation products, also mask very small values for cleaner display
+    if 'rotation' in output_name:
+        data = np.ma.masked_where(np.abs(data) < 0.0005, data)
+    else:
+        # For MESH/POSH/QPE, mask zero or near-zero values
+        data = np.ma.masked_where(data <= 0.01, data)
+
+    fig = plt.figure(figsize=(12, 10), dpi=150)
+    projection = ccrs.PlateCarree()
+    ax = plt.axes(projection=projection)
+    ax.set_extent([MRMS_LON_MIN, MRMS_LON_MAX, MRMS_LAT_MIN, MRMS_LAT_MAX],
+                  crs=projection)
+
+    mesh = ax.pcolormesh(
+        lons, lats, data,
+        cmap=mrms_cfg['cmap'],
+        vmin=mrms_cfg['vmin'],
+        vmax=mrms_cfg['vmax'],
+        transform=ccrs.PlateCarree(),
+        shading='auto',
+        rasterized=True,
+    )
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.axis('off')
+    fig.patch.set_alpha(0.0)
+    ax.patch.set_alpha(0.0)
+
+    plt.savefig(output_path, bbox_inches='tight', pad_inches=0,
+                transparent=True, dpi=400)
+    plt.close()
+
+    return (MRMS_LAT_MIN, MRMS_LON_MIN, MRMS_LAT_MAX, MRMS_LON_MAX)
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 manifest = load_manifest()
 bounds_data = {}
@@ -312,6 +540,104 @@ for radar in RADARS:
                     bounds_data[prod_key] = entry['bounds']
                 if 'frames' in entry:
                     frames_data[prod_key] = entry['frames']
+
+# ── Process MRMS products ─────────────────────────────────────────────────────
+print("\n── MRMS Products ──")
+for output_name, mrms_cfg in MRMS_PRODUCTS.items():
+    prod_key = f"MRMS_{output_name}"
+    try:
+        file_url = get_latest_mrms_file(mrms_cfg['mrms_dir'])
+        if not file_url:
+            # Preserve existing data
+            if prod_key in manifest:
+                entry = manifest[prod_key]
+                if 'bounds' in entry:
+                    bounds_data[prod_key] = entry['bounds']
+                if 'frames' in entry:
+                    frames_data[prod_key] = entry['frames']
+            continue
+
+        # Check if this is a new file vs. what we last processed
+        mrms_manifest_key = f"MRMS_{output_name}_last_url"
+        last_url = manifest.get(mrms_manifest_key)
+
+        if last_url == file_url:
+            print(f"  MRMS {output_name}: No new data (same as last run), skipping.")
+            if prod_key in manifest:
+                entry = manifest[prod_key]
+                if 'bounds' in entry:
+                    bounds_data[prod_key] = entry['bounds']
+                if 'frames' in entry:
+                    frames_data[prod_key] = entry['frames']
+            continue
+
+        print(f"  MRMS {output_name}: New data detected ({os.path.basename(file_url)})")
+        scan_time = extract_mrms_time(os.path.basename(file_url))
+        any_changes = True
+
+        local_grib = download_mrms_grib2(file_url)
+        if not local_grib:
+            # Preserve existing data
+            if prod_key in manifest:
+                entry = manifest[prod_key]
+                if 'bounds' in entry:
+                    bounds_data[prod_key] = entry['bounds']
+                if 'frames' in entry:
+                    frames_data[prod_key] = entry['frames']
+            continue
+
+        try:
+            # Rotate existing frames
+            rotate_frames('MRMS', output_name)
+
+            # Generate the new (latest) frame
+            png_path = f"{OUTPUT_DIR}/MRMS_{output_name}.png"
+            bounds = generate_mrms_png(local_grib, output_name, mrms_cfg, png_path)
+            bounds_data[prod_key] = list(bounds)
+            print(f"    Saved {png_path}")
+
+            # Build the frame list
+            frame_list = [{'file': f"MRMS_{output_name}.png", 'time': scan_time}]
+            old_frames = manifest.get(prod_key, {}).get('frames', [])
+            for i, old_frame in enumerate(old_frames):
+                hist_idx = i + 1
+                if hist_idx >= MAX_HISTORY:
+                    break
+                hist_file = f"MRMS_{output_name}_{hist_idx}.png"
+                if os.path.exists(os.path.join(OUTPUT_DIR, hist_file)):
+                    frame_list.append({'file': hist_file, 'time': old_frame.get('time', '')})
+
+            frames_data[prod_key] = frame_list
+            manifest[prod_key] = {
+                'bounds': list(bounds),
+                'frames': frame_list,
+            }
+            manifest[mrms_manifest_key] = file_url
+
+        except Exception as e:
+            print(f"    MRMS/{output_name}: render failed — {e}")
+            if prod_key in manifest:
+                entry = manifest[prod_key]
+                if 'bounds' in entry:
+                    bounds_data[prod_key] = entry['bounds']
+                if 'frames' in entry:
+                    frames_data[prod_key] = entry['frames']
+        finally:
+            if os.path.exists(local_grib):
+                os.remove(local_grib)
+
+    except Exception as e:
+        print(f"Error processing MRMS {output_name}: {e}")
+        if prod_key in manifest:
+            entry = manifest[prod_key]
+            if 'bounds' in entry:
+                bounds_data[prod_key] = entry['bounds']
+            if 'frames' in entry:
+                frames_data[prod_key] = entry['frames']
+
+# ── Cleanup old frames (older than 10th newest) ──────────────────────────────
+print("\n── Frame Cleanup ──")
+cleanup_old_frames()
 
 # Write bounds to JS file.
 # Use window.RADAR_BOUNDS (not const) so the script can be reloaded at runtime

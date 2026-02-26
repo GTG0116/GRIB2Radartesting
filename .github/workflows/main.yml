@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge arm_pyart cartopy matplotlib numpy scipy shapely boto3
+          conda install -c conda-forge arm_pyart cartopy matplotlib numpy scipy shapely boto3 pygrib
 
       - name: Run radar update script
         shell: bash -l {0}
