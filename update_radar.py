@@ -191,15 +191,23 @@ def download_file(key):
     return local_path
 
 def find_best_sweep(radar_data, field):
-    """Return the first sweep index that contains non-masked data for field."""
+    """Return the lowest-elevation sweep with 0.25 km gate spacing (super-res),
+    falling back to any sweep that has non-masked data."""
+    gate_spacing = radar_data.range.get('meters_between_gates', 1000)
+    is_super_res = abs(gate_spacing - 250) < 50  # 250 m = 0.25 km
+
+    best_standard = None
     for i in range(radar_data.nsweeps):
         start = int(radar_data.sweep_start_ray_index['data'][i])
         end   = int(radar_data.sweep_end_ray_index['data'][i]) + 1
         data  = radar_data.fields[field]['data'][start:end]
         mask  = np.ma.getmaskarray(data)
         if not np.all(mask):
-            return i
-    return 0  # fallback
+            if is_super_res:
+                return i  # super-res data — first good sweep is best
+            if best_standard is None:
+                best_standard = i
+    return best_standard if best_standard is not None else 0
 
 def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     display = pyart.graph.RadarMapDisplay(radar_data)
@@ -261,7 +269,7 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     lat_min, lat_max = ax.get_ylim()
 
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0,
-                transparent=True, dpi=800)
+                transparent=True, dpi=150)
     plt.close()
 
     return (lat_min, lon_min, lat_max, lon_max)
@@ -419,7 +427,7 @@ def generate_mrms_png(grib_path, output_name, mrms_cfg, output_path):
     ax.patch.set_alpha(0.0)
 
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0,
-                transparent=True, dpi=400)
+                transparent=True, dpi=150)
     plt.close()
 
     return (MRMS_LAT_MIN, MRMS_LON_MIN, MRMS_LAT_MAX, MRMS_LON_MAX)
