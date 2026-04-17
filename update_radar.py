@@ -234,7 +234,6 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
     gatefilter.exclude_transition()
     gatefilter.exclude_masked(pyart_field)
 
-    # Plot with rasterized output for smooth pixel rendering
     display.plot_ppi_map(
         pyart_field, sweep_idx,
         vmin=vmin,
@@ -249,13 +248,6 @@ def generate_png(radar_data, pyart_field, output_name, radar_code, output_path):
         raster=True,
         embellish=False,
     )
-
-    # Ensure rasterized elements render with smooth interpolation
-    for artist in ax.get_children():
-        if hasattr(artist, 'set_rasterized'):
-            artist.set_rasterized(True)
-        if hasattr(artist, 'set_interpolation'):
-            artist.set_interpolation('bilinear')
 
     # Remove all axes decorations so the PNG is pure radar data on transparency
     ax.set_xticks([])

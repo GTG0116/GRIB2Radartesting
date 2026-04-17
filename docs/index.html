@@ -2559,8 +2559,8 @@
             const frames = rainviewerApiData.radar.past;
             const latestFrame = frames[frames.length - 1];
             const tileSize = window.devicePixelRatio > 1 ? 512 : 256;
-            // Color scheme 2 (universal blue), smooth=1, snow=1
-            const tileUrl = `${rainviewerApiData.host}${latestFrame.path}/${tileSize}/{z}/{x}/{y}/2/1_1.png`;
+            // Color scheme 2 (universal blue), smooth=0, snow=1
+            const tileUrl = `${rainviewerApiData.host}${latestFrame.path}/${tileSize}/{z}/{x}/{y}/2/0_1.png`;
             currentOverlay = L.tileLayer(tileUrl, {
                 tileSize: 256,
                 opacity: opacity,
