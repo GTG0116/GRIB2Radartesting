@@ -408,7 +408,7 @@ def generate_mrms_png(grib_path, output_name, mrms_cfg, output_path):
         vmin=mrms_cfg['vmin'],
         vmax=mrms_cfg['vmax'],
         transform=ccrs.PlateCarree(),
-        shading='auto',
+        shading='nearest',
         rasterized=True,
     )
 
