@@ -800,9 +800,13 @@
             font-size: 11px !important;
         }
         .leaflet-control-attribution a { color: var(--accent) !important; }
-        .radar-image {
+        .radar-image,
+        .radar-image img,
+        .leaflet-image-layer {
             image-rendering: pixelated;
+            image-rendering: crisp-edges;
             image-rendering: -webkit-optimize-contrast;
+            -ms-interpolation-mode: nearest-neighbor;
         }
 
         /* ── Floating screenshot button ── */
