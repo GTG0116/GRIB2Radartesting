@@ -1452,48 +1452,55 @@
             </div>
 
             <div class="section">
-                <div class="section-label">MRMS Products</div>
+                <div class="section-label">MRMS Products <span style="font-size:9px;color:var(--text-muted);font-weight:400;letter-spacing:0">via EphrataWeather</span></div>
                 <div class="radio-group" id="mrms-product-group">
-                    <div class="radio-opt" data-value="rotation_instant">
+                    <div class="radio-opt" data-value="mrms_precip">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
-                            <div class="radio-name">Instant Rotation</div>
-                            <div class="radio-desc">0-2km AGL azimuthal shear</div>
+                            <div class="radio-name">Precip Rate</div>
+                            <div class="radio-desc">MRMS precipitation rate</div>
                         </div>
                     </div>
-                    <div class="radio-opt" data-value="rotation_1hr">
+                    <div class="radio-opt" data-value="mrms_refl">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
-                            <div class="radio-name">1hr Rotation</div>
-                            <div class="radio-desc">60-min rotation tracks AGL</div>
+                            <div class="radio-name">Reflectivity</div>
+                            <div class="radio-desc">MRMS base reflectivity (dBZ)</div>
                         </div>
                     </div>
-                    <div class="radio-opt" data-value="rotation_24hr">
+                    <div class="radio-opt" data-value="mrms_hail">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
-                            <div class="radio-name">24hr Rotation</div>
-                            <div class="radio-desc">24-hr rotation tracks AGL</div>
-                        </div>
-                    </div>
-                    <div class="radio-opt" data-value="mesh">
-                        <div class="radio-pip"></div>
-                        <div class="radio-text">
-                            <div class="radio-name">MESH</div>
+                            <div class="radio-name">Hail (MESH)</div>
                             <div class="radio-desc">Max estimated hail size</div>
                         </div>
                     </div>
-                    <div class="radio-opt" data-value="posh">
+                    <div class="radio-opt" data-value="mrms_qpe6h">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
-                            <div class="radio-name">Prob. Severe Hail</div>
-                            <div class="radio-desc">Probability of severe hail</div>
+                            <div class="radio-name">6-Hr QPE</div>
+                            <div class="radio-desc">6-hr radar-only precip estimate</div>
                         </div>
                     </div>
-                    <div class="radio-opt" data-value="qpe_24hr">
+                    <div class="radio-opt" data-value="mrms_qpe24h">
                         <div class="radio-pip"></div>
                         <div class="radio-text">
-                            <div class="radio-name">24hr QPE</div>
-                            <div class="radio-desc">24-hr quantitative precip est.</div>
+                            <div class="radio-name">24-Hr QPE</div>
+                            <div class="radio-desc">24-hr radar-only precip estimate</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="mrms_lightning">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Lightning</div>
+                            <div class="radio-desc">1-hr CG lightning probability</div>
+                        </div>
+                    </div>
+                    <div class="radio-opt" data-value="mrms_rotation">
+                        <div class="radio-pip"></div>
+                        <div class="radio-text">
+                            <div class="radio-name">Az Shear</div>
+                            <div class="radio-desc">Azimuthal shear (rotation)</div>
                         </div>
                     </div>
                 </div>
@@ -1668,6 +1675,7 @@
                         <span class="ap-type-badge" id="ap-type-badge"></span>
                     </div>
                     <div class="ap-header-right">
+                        <button class="ap-action-btn" id="ap-show-others" title="Show other alerts &amp; MCDs" style="display:none;font-size:10px;width:auto;padding:0 6px;border-radius:4px;">Show All</button>
                         <button class="ap-action-btn" id="ap-screenshot" title="Take Screenshot">&#128247;</button>
                         <button class="ap-action-btn" id="ap-close" title="Close">&#10005;</button>
                     </div>
@@ -1779,16 +1787,17 @@
     let highlightedNonWarnLayer = null;
     let skipNextMapClick = false;  // Prevents map click from closing panel after layer click
 
-    /* ── SPC Risk Level Definitions ── */
+    /* ── SPC Risk Level Definitions (includes new conditional intensity scale) ── */
     const SPC_RISK_LEVELS = {
         cat: [
             { label: 'TSTM', name: 'Gen. Thunderstorms', color: '#c0e8c0' },
-            { label: 'MRGL', name: 'Marginal',           color: '#00ff00' },
+            { label: 'MRGL', name: 'Marginal',           color: '#00cc00' },
             { label: 'SLGT', name: 'Slight',             color: '#ffff00' },
             { label: 'ENH',  name: 'Enhanced',           color: '#ffa500' },
             { label: 'MDT',  name: 'Moderate',           color: '#ff0000' },
             { label: 'HIGH', name: 'High',               color: '#ff00ff' },
         ],
+        // Unconditional probability scale (traditional)
         torn: [
             { label: '2',    name: '2%',          color: '#008000' },
             { label: '5',    name: '5%',          color: '#8B4513' },
@@ -1815,16 +1824,56 @@
             { label: '60',   name: '60%',         color: '#4444ff' },
             { label: 'SIGN', name: 'Sig. Wind',   color: '#bbbbbb' },
         ],
+        // SPC conditional intensity scale (LABEL2 field) — probability given organized svr wx
+        torn_cond: [
+            { label: '10',   name: '10% Cond.',   color: '#008000' },
+            { label: '15',   name: '15% Cond.',   color: '#8B4513' },
+            { label: '30',   name: '30% Cond.',   color: '#ffff00' },
+            { label: '45',   name: '45% Cond.',   color: '#ff0000' },
+            { label: '60',   name: '60% Cond.',   color: '#ff00ff' },
+            { label: 'SIGN', name: 'Sig. (Cond.)', color: '#bbbbbb' },
+        ],
+        hail_cond: [
+            { label: '10',   name: '10% Cond.',   color: '#8B4513' },
+            { label: '20',   name: '20% Cond.',   color: '#ffff00' },
+            { label: '30',   name: '30% Cond.',   color: '#ff0000' },
+            { label: '45',   name: '45% Cond.',   color: '#ff00ff' },
+            { label: '60',   name: '60% Cond.',   color: '#800080' },
+            { label: 'SIGN', name: 'Sig. (Cond.)', color: '#bbbbbb' },
+        ],
+        wind_cond: [
+            { label: '10',   name: '10% Cond.',   color: '#8B4513' },
+            { label: '20',   name: '20% Cond.',   color: '#ffff00' },
+            { label: '30',   name: '30% Cond.',   color: '#ff0000' },
+            { label: '45',   name: '45% Cond.',   color: '#ff00ff' },
+            { label: '60',   name: '60% Cond.',   color: '#800080' },
+            { label: 'SIGN', name: 'Sig. (Cond.)', color: '#bbbbbb' },
+        ],
     };
     const SPC_THREAT_NAMES = { cat: 'Categorical', torn: 'Tornado', hail: 'Hail', wind: 'Wind' };
 
-    /* Convert SPC LABEL from decimal fraction (0.02) to percentage integer string ("2") */
+    /* Unified SPC colour map (covers both standard and conditional scale values) */
+    const SPC_COLORS = {
+        // Categorical
+        'TSTM': '#c0e8c0', 'MRGL': '#00cc00', 'SLGT': '#ffff00',
+        'ENH': '#ffa500',  'MDT': '#ff0000',  'HIGH': '#ff00ff',
+        // Probabilistic (standard & conditional share the same palette by value)
+        '2':  '#008000', '5':  '#8B4513', '10': '#ffff00',
+        '15': '#ff0000', '20': '#ff7f00', '30': '#ff00ff',
+        '45': '#800080', '60': '#0000ff',
+        // Significant severe (hatching)
+        'SIGN': '#000000',
+    };
+
+    /* Convert SPC LABEL from decimal fraction (0.02) or integer string to percentage string.
+       Also handles the newer conditional LABEL2 field which may already be an integer. */
     function normalizeSPCLabel(raw) {
-        const s = String(raw).trim();
-        if (/^[A-Z]/i.test(s)) return s; // categorical: TSTM, MRGL, SIGN, etc.
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        if (/^[A-Z]/i.test(s)) return s.toUpperCase(); // TSTM, MRGL, SIGN, etc.
         const n = parseFloat(s);
         if (isNaN(n)) return s;
-        if (n > 0 && n < 1) return String(Math.round(n * 100));
+        if (n > 0 && n < 1) return String(Math.round(n * 100)); // 0.10 → "10"
         return String(Math.round(n));
     }
 
@@ -1862,27 +1911,23 @@
             const data = await resp.json();
 
             spcLayer = L.geoJSON(data, {
-                pane: 'spcPane', // Sit below warnings, above radar
+                pane: 'spcPane',
                 style: feature => {
-                    const label = normalizeSPCLabel(feature.properties.LABEL);
-                    const colors = {
-                        // Categorical
-                        'TSTM': '#c0e8c0', 'MRGL': '#00ff00', 'SLGT': '#ffff00',
-                        'ENH': '#ffa500',  'MDT': '#ff0000',  'HIGH': '#ff00ff',
-                        // Probabilistic (%)
-                        '2': '#008000', '5': '#8B4513', '10': '#FFFF00',
-                        '15': '#ff0000', '30': '#ff00ff', '45': '#800080',
-                        '60': '#0000FF', 'SIGN': '#000000'
-                    };
-                    return { 
-                        color: colors[label] || '#888', 
-                        weight: label === 'SIGN' ? 3 : 2, 
-                        opacity: 0.9, 
-                        fillOpacity: label === 'SIGN' ? 0.0 : 0.15, 
-                        dashArray: label === 'SIGN' ? '8 4' : null 
+                    const p = feature.properties;
+                    // LABEL2 is the SPC conditional intensity scale; fall back to LABEL
+                    const rawLabel  = p.LABEL2 || p.LABEL || '';
+                    const label = normalizeSPCLabel(rawLabel);
+                    const color = SPC_COLORS[label] || '#888888';
+                    const isSign = label === 'SIGN';
+                    return {
+                        color,
+                        weight:      isSign ? 3 : 2,
+                        opacity:     0.92,
+                        fillOpacity: isSign ? 0.0 : 0.18,
+                        dashArray:   isSign ? '8 4' : null,
                     };
                 },
-               onEachFeature: (feature, layer) => {
+                onEachFeature: (feature, layer) => {
                     layer.on('click', () => {
                         skipNextMapClick = true;
                         handleSPCClick(layer);
@@ -1898,41 +1943,64 @@
     async function fetchMCDProductDetails(mcdNum) {
         if (mcdDetailCache[mcdNum]) return mcdDetailCache[mcdNum];
         try {
-            const listResp = await fetch('https://api.weather.gov/products?type=MCD&limit=50', {
-                headers: { 'Accept': 'application/ld+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
-            });
+            const paddedNum = String(mcdNum).padStart(4, '0');
+
+            // NWS Products API — filter to SPC (office KWNS) MCD products
+            const listResp = await fetch(
+                `https://api.weather.gov/products?type=MCD&office=KWNS&limit=100`,
+                { headers: { 'User-Agent': 'WeatherRadarViewer/1.0' } }
+            );
             if (!listResp.ok) return null;
             const listData = await listResp.json();
-            const products = listData['@graph'] || [];
-            const paddedNum = String(mcdNum).padStart(4, '0');
+            // API may return { '@graph': [...] } or { features: [...] } depending on Accept header
+            const products = listData['@graph'] || listData.features || [];
+
+            // Match by MCD number in productName or @id
             const match = products.find(p => {
-                const id = p['@id'] || p.id || '';
-                return id.includes(paddedNum) || (p.productName || '').includes(paddedNum);
+                const name = (p.productName || p.name || '').toLowerCase();
+                const id   = (p['@id']    || p.id   || '').toLowerCase();
+                return (
+                    name.includes(paddedNum) ||
+                    id.includes(paddedNum) ||
+                    name.includes(`#${mcdNum}`) ||
+                    name.includes(`discussion ${paddedNum}`) ||
+                    name.endsWith(paddedNum)
+                );
             });
-            if (!match) return null;
-            const prodUrl = match['@id'] || match.id;
+            if (!match) { console.warn(`MCD #${paddedNum} not found in NWS products list`); return null; }
+
+            const prodUrl = match['@id'] || match.id || match.url;
+            if (!prodUrl) return null;
+
             const prodResp = await fetch(prodUrl, {
-                headers: { 'Accept': 'application/ld+json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+                headers: { 'User-Agent': 'WeatherRadarViewer/1.0' }
             });
             if (!prodResp.ok) return null;
             const prod = await prodResp.json();
             const text = prod.productText || '';
 
             const details = {};
-            const concernMatch = text.match(/Concerning[.\s]*([^\n]+)/i);
-            if (concernMatch) details.concerning = concernMatch[1].replace(/^\.{3,}\s*/, '').trim();
-            const probMatch = text.match(/(?:Probability of Watch Issuance|Watch Issuance Probability)[.\s]*(\d+)\s*percent/i);
+
+            // "Concerning..." line — often follows MCD header
+            const concernMatch = text.match(/Concerning\.{3,}\s*([^\n\r]+)/i);
+            if (concernMatch) details.concerning = concernMatch[1].trim();
+
+            // Watch issuance probability
+            const probMatch = text.match(/(?:Probability of Watch Issuance|Watch Issuance Probability)\s*[.\s]*?(\d+)\s*[Pp]ercent/i);
             if (probMatch) details.watchProb = probMatch[1] + '%';
-            const validMatch = text.match(/VALID\s+(\d{6}Z)\s*-\s*(\d{6}Z)/i);
+
+            // Valid period from DDHHMMZ format
+            const validMatch = text.match(/VALID\s+(\d{6}Z)\s*[-–]\s*(\d{6}Z)/i);
             if (validMatch) {
                 const now = new Date();
                 const parseShort = (s) => {
                     const d = parseInt(s.slice(0, 2)), h = parseInt(s.slice(2, 4)), m = parseInt(s.slice(4, 6));
                     const dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), d, h, m));
+                    // If date is in the past by more than 2 days, bump a month
                     if (dt < now - 86400000 * 2) dt.setUTCMonth(dt.getUTCMonth() + 1);
                     return dt.toISOString();
                 };
-                details.issued = parseShort(validMatch[1]);
+                details.issued  = parseShort(validMatch[1]);
                 details.expires = parseShort(validMatch[2]);
             }
             if (prod.issuanceTime) details.issued = details.issued || prod.issuanceTime;
@@ -2002,43 +2070,61 @@
         if (lsrLayer) { map.removeLayer(lsrLayer); lsrLayer = null; }
         if (!document.getElementById('lsr-toggle').checked) return;
 
+        // IEM LSR GeoJSON API — last 24 hours of local storm reports
+        const LSR_URL = 'https://mesonet.agron.iastate.edu/geojson/lsr.geojson?hours=24';
+
         try {
-            // Using IEM LSR GeoJSON (defaults to the last 24 hours)
-            const resp = await fetch('https://mesonet.agron.iastate.edu/geojson/lsr.php');
-            if (!resp.ok) throw new Error('Data not available');
+            const resp = await fetch(LSR_URL, {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'WeatherRadarViewer/1.0' }
+            });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
+            if (!data.features || data.features.length === 0) {
+                showError('No local storm reports in the past 24 hours.');
+                return;
+            }
+
             lsrLayer = L.geoJSON(data, {
-                pane: 'warningPane', // Keeps it above radar/spc layers
+                pane: 'warningPane',
                 pointToLayer: (feature, latlng) => {
+                    const color = getLSRColor(feature.properties.typetext);
                     return L.circleMarker(latlng, {
-                        radius: 5,
-                        fillColor: getLSRColor(feature.properties.typetext),
+                        radius: 6,
+                        fillColor: color,
                         color: '#0d1117',
                         weight: 1.5,
                         opacity: 1,
-                        fillOpacity: 0.85
+                        fillOpacity: 0.88,
                     });
                 },
                 onEachFeature: (feature, layer) => {
+                    const p = feature.properties;
                     layer.on('click', () => {
                         skipNextMapClick = true;
-                        const p = feature.properties;
+                        const city  = p.city  || p.wfo || '';
+                        const state = p.st    || p.state || '';
+                        const type  = p.typetext || p.type || 'Report';
+                        const mag   = p.magnitude != null ? ` · Magnitude: ${p.magnitude}` : '';
                         const lsrProps = {
-                            event: `Local Storm Report`,
-                            areaDesc: `${p.city}, ${p.state}`,
-                            effective: p.valid,
-                            expires: null,
-                            lsrType: `${p.typetext}${p.magnitude ? ' \u00b7 Magnitude: ' + p.magnitude : ''}`,
-                            description: p.remark || 'No remarks provided.',
-                            parameters: {}
+                            event:       'Local Storm Report',
+                            areaDesc:    [city, state].filter(Boolean).join(', '),
+                            effective:   p.valid || p.utcvalid || null,
+                            expires:     null,
+                            lsrType:     `${type}${mag}`,
+                            description: p.remark || p.remarks || 'No remarks provided.',
+                            parameters:  {}
                         };
                         map.setView(layer.getLatLng(), Math.max(map.getZoom(), 8));
-                        showAlertPanel(lsrProps, getLSRColor(p.typetext), layer, 'lsr');
+                        showAlertPanel(lsrProps, getLSRColor(type), layer, 'lsr');
                     });
-                    
-                    // Simple tooltip on hover
-                    layer.bindTooltip(`<b>${feature.properties.typetext}</b><br>${feature.properties.city}, ${feature.properties.state}`, {className: 'warning-tip'});
+                    const city  = p.city  || p.wfo  || '';
+                    const state = p.st    || p.state || '';
+                    const type  = p.typetext || p.type || 'Report';
+                    layer.bindTooltip(
+                        `<b>${type}</b><br>${[city, state].filter(Boolean).join(', ')}`,
+                        { className: 'warning-tip' }
+                    );
                 }
             }).addTo(map);
         } catch (e) {
@@ -2236,19 +2322,76 @@
         reflectivity:             'Reflectivity',
         velocity:                 'Velocity',
         correlation_coefficient:  'Corr. Coeff.',
-        rotation_instant:         'Instant Rotation AGL',
-        rotation_1hr:             '1hr Rotation AGL',
-        rotation_24hr:            '24hr Rotation AGL',
-        mesh:                     'Max Est. Hail Size',
-        posh:                     'Prob. Severe Hail',
-        qpe_24hr:                 '24hr QPE',
+        mrms_precip:              'Precip Rate',
+        mrms_refl:                'MRMS Reflectivity',
+        mrms_hail:                'Hail (MESH)',
+        mrms_qpe6h:               '6-Hr QPE',
+        mrms_qpe24h:              '24-Hr QPE',
+        mrms_lightning:           'Lightning Prob.',
+        mrms_rotation:            'Az Shear',
     };
 
-    // MRMS-only products (use MRMS_ prefix for data keys)
-    const MRMS_PRODUCT_KEYS = new Set([
-        'rotation_instant', 'rotation_1hr', 'rotation_24hr',
-        'mesh', 'posh', 'qpe_24hr',
-    ]);
+    // EphrataWeather MRMS product config
+    const EPHRATA_BASE = 'https://ephrataweather.github.io/MRMS/public/data/';
+    const EPHRATA_MRMS_CFG = {
+        mrms_precip:    { label: 'Precip Rate',      imgPrefix: 'master',    metaPrefix: '',         latestUnnumbered: true  },
+        mrms_refl:      { label: 'Reflectivity',     imgPrefix: 'refl',      metaPrefix: 'refl',     latestUnnumbered: false },
+        mrms_hail:      { label: 'Hail (MESH)',      imgPrefix: 'mesh',      metaPrefix: 'mesh',     latestUnnumbered: false },
+        mrms_qpe6h:     { label: '6-Hr QPE',         imgPrefix: 'qpe6h',     metaPrefix: 'qpe6h',    latestUnnumbered: false },
+        mrms_qpe24h:    { label: '24-Hr QPE',        imgPrefix: 'qpe24h',    metaPrefix: 'qpe24h',   latestUnnumbered: false },
+        mrms_lightning: { label: 'Lightning',        imgPrefix: 'lightning', metaPrefix: 'lightning', latestUnnumbered: false },
+        mrms_rotation:  { label: 'Az Shear',         imgPrefix: 'rotation',  metaPrefix: 'rotation', latestUnnumbered: false },
+    };
+    // Fixed CONUS bounds for all EphrataWeather products: [[latSW, lonSW], [latNE, lonNE]]
+    const EPHRATA_BOUNDS = [[24.0, -130.0], [50.0, -60.0]];
+
+    function ephrataImgUrl(product, frameIdx) {
+        const cfg = EPHRATA_MRMS_CFG[product];
+        if (!cfg) return null;
+        let filename;
+        if (cfg.latestUnnumbered && frameIdx === 0) {
+            filename = `${cfg.imgPrefix}.png`;
+        } else {
+            filename = `${cfg.imgPrefix}_${frameIdx}.png`;
+        }
+        return EPHRATA_BASE + filename;
+    }
+
+    function ephrataMetaUrl(product, frameIdx) {
+        const cfg = EPHRATA_MRMS_CFG[product];
+        if (!cfg) return null;
+        const prefix = cfg.metaPrefix ? `metadata_${cfg.metaPrefix}_${frameIdx}` : `metadata_${frameIdx}`;
+        return EPHRATA_BASE + `${prefix}.json`;
+    }
+
+    // Cache of loaded EphrataWeather frame lists per product
+    const ephrataFrameCache = {};
+
+    async function loadEphrataFrames(product) {
+        if (ephrataFrameCache[product]) return ephrataFrameCache[product];
+        const frames = [];
+        for (let i = 0; i < 10; i++) {
+            try {
+                const metaUrl = ephrataMetaUrl(product, i);
+                const resp = await fetch(metaUrl + `?t=${Date.now()}`);
+                if (!resp.ok) break;
+                const meta = await resp.json();
+                frames.push({
+                    url: ephrataImgUrl(product, i),
+                    time: meta.time || '',    // "07:58 PM ET" format
+                    bounds: EPHRATA_BOUNDS,
+                    isRemote: true,
+                });
+            } catch { break; }
+        }
+        ephrataFrameCache[product] = frames;
+        return frames;
+    }
+
+    function clearEphrataCache() { Object.keys(ephrataFrameCache).forEach(k => delete ephrataFrameCache[k]); }
+
+    // EphrataWeather MRMS products set
+    const MRMS_PRODUCT_KEYS = new Set(Object.keys(EPHRATA_MRMS_CFG));
 
     function isMrmsProduct(product) {
         return MRMS_PRODUCT_KEYS.has(product);
@@ -2282,11 +2425,11 @@
     const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([40.0, -78.0], 7);
  
     const accessToken = 'pk.eyJ1IjoiZ3RnMDExNiIsImEiOiJjbWxsODV6NXAwNThmM2ZwdWlkYm0xNjFlIn0.vI186twXYzY45nnuV5FucQ';
-    /* Base map — no labels variant so label layer on top is not duplicated */
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
-        maxZoom: 19,
-        subdomains: 'abcd',
+    /* Base map — Mapbox satellite with streets/labels */
+    L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${accessToken}`, {
+        attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        tileSize: 256,
+        maxZoom: 22,
     }).addTo(map);
 
     // Custom panes for layer ordering
@@ -2335,12 +2478,9 @@
         }
     })();
 
-    /* ── Town Name Labels Layer (on top of everything) ── */
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-        pane: 'labelPane',
-        maxZoom: 19,
-        subdomains: 'abcd',
-    }).addTo(map);
+    /* Labels are baked into the Mapbox satellite-streets base layer.
+       The labelPane pane (z=250) stays empty; radar pane (z=210) sits above
+       the base map so labels remain visible in areas without precipitation. */
  
     /* ── Error helper ── */
     let errorTimer;
@@ -2376,21 +2516,20 @@
 
         let imageUrl, bounds;
 
-        // MRMS-derived products always use MRMS data regardless of radar selection
+        // EphrataWeather MRMS products — load directly from GitHub Pages
         if (isMrmsProduct(selectedProduct)) {
-            if (!RADAR_BOUNDS || !Object.keys(RADAR_BOUNDS).length) {
-                showError('Radar data not yet available — check back in a few minutes.');
-                refreshNowViewing();
-                return;
-            }
-            const key = getDataKey();  // e.g. "MRMS_mesh"
-            bounds = RADAR_BOUNDS[key];
-            if (!bounds) {
-                showError(`No MRMS data available for ${PRODUCT_NAMES[selectedProduct]}.`);
-                refreshNowViewing();
-                return;
-            }
-            imageUrl = `assets/MRMS_${selectedProduct}.png?t=${Date.now()}`;
+            const imgUrl = ephrataImgUrl(selectedProduct, 0) + `?t=${Date.now()}`;
+            currentOverlay = L.imageOverlay(imgUrl, EPHRATA_BOUNDS, {
+                opacity, interactive: false, pane: 'radarPane', className: 'radar-image'
+            });
+            currentOverlay.on('error', () => showError(`Could not load MRMS ${PRODUCT_NAMES[selectedProduct]} — EphrataWeather may be updating.`));
+            currentOverlay.addTo(map);
+            map.fitBounds(EPHRATA_BOUNDS, { padding: [24, 24] });
+            refreshNowViewing();
+            if (warningLayer) warningLayer.bringToFront();
+            // Load frame history asynchronously then update playback bar
+            loadEphrataFrames(selectedProduct).then(() => updatePlaybackBar());
+            return;
         } else if (selectedRadar === 'MRMS') {
             if (selectedProduct !== 'reflectivity') {
                 showError('MRMS radar supports Reflectivity only. Use MRMS Products for other data.');
@@ -2506,6 +2645,7 @@
  
     /* ── Refresh button ── */
     document.getElementById('refresh-btn').addEventListener('click', async () => {
+        clearEphrataCache();
         await Promise.all([reloadBounds(), reloadFrames(), fetchRainViewerFrames()]);
         updateOverlay();
         updatePlaybackBar();
@@ -2518,6 +2658,7 @@
 
     /* ── Auto-refresh every 5 minutes ── */
     setInterval(async () => {
+        clearEphrataCache();
         await Promise.all([reloadBounds(), reloadFrames(), fetchRainViewerFrames()]);
         updateOverlay();
         updatePlaybackBar();
@@ -2607,17 +2748,28 @@
  
     function closeAlertPanel() {
         alertPanel.classList.remove('visible');
+        alertsIsolated = false;
+        apShowOthersBtn.style.display = 'none';
 
         /* Reset NWS warning layers */
         if (warningLayer) {
             warningLayer.eachLayer(l => {
                 const event = l.feature.properties.event;
                 l.setStyle(WARN_STYLE_MAP[event] || {});
-                if (l._path) l._path.classList.remove('warn-selected');
+                if (l._path) {
+                    l._path.classList.remove('warn-selected');
+                    l._path.style.pointerEvents = '';
+                }
             });
         }
         selectedLayer = null;
         selectedEvent = null;
+
+        /* Restore MCD layer visibility */
+        if (mcdLayer) {
+            mcdLayer.setStyle({ color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' });
+            mcdLayer.eachLayer(l => { if (l._path) l._path.style.pointerEvents = ''; });
+        }
 
         /* Clear SPC/MCD polygon highlight */
         if (highlightedNonWarnLayer && highlightedNonWarnLayer._path) {
@@ -2754,7 +2906,9 @@
     function handleSPCClick(layer) {
         const feature = layer.feature;
         const p = feature.properties;
-        const label = normalizeSPCLabel(p.LABEL);
+        const isConditional = !!p.LABEL2;
+        const label = normalizeSPCLabel(p.LABEL2 || p.LABEL);
+        const unconditionalLabel = normalizeSPCLabel(p.LABEL);
         const day = document.getElementById('spc-day').value;
         const threat = document.getElementById('spc-threat').value;
 
@@ -2764,22 +2918,26 @@
             'MDT': 'Moderate Risk', 'HIGH': 'High Risk',
             'SIGN': 'Significant Severe (Hatched)'
         };
-        const riskLevel = riskMap[label] || `${label}% Probability`;
+        let riskLevel = riskMap[label] || `${label}%`;
+        if (isConditional) riskLevel += ` Conditional (${unconditionalLabel}% overall)`;
+        else if (!/[A-Z]/.test(label)) riskLevel += ' Probability';
+
         const parseTime = (t) => t && t.length === 12 ? `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:00Z` : null;
         const dayLabel = day.replace(/^day(\d)$/, 'Day $1');
+        const scaleNote = isConditional ? ' (Conditional Scale)' : '';
 
         const spcProps = {
-            event: `SPC ${dayLabel} ${SPC_THREAT_NAMES[threat] || threat.toUpperCase()} Outlook`,
+            event: `SPC ${dayLabel} ${SPC_THREAT_NAMES[threat] || threat.toUpperCase()} Outlook${scaleNote}`,
             areaDesc: riskLevel,
             effective: parseTime(p.ISSUE),
-            expires: parseTime(p.EXPIRE),
-            spcThreat: threat,
-            spcLabel: label,
+            expires:   parseTime(p.EXPIRE),
+            spcThreat: threat + (isConditional ? '_cond' : ''),
+            spcLabel:  label,
             parameters: {}
         };
 
         map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6 });
-        showAlertPanel(spcProps, layer.options.color || '#888', layer, 'spc');
+        showAlertPanel(spcProps, SPC_COLORS[label] || layer.options.color || '#888', layer, 'spc');
     }
 
     async function handleMCDClick(layer) {
@@ -2822,26 +2980,65 @@
         }
     }
  
+    /* Alert isolation state — when true, viewing an NWS alert hides all
+       other alerts and active MCDs until the user toggles them back or closes. */
+    let alertsIsolated = false;
+
+    const apShowOthersBtn = document.getElementById('ap-show-others');
+    apShowOthersBtn.addEventListener('click', () => {
+        alertsIsolated = false;
+        apShowOthersBtn.style.display = 'none';
+        // Restore all warning layers to their default style
+        if (warningLayer) {
+            warningLayer.eachLayer(l => {
+                const event = l.feature.properties.event;
+                if (hiddenAlertTypes.has(event)) return;
+                if (l === selectedLayer) {
+                    if (l._path) l._path.classList.add('warn-selected');
+                } else {
+                    l.setStyle(WARN_STYLE_MAP[event] || {});
+                }
+            });
+        }
+        // Restore MCDs
+        if (mcdLayer) {
+            mcdLayer.setStyle({ color: '#9370DB', weight: 3, opacity: 0.8, fillOpacity: 0.1, dashArray: '6 6' });
+            mcdLayer.eachLayer(l => { if (l._path) l._path.style.pointerEvents = ''; });
+        }
+    });
+
     function showAlertPanel(props, warnColor, layer, panelType = 'alert') {
         /* Close location panel if open */
         if (locationPanelOpen) closeLocationPanel();
 
-        /* ── Warning layer handling (only for NWS alert clicks) ── */
+        /* ── NWS alert: isolate this alert — hide others and MCDs ── */
         if (panelType === 'alert' && warningLayer) {
+            alertsIsolated = true;
             warningLayer.eachLayer(l => {
                 if (l === layer) {
                     highlightLayer(l, props.event);
                 } else {
-                    l.setStyle({opacity: 0, fillOpacity: 0});
+                    l.setStyle({ opacity: 0, fillOpacity: 0 });
+                    if (l._path) l._path.style.pointerEvents = 'none';
                 }
             });
+            // Hide MCD layer while viewing a specific alert
+            if (mcdLayer) {
+                mcdLayer.setStyle({ opacity: 0, fillOpacity: 0, color: 'transparent' });
+                mcdLayer.eachLayer(l => { if (l._path) l._path.style.pointerEvents = 'none'; });
+            }
+            apShowOthersBtn.style.display = 'inline-flex';
         } else if ((panelType === 'spc' || panelType === 'mcd') && layer) {
+            alertsIsolated = false;
+            apShowOthersBtn.style.display = 'none';
             if (highlightedNonWarnLayer && highlightedNonWarnLayer._path) {
                 highlightedNonWarnLayer._path.classList.remove('warn-selected');
             }
             highlightedNonWarnLayer = layer;
             layer.bringToFront();
             if (layer._path) layer._path.classList.add('warn-selected');
+        } else {
+            apShowOthersBtn.style.display = 'none';
         }
 
         alertPanel.classList.add('visible');
@@ -3761,14 +3958,12 @@
     let pbSpeedIdx     = 2;    // Index into PB_SPEEDS (default 1000ms)
 
     function getFramesForCurrent() {
-        if (!RADAR_FRAMES) return [];
-        // MRMS products have their own frames regardless of radar selection
+        // EphrataWeather MRMS — use cached remote frames
         if (isMrmsProduct(selectedProduct)) {
-            const key = getDataKey();
-            const entry = RADAR_FRAMES[key];
-            if (!entry || !Array.isArray(entry) || entry.length <= 1) return [];
-            return entry;
+            const frames = ephrataFrameCache[selectedProduct] || [];
+            return frames.length > 1 ? frames : [];
         }
+        if (!RADAR_FRAMES) return [];
         if (selectedRadar === 'None' || selectedRadar === 'MRMS' || selectedRadar === 'RainViewer') {
             return [];
         }
@@ -3811,12 +4006,17 @@
         const frame = pbFrames[pbIndex];
         let timeStr = '';
         if (frame && frame.time) {
-            try {
-                timeStr = new Date(frame.time).toLocaleTimeString('en-US', {
-                    hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
-                });
-            } catch (_) {
+            if (frame.isRemote) {
+                // EphrataWeather uses "07:58 PM ET" format — display as-is
                 timeStr = frame.time;
+            } else {
+                try {
+                    timeStr = new Date(frame.time).toLocaleTimeString('en-US', {
+                        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+                    });
+                } catch (_) {
+                    timeStr = frame.time;
+                }
             }
         }
         pbLabelEl.textContent = `${pbIndex + 1}/${pbFrames.length}` + (timeStr ? ` · ${timeStr}` : '');
@@ -3832,22 +4032,28 @@
     function showFrame(idx) {
         if (!pbFrames[idx]) return;
         const frame = pbFrames[idx];
-        const key = getDataKey();
-        const bounds = RADAR_BOUNDS[key];
-        if (!bounds) return;
 
         if (currentOverlay) {
             map.removeLayer(currentOverlay);
             currentOverlay = null;
         }
 
-        const sw = [bounds[0], bounds[1]];
-        const ne = [bounds[2], bounds[3]];
-        const imageUrl = `assets/${frame.file}?t=${Date.now()}`;
+        let imageUrl, leafletBounds;
+
+        if (frame.isRemote) {
+            // EphrataWeather MRMS frame — use stored URL and fixed CONUS bounds
+            imageUrl = frame.url + `?t=${Date.now()}`;
+            leafletBounds = frame.bounds;
+        } else {
+            const key = getDataKey();
+            const bounds = RADAR_BOUNDS[key];
+            if (!bounds) return;
+            imageUrl = `assets/${frame.file}?t=${Date.now()}`;
+            leafletBounds = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]];
+        }
 
         currentOverlay = L.imageOverlay(
-            imageUrl,
-            [sw, ne],
+            imageUrl, leafletBounds,
             { opacity, interactive: false, pane: 'radarPane', className: 'radar-image' }
         );
         currentOverlay.addTo(map);
