@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Configurable radars
-RADARS = ['KCCX', 'KDIX', 'KDOX', 'KBGM', 'KOKX', 'KPBZ']
+RADARS = ['KCCX', 'KDIX', 'KDOX', 'KBGM', 'KVNX', 'KPBZ']
 
 # NEXRAD Products: output_name -> PyART field name
 PRODUCTS = {
