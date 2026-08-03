@@ -1,608 +1,608 @@
 {
   "KCCX_reflectivity": {
     "bounds": [
-      36.586024564565896,
-      -83.46004669639377,
+      36.58602456568334,
+      -83.46004614631019,
       44.838007154981256,
-      -72.54739959266824
+      -72.54739924158095
     ],
     "frames": [
       {
         "file": "KCCX_reflectivity.png",
-        "time": "2026-08-03T22:34:41Z"
+        "time": "2026-08-03T23:45:23Z"
       },
       {
         "file": "KCCX_reflectivity_1.png",
-        "time": "2026-08-03T21:38:06Z"
+        "time": "2026-08-03T22:34:41Z"
       },
       {
         "file": "KCCX_reflectivity_2.png",
-        "time": "2026-08-03T20:27:51Z"
+        "time": "2026-08-03T21:38:06Z"
       },
       {
         "file": "KCCX_reflectivity_3.png",
-        "time": "2026-08-03T18:50:32Z"
+        "time": "2026-08-03T20:27:51Z"
       },
       {
         "file": "KCCX_reflectivity_4.png",
-        "time": "2026-08-03T17:08:12Z"
+        "time": "2026-08-03T18:50:32Z"
       },
       {
         "file": "KCCX_reflectivity_5.png",
-        "time": "2026-08-03T15:00:45Z"
+        "time": "2026-08-03T17:08:12Z"
       },
       {
         "file": "KCCX_reflectivity_6.png",
-        "time": "2026-08-03T11:52:33Z"
+        "time": "2026-08-03T15:00:45Z"
       },
       {
         "file": "KCCX_reflectivity_7.png",
-        "time": "2026-08-03T08:25:26Z"
+        "time": "2026-08-03T11:52:33Z"
       },
       {
         "file": "KCCX_reflectivity_8.png",
-        "time": "2026-08-03T04:44:33Z"
+        "time": "2026-08-03T08:25:26Z"
       },
       {
         "file": "KCCX_reflectivity_9.png",
-        "time": "2026-08-03T01:09:28Z"
+        "time": "2026-08-03T04:44:33Z"
       }
     ]
   },
   "KCCX_velocity": {
     "bounds": [
-      36.58602531995314,
-      -83.46004099406457,
-      44.83800577598545,
-      -72.54739726440572
+      36.586025057355506,
+      -83.46003937797482,
+      44.83800616220555,
+      -72.54739688318695
     ],
     "frames": [
       {
         "file": "KCCX_velocity.png",
-        "time": "2026-08-03T22:34:41Z"
+        "time": "2026-08-03T23:45:23Z"
       },
       {
         "file": "KCCX_velocity_1.png",
-        "time": "2026-08-03T21:38:06Z"
+        "time": "2026-08-03T22:34:41Z"
       },
       {
         "file": "KCCX_velocity_2.png",
-        "time": "2026-08-03T20:27:51Z"
+        "time": "2026-08-03T21:38:06Z"
       },
       {
         "file": "KCCX_velocity_3.png",
-        "time": "2026-08-03T18:50:32Z"
+        "time": "2026-08-03T20:27:51Z"
       },
       {
         "file": "KCCX_velocity_4.png",
-        "time": "2026-08-03T17:08:12Z"
+        "time": "2026-08-03T18:50:32Z"
       },
       {
         "file": "KCCX_velocity_5.png",
-        "time": "2026-08-03T15:00:45Z"
+        "time": "2026-08-03T17:08:12Z"
       },
       {
         "file": "KCCX_velocity_6.png",
-        "time": "2026-08-03T11:52:33Z"
+        "time": "2026-08-03T15:00:45Z"
       },
       {
         "file": "KCCX_velocity_7.png",
-        "time": "2026-08-03T08:25:26Z"
+        "time": "2026-08-03T11:52:33Z"
       },
       {
         "file": "KCCX_velocity_8.png",
-        "time": "2026-08-03T04:44:33Z"
+        "time": "2026-08-03T08:25:26Z"
       },
       {
         "file": "KCCX_velocity_9.png",
-        "time": "2026-08-03T01:09:28Z"
+        "time": "2026-08-03T04:44:33Z"
       }
     ]
   },
   "KCCX_correlation_coefficient": {
     "bounds": [
-      36.586024564565896,
-      -83.46004669639377,
+      36.58602456568334,
+      -83.46004614631019,
       44.838007154981256,
-      -72.54739959266824
+      -72.54739924158095
     ],
     "frames": [
       {
         "file": "KCCX_correlation_coefficient.png",
-        "time": "2026-08-03T22:34:41Z"
+        "time": "2026-08-03T23:45:23Z"
       },
       {
         "file": "KCCX_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:38:06Z"
+        "time": "2026-08-03T22:34:41Z"
       },
       {
         "file": "KCCX_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:27:51Z"
+        "time": "2026-08-03T21:38:06Z"
       },
       {
         "file": "KCCX_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:50:32Z"
+        "time": "2026-08-03T20:27:51Z"
       },
       {
         "file": "KCCX_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:08:12Z"
+        "time": "2026-08-03T18:50:32Z"
       },
       {
         "file": "KCCX_correlation_coefficient_5.png",
-        "time": "2026-08-03T15:00:45Z"
+        "time": "2026-08-03T17:08:12Z"
       },
       {
         "file": "KCCX_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:52:33Z"
+        "time": "2026-08-03T15:00:45Z"
       },
       {
         "file": "KCCX_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:25:26Z"
+        "time": "2026-08-03T11:52:33Z"
       },
       {
         "file": "KCCX_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:44:33Z"
+        "time": "2026-08-03T08:25:26Z"
       },
       {
         "file": "KCCX_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:09:28Z"
+        "time": "2026-08-03T04:44:33Z"
       }
     ]
   },
-  "KCCX_last_key": "2026/08/03/KCCX/KCCX20260803_223441_V06",
+  "KCCX_last_key": "2026/08/03/KCCX/KCCX20260803_234523_V06",
   "KDIX_reflectivity": {
     "bounds": [
-      35.61209879160902,
-      -79.78874741227843,
-      43.864551801025875,
-      -69.03245378734037
+      35.61217494193986,
+      -79.78900423271163,
+      43.86455199813359,
+      -69.03271223764514
     ],
     "frames": [
       {
         "file": "KDIX_reflectivity.png",
-        "time": "2026-08-03T22:38:29Z"
+        "time": "2026-08-03T23:50:41Z"
       },
       {
         "file": "KDIX_reflectivity_1.png",
-        "time": "2026-08-03T21:37:45Z"
+        "time": "2026-08-03T22:38:29Z"
       },
       {
         "file": "KDIX_reflectivity_2.png",
-        "time": "2026-08-03T20:32:26Z"
+        "time": "2026-08-03T21:37:45Z"
       },
       {
         "file": "KDIX_reflectivity_3.png",
-        "time": "2026-08-03T18:52:22Z"
+        "time": "2026-08-03T20:32:26Z"
       },
       {
         "file": "KDIX_reflectivity_4.png",
-        "time": "2026-08-03T17:14:38Z"
+        "time": "2026-08-03T18:52:22Z"
       },
       {
         "file": "KDIX_reflectivity_5.png",
-        "time": "2026-08-03T15:03:13Z"
+        "time": "2026-08-03T17:14:38Z"
       },
       {
         "file": "KDIX_reflectivity_6.png",
-        "time": "2026-08-03T11:54:24Z"
+        "time": "2026-08-03T15:03:13Z"
       },
       {
         "file": "KDIX_reflectivity_7.png",
-        "time": "2026-08-03T08:23:12Z"
+        "time": "2026-08-03T11:54:24Z"
       },
       {
         "file": "KDIX_reflectivity_8.png",
-        "time": "2026-08-03T04:48:26Z"
+        "time": "2026-08-03T08:23:12Z"
       },
       {
         "file": "KDIX_reflectivity_9.png",
-        "time": "2026-08-03T01:06:57Z"
+        "time": "2026-08-03T04:48:26Z"
       }
     ]
   },
   "KDIX_velocity": {
     "bounds": [
-      35.61198029285347,
-      -79.78900541633918,
-      43.86474603346198,
-      -69.03246010362977
+      35.61197675326881,
+      -79.7890053717371,
+      43.86474840266551,
+      -69.03245941421795
     ],
     "frames": [
       {
         "file": "KDIX_velocity.png",
-        "time": "2026-08-03T22:38:29Z"
+        "time": "2026-08-03T23:50:41Z"
       },
       {
         "file": "KDIX_velocity_1.png",
-        "time": "2026-08-03T21:37:45Z"
+        "time": "2026-08-03T22:38:29Z"
       },
       {
         "file": "KDIX_velocity_2.png",
-        "time": "2026-08-03T20:32:26Z"
+        "time": "2026-08-03T21:37:45Z"
       },
       {
         "file": "KDIX_velocity_3.png",
-        "time": "2026-08-03T18:52:22Z"
+        "time": "2026-08-03T20:32:26Z"
       },
       {
         "file": "KDIX_velocity_4.png",
-        "time": "2026-08-03T17:14:38Z"
+        "time": "2026-08-03T18:52:22Z"
       },
       {
         "file": "KDIX_velocity_5.png",
-        "time": "2026-08-03T15:03:13Z"
+        "time": "2026-08-03T17:14:38Z"
       },
       {
         "file": "KDIX_velocity_6.png",
-        "time": "2026-08-03T11:54:24Z"
+        "time": "2026-08-03T15:03:13Z"
       },
       {
         "file": "KDIX_velocity_7.png",
-        "time": "2026-08-03T08:23:12Z"
+        "time": "2026-08-03T11:54:24Z"
       },
       {
         "file": "KDIX_velocity_8.png",
-        "time": "2026-08-03T04:48:26Z"
+        "time": "2026-08-03T08:23:12Z"
       },
       {
         "file": "KDIX_velocity_9.png",
-        "time": "2026-08-03T01:06:57Z"
+        "time": "2026-08-03T04:48:26Z"
       }
     ]
   },
   "KDIX_correlation_coefficient": {
     "bounds": [
-      35.61209879160902,
-      -79.78874741227843,
-      43.864551801025875,
-      -69.03245378734037
+      35.61217494193986,
+      -79.78900423271163,
+      43.86455199813359,
+      -69.03271223764514
     ],
     "frames": [
       {
         "file": "KDIX_correlation_coefficient.png",
-        "time": "2026-08-03T22:38:29Z"
+        "time": "2026-08-03T23:50:41Z"
       },
       {
         "file": "KDIX_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:37:45Z"
+        "time": "2026-08-03T22:38:29Z"
       },
       {
         "file": "KDIX_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:32:26Z"
+        "time": "2026-08-03T21:37:45Z"
       },
       {
         "file": "KDIX_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:52:22Z"
+        "time": "2026-08-03T20:32:26Z"
       },
       {
         "file": "KDIX_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:14:38Z"
+        "time": "2026-08-03T18:52:22Z"
       },
       {
         "file": "KDIX_correlation_coefficient_5.png",
-        "time": "2026-08-03T15:03:13Z"
+        "time": "2026-08-03T17:14:38Z"
       },
       {
         "file": "KDIX_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:54:24Z"
+        "time": "2026-08-03T15:03:13Z"
       },
       {
         "file": "KDIX_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:23:12Z"
+        "time": "2026-08-03T11:54:24Z"
       },
       {
         "file": "KDIX_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:48:26Z"
+        "time": "2026-08-03T08:23:12Z"
       },
       {
         "file": "KDIX_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:06:57Z"
+        "time": "2026-08-03T04:48:26Z"
       }
     ]
   },
-  "KDIX_last_key": "2026/08/03/KDIX/KDIX20260803_223829_V06",
+  "KDIX_last_key": "2026/08/03/KDIX/KDIX20260803_235041_V06",
   "KDOX_reflectivity": {
     "bounds": [
-      34.49306581023474,
-      -80.73347557607751,
-      42.74698721293734,
-      -70.14677883296827
+      34.49317205928069,
+      -80.73336020364489,
+      42.747174800019806,
+      -70.14653331108744
     ],
     "frames": [
       {
         "file": "KDOX_reflectivity.png",
-        "time": "2026-08-03T22:36:50Z"
+        "time": "2026-08-03T23:50:19Z"
       },
       {
         "file": "KDOX_reflectivity_1.png",
-        "time": "2026-08-03T21:38:33Z"
+        "time": "2026-08-03T22:36:50Z"
       },
       {
         "file": "KDOX_reflectivity_2.png",
-        "time": "2026-08-03T20:32:42Z"
+        "time": "2026-08-03T21:38:33Z"
       },
       {
         "file": "KDOX_reflectivity_3.png",
-        "time": "2026-08-03T18:54:50Z"
+        "time": "2026-08-03T20:32:42Z"
       },
       {
         "file": "KDOX_reflectivity_4.png",
-        "time": "2026-08-03T17:12:00Z"
+        "time": "2026-08-03T18:54:50Z"
       },
       {
         "file": "KDOX_reflectivity_5.png",
-        "time": "2026-08-03T15:06:08Z"
+        "time": "2026-08-03T17:12:00Z"
       },
       {
         "file": "KDOX_reflectivity_6.png",
-        "time": "2026-08-03T11:54:38Z"
+        "time": "2026-08-03T15:06:08Z"
       },
       {
         "file": "KDOX_reflectivity_7.png",
-        "time": "2026-08-03T08:25:13Z"
+        "time": "2026-08-03T11:54:38Z"
       },
       {
         "file": "KDOX_reflectivity_8.png",
-        "time": "2026-08-03T04:46:43Z"
+        "time": "2026-08-03T08:25:13Z"
       },
       {
         "file": "KDOX_reflectivity_9.png",
-        "time": "2026-08-03T01:08:47Z"
+        "time": "2026-08-03T04:46:43Z"
       }
     ]
   },
   "KDOX_velocity": {
     "bounds": [
-      34.49306778567761,
-      -80.73348501415902,
-      42.74698820124889,
-      -70.1467837385549
+      34.49287985408968,
+      -80.73372461584658,
+      42.7471747306834,
+      -70.14653853868546
     ],
     "frames": [
       {
         "file": "KDOX_velocity.png",
-        "time": "2026-08-03T22:36:50Z"
+        "time": "2026-08-03T23:50:19Z"
       },
       {
         "file": "KDOX_velocity_1.png",
-        "time": "2026-08-03T21:38:33Z"
+        "time": "2026-08-03T22:36:50Z"
       },
       {
         "file": "KDOX_velocity_2.png",
-        "time": "2026-08-03T20:32:42Z"
+        "time": "2026-08-03T21:38:33Z"
       },
       {
         "file": "KDOX_velocity_3.png",
-        "time": "2026-08-03T18:54:50Z"
+        "time": "2026-08-03T20:32:42Z"
       },
       {
         "file": "KDOX_velocity_4.png",
-        "time": "2026-08-03T17:12:00Z"
+        "time": "2026-08-03T18:54:50Z"
       },
       {
         "file": "KDOX_velocity_5.png",
-        "time": "2026-08-03T15:06:08Z"
+        "time": "2026-08-03T17:12:00Z"
       },
       {
         "file": "KDOX_velocity_6.png",
-        "time": "2026-08-03T11:54:38Z"
+        "time": "2026-08-03T15:06:08Z"
       },
       {
         "file": "KDOX_velocity_7.png",
-        "time": "2026-08-03T08:25:13Z"
+        "time": "2026-08-03T11:54:38Z"
       },
       {
         "file": "KDOX_velocity_8.png",
-        "time": "2026-08-03T04:46:43Z"
+        "time": "2026-08-03T08:25:13Z"
       },
       {
         "file": "KDOX_velocity_9.png",
-        "time": "2026-08-03T01:08:47Z"
+        "time": "2026-08-03T04:46:43Z"
       }
     ]
   },
   "KDOX_correlation_coefficient": {
     "bounds": [
-      34.49306581023474,
-      -80.73347557607751,
-      42.74698721293734,
-      -70.14677883296827
+      34.49317205928069,
+      -80.73336020364489,
+      42.747174800019806,
+      -70.14653331108744
     ],
     "frames": [
       {
         "file": "KDOX_correlation_coefficient.png",
-        "time": "2026-08-03T22:36:50Z"
+        "time": "2026-08-03T23:50:19Z"
       },
       {
         "file": "KDOX_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:38:33Z"
+        "time": "2026-08-03T22:36:50Z"
       },
       {
         "file": "KDOX_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:32:42Z"
+        "time": "2026-08-03T21:38:33Z"
       },
       {
         "file": "KDOX_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:54:50Z"
+        "time": "2026-08-03T20:32:42Z"
       },
       {
         "file": "KDOX_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:12:00Z"
+        "time": "2026-08-03T18:54:50Z"
       },
       {
         "file": "KDOX_correlation_coefficient_5.png",
-        "time": "2026-08-03T15:06:08Z"
+        "time": "2026-08-03T17:12:00Z"
       },
       {
         "file": "KDOX_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:54:38Z"
+        "time": "2026-08-03T15:06:08Z"
       },
       {
         "file": "KDOX_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:25:13Z"
+        "time": "2026-08-03T11:54:38Z"
       },
       {
         "file": "KDOX_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:46:43Z"
+        "time": "2026-08-03T08:25:13Z"
       },
       {
         "file": "KDOX_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:08:47Z"
+        "time": "2026-08-03T04:46:43Z"
       }
     ]
   },
-  "KDOX_last_key": "2026/08/03/KDOX/KDOX20260803_223650_V06",
+  "KDOX_last_key": "2026/08/03/KDOX/KDOX20260803_235019_V06",
   "KBGM_reflectivity": {
     "bounds": [
-      37.859235336055676,
-      -81.55033069101862,
-      46.11200955727581,
-      -70.4191229025837
+      37.859235332712075,
+      -81.55032900171251,
+      46.11200956108673,
+      -70.41901581746555
     ],
     "frames": [
       {
         "file": "KBGM_reflectivity.png",
-        "time": "2026-08-03T22:38:12Z"
+        "time": "2026-08-03T23:49:38Z"
       },
       {
         "file": "KBGM_reflectivity_1.png",
-        "time": "2026-08-03T21:41:02Z"
+        "time": "2026-08-03T22:38:12Z"
       },
       {
         "file": "KBGM_reflectivity_2.png",
-        "time": "2026-08-03T20:28:24Z"
+        "time": "2026-08-03T21:41:02Z"
       },
       {
         "file": "KBGM_reflectivity_3.png",
-        "time": "2026-08-03T18:58:17Z"
+        "time": "2026-08-03T20:28:24Z"
       },
       {
         "file": "KBGM_reflectivity_4.png",
-        "time": "2026-08-03T17:17:28Z"
+        "time": "2026-08-03T18:58:17Z"
       },
       {
         "file": "KBGM_reflectivity_5.png",
-        "time": "2026-08-03T15:06:24Z"
+        "time": "2026-08-03T17:17:28Z"
       },
       {
         "file": "KBGM_reflectivity_6.png",
-        "time": "2026-08-03T11:56:23Z"
+        "time": "2026-08-03T15:06:24Z"
       },
       {
         "file": "KBGM_reflectivity_7.png",
-        "time": "2026-08-03T08:25:19Z"
+        "time": "2026-08-03T11:56:23Z"
       },
       {
         "file": "KBGM_reflectivity_8.png",
-        "time": "2026-08-03T04:47:16Z"
+        "time": "2026-08-03T08:25:19Z"
       },
       {
         "file": "KBGM_reflectivity_9.png",
-        "time": "2026-08-03T01:09:42Z"
+        "time": "2026-08-03T04:47:16Z"
       }
     ]
   },
   "KBGM_velocity": {
     "bounds": [
-      37.85923602818178,
-      -81.5503417392308,
-      46.11200915077883,
-      -70.4191049795073
+      37.85923582310739,
+      -81.55033666528347,
+      46.11200883066244,
+      -70.41910970182431
     ],
     "frames": [
       {
         "file": "KBGM_velocity.png",
-        "time": "2026-08-03T22:38:12Z"
+        "time": "2026-08-03T23:49:38Z"
       },
       {
         "file": "KBGM_velocity_1.png",
-        "time": "2026-08-03T21:41:02Z"
+        "time": "2026-08-03T22:38:12Z"
       },
       {
         "file": "KBGM_velocity_2.png",
-        "time": "2026-08-03T20:28:24Z"
+        "time": "2026-08-03T21:41:02Z"
       },
       {
         "file": "KBGM_velocity_3.png",
-        "time": "2026-08-03T18:58:17Z"
+        "time": "2026-08-03T20:28:24Z"
       },
       {
         "file": "KBGM_velocity_4.png",
-        "time": "2026-08-03T17:17:28Z"
+        "time": "2026-08-03T18:58:17Z"
       },
       {
         "file": "KBGM_velocity_5.png",
-        "time": "2026-08-03T15:06:24Z"
+        "time": "2026-08-03T17:17:28Z"
       },
       {
         "file": "KBGM_velocity_6.png",
-        "time": "2026-08-03T11:56:23Z"
+        "time": "2026-08-03T15:06:24Z"
       },
       {
         "file": "KBGM_velocity_7.png",
-        "time": "2026-08-03T08:25:19Z"
+        "time": "2026-08-03T11:56:23Z"
       },
       {
         "file": "KBGM_velocity_8.png",
-        "time": "2026-08-03T04:47:16Z"
+        "time": "2026-08-03T08:25:19Z"
       },
       {
         "file": "KBGM_velocity_9.png",
-        "time": "2026-08-03T01:09:42Z"
+        "time": "2026-08-03T04:47:16Z"
       }
     ]
   },
   "KBGM_correlation_coefficient": {
     "bounds": [
-      37.859235336055676,
-      -81.55033069101862,
-      46.11200955727581,
-      -70.4191229025837
+      37.859235332712075,
+      -81.55032900171251,
+      46.11200956108673,
+      -70.41901581746555
     ],
     "frames": [
       {
         "file": "KBGM_correlation_coefficient.png",
-        "time": "2026-08-03T22:38:12Z"
+        "time": "2026-08-03T23:49:38Z"
       },
       {
         "file": "KBGM_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:41:02Z"
+        "time": "2026-08-03T22:38:12Z"
       },
       {
         "file": "KBGM_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:28:24Z"
+        "time": "2026-08-03T21:41:02Z"
       },
       {
         "file": "KBGM_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:58:17Z"
+        "time": "2026-08-03T20:28:24Z"
       },
       {
         "file": "KBGM_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:17:28Z"
+        "time": "2026-08-03T18:58:17Z"
       },
       {
         "file": "KBGM_correlation_coefficient_5.png",
-        "time": "2026-08-03T15:06:24Z"
+        "time": "2026-08-03T17:17:28Z"
       },
       {
         "file": "KBGM_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:56:23Z"
+        "time": "2026-08-03T15:06:24Z"
       },
       {
         "file": "KBGM_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:25:19Z"
+        "time": "2026-08-03T11:56:23Z"
       },
       {
         "file": "KBGM_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:47:16Z"
+        "time": "2026-08-03T08:25:19Z"
       },
       {
         "file": "KBGM_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:09:42Z"
+        "time": "2026-08-03T04:47:16Z"
       }
     ]
   },
-  "KBGM_last_key": "2026/08/03/KBGM/KBGM20260803_223812_V06",
+  "KBGM_last_key": "2026/08/03/KBGM/KBGM20260803_234938_V06",
   "KOKX_reflectivity": {
     "bounds": [
       36.5283243142973,
@@ -756,304 +756,304 @@
   "KOKX_last_key": "2026/04/23/KOKX/KOKX20260423_225119_V06",
   "KPBZ_reflectivity": {
     "bounds": [
-      36.19512840047387,
-      -85.64283875719158,
-      44.447902613338336,
-      -74.79308964386172
+      36.195325451612696,
+      -85.64257923907714,
+      44.44770554415768,
+      -74.79334904659856
     ],
     "frames": [
       {
         "file": "KPBZ_reflectivity.png",
-        "time": "2026-08-03T22:36:36Z"
+        "time": "2026-08-03T23:46:55Z"
       },
       {
         "file": "KPBZ_reflectivity_1.png",
-        "time": "2026-08-03T21:39:29Z"
+        "time": "2026-08-03T22:36:36Z"
       },
       {
         "file": "KPBZ_reflectivity_2.png",
-        "time": "2026-08-03T20:29:29Z"
+        "time": "2026-08-03T21:39:29Z"
       },
       {
         "file": "KPBZ_reflectivity_3.png",
-        "time": "2026-08-03T18:51:01Z"
+        "time": "2026-08-03T20:29:29Z"
       },
       {
         "file": "KPBZ_reflectivity_4.png",
-        "time": "2026-08-03T17:13:00Z"
+        "time": "2026-08-03T18:51:01Z"
       },
       {
         "file": "KPBZ_reflectivity_5.png",
-        "time": "2026-08-03T15:01:35Z"
+        "time": "2026-08-03T17:13:00Z"
       },
       {
         "file": "KPBZ_reflectivity_6.png",
-        "time": "2026-08-03T11:55:02Z"
+        "time": "2026-08-03T15:01:35Z"
       },
       {
         "file": "KPBZ_reflectivity_7.png",
-        "time": "2026-08-03T08:27:34Z"
+        "time": "2026-08-03T11:55:02Z"
       },
       {
         "file": "KPBZ_reflectivity_8.png",
-        "time": "2026-08-03T04:47:32Z"
+        "time": "2026-08-03T08:27:34Z"
       },
       {
         "file": "KPBZ_reflectivity_9.png",
-        "time": "2026-08-03T01:13:39Z"
+        "time": "2026-08-03T04:47:32Z"
       }
     ]
   },
   "KPBZ_velocity": {
     "bounds": [
-      36.195129026799634,
-      -85.64283654716158,
-      44.447901474594424,
-      -74.79308981626755
+      36.195326595723984,
+      -85.64257336393477,
+      44.44770341861102,
+      -74.79334858089376
     ],
     "frames": [
       {
         "file": "KPBZ_velocity.png",
-        "time": "2026-08-03T22:36:36Z"
+        "time": "2026-08-03T23:46:55Z"
       },
       {
         "file": "KPBZ_velocity_1.png",
-        "time": "2026-08-03T21:39:29Z"
+        "time": "2026-08-03T22:36:36Z"
       },
       {
         "file": "KPBZ_velocity_2.png",
-        "time": "2026-08-03T20:29:29Z"
+        "time": "2026-08-03T21:39:29Z"
       },
       {
         "file": "KPBZ_velocity_3.png",
-        "time": "2026-08-03T18:51:01Z"
+        "time": "2026-08-03T20:29:29Z"
       },
       {
         "file": "KPBZ_velocity_4.png",
-        "time": "2026-08-03T17:13:00Z"
+        "time": "2026-08-03T18:51:01Z"
       },
       {
         "file": "KPBZ_velocity_5.png",
-        "time": "2026-08-03T15:01:35Z"
+        "time": "2026-08-03T17:13:00Z"
       },
       {
         "file": "KPBZ_velocity_6.png",
-        "time": "2026-08-03T11:55:02Z"
+        "time": "2026-08-03T15:01:35Z"
       },
       {
         "file": "KPBZ_velocity_7.png",
-        "time": "2026-08-03T08:27:34Z"
+        "time": "2026-08-03T11:55:02Z"
       },
       {
         "file": "KPBZ_velocity_8.png",
-        "time": "2026-08-03T04:47:32Z"
+        "time": "2026-08-03T08:27:34Z"
       },
       {
         "file": "KPBZ_velocity_9.png",
-        "time": "2026-08-03T01:13:39Z"
+        "time": "2026-08-03T04:47:32Z"
       }
     ]
   },
   "KPBZ_correlation_coefficient": {
     "bounds": [
-      36.19512840047387,
-      -85.64283875719158,
-      44.447902613338336,
-      -74.79308964386172
+      36.195325451612696,
+      -85.64257923907714,
+      44.44770554415768,
+      -74.79334904659856
     ],
     "frames": [
       {
         "file": "KPBZ_correlation_coefficient.png",
-        "time": "2026-08-03T22:36:36Z"
+        "time": "2026-08-03T23:46:55Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:39:29Z"
+        "time": "2026-08-03T22:36:36Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:29:29Z"
+        "time": "2026-08-03T21:39:29Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:51:01Z"
+        "time": "2026-08-03T20:29:29Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:13:00Z"
+        "time": "2026-08-03T18:51:01Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_5.png",
-        "time": "2026-08-03T15:01:35Z"
+        "time": "2026-08-03T17:13:00Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:55:02Z"
+        "time": "2026-08-03T15:01:35Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:27:34Z"
+        "time": "2026-08-03T11:55:02Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:47:32Z"
+        "time": "2026-08-03T08:27:34Z"
       },
       {
         "file": "KPBZ_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:13:39Z"
+        "time": "2026-08-03T04:47:32Z"
       }
     ]
   },
-  "KPBZ_last_key": "2026/08/03/KPBZ/KPBZ20260803_223636_V06",
+  "KPBZ_last_key": "2026/08/03/KPBZ/KPBZ20260803_234655_V06",
   "KVNX_reflectivity": {
     "bounds": [
-      32.41481220568672,
-      -103.27305685736562,
-      40.66719227918231,
-      -92.98237579035268
+      32.41481219667331,
+      -103.27305651443825,
+      40.66719228545614,
+      -92.98237596918601
     ],
     "frames": [
       {
         "file": "KVNX_reflectivity.png",
-        "time": "2026-08-03T22:36:06Z"
+        "time": "2026-08-03T23:46:18Z"
       },
       {
         "file": "KVNX_reflectivity_1.png",
-        "time": "2026-08-03T21:39:57Z"
+        "time": "2026-08-03T22:36:06Z"
       },
       {
         "file": "KVNX_reflectivity_2.png",
-        "time": "2026-08-03T20:29:43Z"
+        "time": "2026-08-03T21:39:57Z"
       },
       {
         "file": "KVNX_reflectivity_3.png",
-        "time": "2026-08-03T18:51:23Z"
+        "time": "2026-08-03T20:29:43Z"
       },
       {
         "file": "KVNX_reflectivity_4.png",
-        "time": "2026-08-03T17:12:04Z"
+        "time": "2026-08-03T18:51:23Z"
       },
       {
         "file": "KVNX_reflectivity_5.png",
-        "time": "2026-08-03T14:59:58Z"
+        "time": "2026-08-03T17:12:04Z"
       },
       {
         "file": "KVNX_reflectivity_6.png",
-        "time": "2026-08-03T11:49:51Z"
+        "time": "2026-08-03T14:59:58Z"
       },
       {
         "file": "KVNX_reflectivity_7.png",
-        "time": "2026-08-03T08:25:09Z"
+        "time": "2026-08-03T11:49:51Z"
       },
       {
         "file": "KVNX_reflectivity_8.png",
-        "time": "2026-08-03T04:47:09Z"
+        "time": "2026-08-03T08:25:09Z"
       },
       {
         "file": "KVNX_reflectivity_9.png",
-        "time": "2026-08-03T01:09:07Z"
+        "time": "2026-08-03T04:47:09Z"
       }
     ]
   },
   "KVNX_velocity": {
     "bounds": [
-      32.41481241637539,
-      -103.27304628958508,
-      40.66719150624572,
-      -92.98237075084347
+      32.41481314308232,
+      -103.27304915380881,
+      40.66719162670338,
+      -92.98237207618156
     ],
     "frames": [
       {
         "file": "KVNX_velocity.png",
-        "time": "2026-08-03T22:36:06Z"
+        "time": "2026-08-03T23:46:18Z"
       },
       {
         "file": "KVNX_velocity_1.png",
-        "time": "2026-08-03T21:39:57Z"
+        "time": "2026-08-03T22:36:06Z"
       },
       {
         "file": "KVNX_velocity_2.png",
-        "time": "2026-08-03T20:29:43Z"
+        "time": "2026-08-03T21:39:57Z"
       },
       {
         "file": "KVNX_velocity_3.png",
-        "time": "2026-08-03T18:51:23Z"
+        "time": "2026-08-03T20:29:43Z"
       },
       {
         "file": "KVNX_velocity_4.png",
-        "time": "2026-08-03T17:12:04Z"
+        "time": "2026-08-03T18:51:23Z"
       },
       {
         "file": "KVNX_velocity_5.png",
-        "time": "2026-08-03T14:59:58Z"
+        "time": "2026-08-03T17:12:04Z"
       },
       {
         "file": "KVNX_velocity_6.png",
-        "time": "2026-08-03T11:49:51Z"
+        "time": "2026-08-03T14:59:58Z"
       },
       {
         "file": "KVNX_velocity_7.png",
-        "time": "2026-08-03T08:25:09Z"
+        "time": "2026-08-03T11:49:51Z"
       },
       {
         "file": "KVNX_velocity_8.png",
-        "time": "2026-08-03T04:47:09Z"
+        "time": "2026-08-03T08:25:09Z"
       },
       {
         "file": "KVNX_velocity_9.png",
-        "time": "2026-08-03T01:09:07Z"
+        "time": "2026-08-03T04:47:09Z"
       }
     ]
   },
   "KVNX_correlation_coefficient": {
     "bounds": [
-      32.41481220568672,
-      -103.27305685736562,
-      40.66719227918231,
-      -92.98237579035268
+      32.41481219667331,
+      -103.27305651443825,
+      40.66719228545614,
+      -92.98237596918601
     ],
     "frames": [
       {
         "file": "KVNX_correlation_coefficient.png",
-        "time": "2026-08-03T22:36:06Z"
+        "time": "2026-08-03T23:46:18Z"
       },
       {
         "file": "KVNX_correlation_coefficient_1.png",
-        "time": "2026-08-03T21:39:57Z"
+        "time": "2026-08-03T22:36:06Z"
       },
       {
         "file": "KVNX_correlation_coefficient_2.png",
-        "time": "2026-08-03T20:29:43Z"
+        "time": "2026-08-03T21:39:57Z"
       },
       {
         "file": "KVNX_correlation_coefficient_3.png",
-        "time": "2026-08-03T18:51:23Z"
+        "time": "2026-08-03T20:29:43Z"
       },
       {
         "file": "KVNX_correlation_coefficient_4.png",
-        "time": "2026-08-03T17:12:04Z"
+        "time": "2026-08-03T18:51:23Z"
       },
       {
         "file": "KVNX_correlation_coefficient_5.png",
-        "time": "2026-08-03T14:59:58Z"
+        "time": "2026-08-03T17:12:04Z"
       },
       {
         "file": "KVNX_correlation_coefficient_6.png",
-        "time": "2026-08-03T11:49:51Z"
+        "time": "2026-08-03T14:59:58Z"
       },
       {
         "file": "KVNX_correlation_coefficient_7.png",
-        "time": "2026-08-03T08:25:09Z"
+        "time": "2026-08-03T11:49:51Z"
       },
       {
         "file": "KVNX_correlation_coefficient_8.png",
-        "time": "2026-08-03T04:47:09Z"
+        "time": "2026-08-03T08:25:09Z"
       },
       {
         "file": "KVNX_correlation_coefficient_9.png",
-        "time": "2026-08-03T01:09:07Z"
+        "time": "2026-08-03T04:47:09Z"
       }
     ]
   },
-  "KVNX_last_key": "2026/08/03/KVNX/KVNX20260803_223606_V06"
+  "KVNX_last_key": "2026/08/03/KVNX/KVNX20260803_234618_V06"
 }
